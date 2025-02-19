@@ -28,6 +28,7 @@ using System.Reflection;
 using System.Windows.Media.Media3D;
 using System.Drawing.Drawing2D;
 using FormsExtensions.Controls.Entrys;
+using static System.Net.WebRequestMethods;
 
 namespace Photoapp
 {
@@ -399,43 +400,7 @@ namespace Photoapp
             
         
         }
-        // Layer panel UI functions
-        private void LayerPanel_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (isDragging && draggedPanel != null)
-            {
-                // Move the dragged panel with the mouse
-                draggedPanel.Left = e.X + draggedPanel.Left - mouseOffset.X;
-                draggedPanel.Top = e.Y + draggedPanel.Top - mouseOffset.Y;
-            }
-        }
-        private void LayerPanel_MouseUp(object sender, MouseEventArgs e)
-        {
-            isDragging = false;
 
-            // Determine the target layer based on the drop location (e.g., by comparing positions)
-            Panel targetPanel = null;
-            foreach (Panel panel in layerPanel.Controls)
-            {
-                if (panel != draggedPanel && panel.Bounds.Contains(e.Location))
-                {
-                    targetPanel = panel;
-                    break;
-                }
-            }
-
-            if (targetPanel != null)
-            {
-                // Extract the target layerId from the panel label
-                int targetLayerId = int.Parse(targetPanel.Controls[0].Text.Split(' ')[1]);
-
-                // Call ReorderLayers method to update the order in LayerManager
-                layerManager.ReorderLayers(draggedLayerId, targetLayerId);
-
-                // Optionally, re-sort the UI elements based on the updated order
-                UpdateUIOrder();
-            }
-        }
 
    
 
@@ -458,6 +423,7 @@ namespace Photoapp
             }
 
             // Trigger the canvasPanel repaint to reflect the updated layer order
+            buildCombinedBitmap();
             canvasPanel.Invalidate();
         }
 
@@ -534,7 +500,7 @@ namespace Photoapp
             // Create the "Up" button
             Button upButton = new Button
             {
-                Text = "Up",
+                Text = "Down",
                 Width = 50,
                 ForeColor = Color.White,
                 Height = layerItemPanel.Height / 2,
@@ -545,7 +511,7 @@ namespace Photoapp
             // Create the "Down" button
             Button downButton = new Button
             {
-                Text = "Down",
+                Text = "Up",
                 Width = 50,
                 ForeColor = Color.White,
                 Height = layerItemPanel.Height / 2,
@@ -581,10 +547,514 @@ namespace Photoapp
 
         //Bitmap copyBitmap = new Bitmap(originalBitmap);
 
+
+
+
+
+        //public Bitmap MergeAndClearEdges(Bitmap newBitmap, Bitmap oldBitmap, Color fillColor)
+        //{
+        //    if (newBitmap.Width != oldBitmap.Width || newBitmap.Height != oldBitmap.Height)
+        //        throw new ArgumentException("Bitmaps must be of the same dimensions");
+
+        //    Bitmap result = new Bitmap(oldBitmap);
+
+        //    // Iterate through every row of the bitmap
+        //    for (int y = 0; y < newBitmap.Height; y++)
+        //    {
+        //        bool insideFill = false; // Track if we are inside a fillable region
+        //        bool continuousrow = false;
+        //        int startX = -1; // Start of fill range
+
+        //        // Iterate through every pixel in the current row
+        //        for (int x = 0; x < newBitmap.Width; x++)
+        //        {
+        //            Color pixel = newBitmap.GetPixel(x, y);
+
+        //            if (pixel.A > 0) // Non-transparent pixel
+        //            {
+        //                continuousrow = true;
+        //            }
+        //            else
+        //            {
+        //                if (continuousrow)
+        //                {
+        //                    continuousrow = false;
+        //                    if (insideFill == false)
+        //                    {
+        //                        insideFill = true;
+        //                    }
+        //                    else
+        //                    {
+        //                        insideFill = false;
+        //                    }
+
+        //                }
+        //            }
+        //            if (insideFill)
+        //            {
+        //                result.SetPixel(x, y, fillColor);
+        //            }
+
+        //        }
+        //    }
+
+        //    return result;
+        //}
+
+        // find pairs group them into pairs of two and only between them fill in
+        //public Bitmap MergeAndClearEdges(Bitmap newBitmap, Bitmap oldBitmap, Color fillColor)
+        //{
+        //    if (newBitmap.Width != oldBitmap.Width || newBitmap.Height != oldBitmap.Height)
+        //        throw new ArgumentException("Bitmaps must be of the same dimensions");
+
+        //    Bitmap result = new Bitmap(oldBitmap);
+
+        //    // dvourozmerny pole s int hodnotou
+        //    List<List<(int[] Array, bool Flag)>> data = new List<List<(int[], bool)>>();
+
+
+
+        //    // Iterate through every row of the bitmap
+        //    for (int y = 0; y < newBitmap.Height; y++)
+        //    {
+        //        bool continuousrow = false;
+
+        //        int numberinrow = 0;
+
+        //        // Iterate through every pixel in the current row
+        //        for (int x = 0; x < newBitmap.Width; x++)
+        //        {
+
+
+        //            Color pixel = newBitmap.GetPixel(x, y);
+
+        //            if (pixel.A > 0) // Non-transparent pixel
+        //            {
+        //                numberinrow += 1;
+        //                continuousrow = true;
+        //            }
+        //            else
+        //            {
+        //                if(numberinrow == 1 && continuousrow)
+        //                {
+        //                    result.SetPixel(x, y, fillColor);
+        //                    continuousrow = false;
+        //                }
+        //                else
+        //                {
+        //                    if (continuousrow)
+        //                    {
+        //                        // get middle
+        //                        int savecord = (x - (x - numberinrow)) / numberinrow;
+
+
+
+        //                        continuousrow = false;
+
+        //                    }
+        //                }
+
+        //            }
+        //            //if (insideFill)
+        //            //{
+        //            //    result.SetPixel(x, y, fillColor);
+        //            //}
+
+        //        }
+        //    }
+
+        //    return result;
+        //}
+
+
+
+ 
+        //public class RowEdgeData
+        //{
+        //    // The row (y coordinate) for these edge points.
+        //    public int Row { get; set; }
+        //    // The x coordinates of the detected edges in that row.
+        //    public List<int> EdgeXs { get; set; } = new List<int>();
+
+        //    // A property indicating whether the number of edge points is even.
+        //    public bool IsCountEven => (EdgeXs.Count % 2 == 0);
+
+        //    public RowEdgeData(int row)
+        //    {
+        //        Row = row;
+        //    }
+        //}
+
+        //public List<RowEdgeData> ExtractEdgeData(Bitmap newBitmap)
+        //{
+        //    List<RowEdgeData> allRowEdges = new List<RowEdgeData>();
+
+        //    // Process each row.
+        //    for (int y = 0; y < newBitmap.Height; y++)
+        //    {
+        //        RowEdgeData rowData = new RowEdgeData(y);
+        //        bool inSegment = false;
+        //        int segStart = -1;
+
+        //        // Process every pixel in the row.
+        //        for (int x = 0; x < newBitmap.Width; x++)
+        //        {
+        //            Color pixel = newBitmap.GetPixel(x, y);
+        //            if (pixel.A > 0) // Non-transparent pixel
+        //            {
+        //                if (!inSegment)
+        //                {
+        //                    inSegment = true;
+        //                    segStart = x;
+        //                }
+        //            }
+        //            else
+        //            {
+        //                // We hit a transparent pixel, so if we were in a segment, close it.
+        //                if (inSegment)
+        //                {
+        //                    int segEnd = x - 1;
+        //                    // Calculate the center x of the segment.
+        //                    int center = (segStart + segEnd) / 2;
+        //                    rowData.EdgeXs.Add(center);
+        //                    inSegment = false;
+        //                }
+        //            }
+        //        }
+
+        //        // If the row ended while still in a segment, close that segment.
+        //        if (inSegment)
+        //        {
+        //            int segEnd = newBitmap.Width - 1;
+        //            int center = (segStart + segEnd) / 2;
+        //            rowData.EdgeXs.Add(center);
+        //        }
+
+        //        if (rowData.EdgeXs.Count > 0)
+        //        {
+        //            allRowEdges.Add(rowData);
+        //        }
+        //    }
+        //    return allRowEdges;
+        //}
+
+
+        //public Bitmap MergeAndClearEdges(Bitmap newBitmap, Bitmap oldBitmap, Color fillColor)
+        //{
+        //    if (newBitmap.Width != oldBitmap.Width || newBitmap.Height != oldBitmap.Height)
+        //        throw new ArgumentException("Bitmaps must be of the same dimensions");
+
+        //    Bitmap result = new Bitmap(oldBitmap);
+
+        //    // dvourozmerny pole s int hodnotou
+        //    //List<List<(int[] Array, bool Flag)>> data = new List<List<(int[], bool)>>();
+
+
+
+        //    // Iterate through every row of the bitmap
+        //    for (int y = 0; y < newBitmap.Height; y++)
+        //    {
+        //        bool continuousrow = false;
+
+        //        int numberinrow = 0;
+
+        //        // Iterate through every pixel in the current row
+        //        for (int x = 0; x < newBitmap.Width; x++)
+        //        {
+
+
+        //            Color pixel = newBitmap.GetPixel(x, y);
+
+        //            if (pixel.A > 0) // Non-transparent pixel
+        //            {
+        //                numberinrow += 1;
+        //                continuousrow = true;
+        //                result.SetPixel(x, y, fillColor);
+        //            }
+        //            else
+        //            {
+        //                if (numberinrow == 1 && continuousrow)
+        //                {
+
+        //                    continuousrow = false;
+        //                }
+        //                else
+        //                {
+        //                    if (continuousrow)
+        //                    {
+        //                        // get middle
+        //                        int savecord = (x - (x - numberinrow)) / numberinrow;
+
+
+
+        //                        continuousrow = false;
+
+        //                    }
+        //                }
+
+        //            }
+
+        //        }
+        //    }
+
+        //    return result;
+        //}
+
+        //public Bitmap MergeAndClearEdges(Bitmap newBitmap, Bitmap oldBitmap, Color fillColor)
+        //{
+        //    if (newBitmap.Width != oldBitmap.Width || newBitmap.Height != oldBitmap.Height)
+        //        throw new ArgumentException("Bitmaps must be of the same dimensions");
+
+        //    Bitmap result = new Bitmap(oldBitmap);
+
+        //    // Process each row of the bitmap.
+        //    for (int y = 0; y < newBitmap.Height; y++)
+        //    {
+        //        bool inSegment = false; // Are we currently in a continuous (non-transparent) segment?
+        //        int segStart = 0;       // Starting x coordinate of the current segment.
+        //        int count = 0;          // How many consecutive non-transparent pixels have been seen.
+        //        List<int> edgeXs = new List<int>(); // To store the computed center x values for this row.
+
+        //        // Iterate through every pixel in the current row.
+        //        for (int x = 0; x < newBitmap.Width; x++)
+        //        {
+        //            Color pixel = newBitmap.GetPixel(x, y);
+
+        //            if (pixel.A > 0) // Non-transparent pixel
+        //            {
+        //                if (!inSegment)
+        //                {
+        //                    // Start a new segment.
+        //                    inSegment = true;
+        //                    segStart = x;
+        //                    count = 1;
+        //                }
+        //                else
+        //                {
+        //                    count++;
+        //                }
+
+        //                // Set the pixel in the result to the fill color.
+        //                result.SetPixel(x, y, fillColor);
+        //            }
+        //            else
+        //            {
+        //                // Transparent pixel.
+        //                if (inSegment)
+        //                {
+        //                    // The segment just ended.
+        //                    // Even if count is 1, record the edge point.
+        //                    int mid = segStart + (count / 2);
+        //                    edgeXs.Add(mid);
+        //                    inSegment = false;
+        //                    count = 0;
+        //                }
+        //            }
+        //        }
+        //        // If the row ended while still in a segment, close the segment.
+        //        if (inSegment)
+        //        {
+        //            int mid = segStart + (count / 2);
+        //            edgeXs.Add(mid);
+        //        }
+
+        //        // Now draw the edge points for this row in green.
+        //        // We'll draw a 3x3 square centered at each edge point.
+        //        int markerSize = 3;
+        //        int half = markerSize / 2;
+        //        foreach (int mid in edgeXs)
+        //        {
+        //            for (int dx = -half; dx <= half; dx++)
+        //            {
+        //                for (int dy = -half; dy <= half; dy++)
+        //                {
+        //                    int px = mid + dx;
+        //                    int py = y + dy;
+        //                    if (px >= 0 && px < result.Width && py >= 0 && py < result.Height)
+        //                    {
+        //                        result.SetPixel(px, py, Color.Green);
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+
+        //    return result;
+        //}
+
+        public class RowEdgeData
+        {
+            public int Y { get; set; }
+            public List<int> XEdges { get; set; }
+
+            public RowEdgeData(int y)
+            {
+                Y = y;
+                XEdges = new List<int>();
+            }
+        }
+
+
+        public Bitmap MergeAndClearEdges(Bitmap newBitmap, Bitmap oldBitmap, Color fillColor)
+        {
+            if (newBitmap.Width != oldBitmap.Width || newBitmap.Height != oldBitmap.Height)
+                throw new ArgumentException("Bitmaps must be of the same dimensions");
+
+            Bitmap result = new Bitmap(oldBitmap);
+
+            // List to store edge data per row.
+            List<RowEdgeData> edgeDataList = new List<RowEdgeData>();
+
+            // Process each row of the bitmap.
+            for (int y = 0; y < newBitmap.Height; y++)
+            {
+                bool inSegment = false; // Are we in a continuous (non-transparent) segment?
+                int segStart = 0;       // Start x coordinate of the segment.
+                int count = 0;          // Number of continuous pixels.
+
+                RowEdgeData rowEdgeData = new RowEdgeData(y); // Create new row data.
+
+                // Iterate through every pixel in the current row.
+                for (int x = 0; x < newBitmap.Width; x++)
+                {
+                    Color pixel = newBitmap.GetPixel(x, y);
+
+                    if (pixel.A > 0) // Non-transparent pixel
+                    {
+                        if (!inSegment)
+                        {
+                            // Start a new segment.
+                            inSegment = true;
+                            segStart = x;
+                            count = 1;
+                        }
+                        else
+                        {
+                            count++;
+                        }
+
+                        // Fill the pixel.
+                        result.SetPixel(x, y, fillColor);
+                    }
+                    else
+                    {
+                        if (inSegment)
+                        {
+                            // Segment ended.
+                            int mid = segStart + (count / 2);
+                            rowEdgeData.XEdges.Add(mid);
+                            inSegment = false;
+                            count = 0;
+                        }
+                    }
+                }
+
+                // If still in a segment at end of row.
+                if (inSegment)
+                {
+                    int mid = segStart + (count / 2);
+                    rowEdgeData.XEdges.Add(mid);
+                }
+
+                // Add row edge data if there are any edges.
+                if (rowEdgeData.XEdges.Count > 0)
+                    edgeDataList.Add(rowEdgeData);
+            }
+
+            // Draw edge points after processing.
+            int markerSize = 5; // Size of green marker.
+            int half = markerSize / 2;
+
+            foreach (var rowData in edgeDataList)
+            {
+                foreach (var xEdge in rowData.XEdges)
+                {
+                    for (int dx = -half; dx <= half; dx++)
+                    {
+                        for (int dy = -half; dy <= half; dy++)
+                        {
+                            int px = xEdge + dx;
+                            int py = rowData.Y + dy;
+
+                            if (px >= 0 && px < result.Width && py >= 0 && py < result.Height)
+                            {
+                                result.SetPixel(px, py, Color.Green);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Second foreach: Overwrite single edge points with red (for testing).
+            foreach (var rowData in edgeDataList)
+            {
+                if (rowData.XEdges.Count == 1) // Only single edge points
+                {
+                    int xEdge = rowData.XEdges[0];
+
+                    for (int dx = -half; dx <= half; dx++)
+                    {
+                        for (int dy = -half; dy <= half; dy++)
+                        {
+                            int px = xEdge + dx;
+                            int py = rowData.Y + dy;
+
+                            if (px >= 0 && px < result.Width && py >= 0 && py < result.Height)
+                            {
+                                result.SetPixel(px, py, Color.Red); // Overwrite with red
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Third foreach: Process even-count edge lists and draw blue lines between pairs.
+            foreach (var rowData in edgeDataList)
+            {
+                if (rowData.XEdges.Count % 2 == 0)
+                {
+                    for (int i = 0; i < rowData.XEdges.Count; i += 2)
+                    {
+                        int xStart = rowData.XEdges[i];
+                        int xEnd = rowData.XEdges[i + 1];
+                        int y = rowData.Y;
+
+                        // Draw a horizontal blue line between the pairs.
+                        for (int x = xStart; x <= xEnd; x++)
+                        {
+                            if (x >= 0 && x < result.Width && y >= 0 && y < result.Height)
+                            {
+                                result.SetPixel(x, y, Color.Purple);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return result;
+        }
+
+
+
+
+
         private void clearUIBitmap()
         {
             LastUILayer = new Bitmap(UILayer);
-            if ((Control.ModifierKeys & Keys.Shift) == 0)
+
+            if ((Control.ModifierKeys & Keys.Shift) == 0 && (Control.ModifierKeys & Keys.Control) == 0)
+            {
+                using (Graphics g = Graphics.FromImage(UILayer))
+                {
+                    g.Clear(Color.Transparent);
+                }
+                using (Graphics g = Graphics.FromImage(LastUILayer))
+                {
+                    g.Clear(Color.Transparent);
+                }
+         
+            }
+            else
             {
                 // Clear the UILayer bitmap to remove any previous selection feedback.
                 using (Graphics g = Graphics.FromImage(UILayer))
@@ -594,23 +1064,8 @@ namespace Photoapp
             }
         }
 
-        public Bitmap MergeAndClearEdges(Bitmap newBitmap, Bitmap oldBitmap)
-        {
-            // Ensure both bitmaps are of the same size.
-            if (newBitmap.Width != oldBitmap.Width || newBitmap.Height != oldBitmap.Height)
-                throw new ArgumentException("Bitmaps must be of the same dimensions");
+     
 
-            Bitmap result = new Bitmap(newBitmap.Width, newBitmap.Height, PixelFormat.Format32bppArgb);
-
-
-       
-
-
-
-          
-
-            return result;
-        }
 
         private void ExportCanvas(string filePath, Bitmap inputBitmap)
         {
@@ -767,11 +1222,21 @@ namespace Photoapp
                 }
                 if(LastUILayer != null)
                 {
-                    UILayer = new Bitmap(MergeAndClearEdges(UILayer, LastUILayer));
-                }
-          
+                
+                  
+                        UILayer = new Bitmap(MergeAndClearEdges(UILayer, LastUILayer, Color.Blue));
 
-                lastPoint = e.Location;
+                 
+
+                }
+                else
+                {
+                    LastUILayer = new Bitmap(UILayer);
+
+                }
+
+
+                    lastPoint = e.Location;
                 isDrawing = false;
 
                 // Update the combined bitmap and refresh the canvas

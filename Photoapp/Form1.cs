@@ -894,6 +894,19 @@ namespace Photoapp
             }
         }
 
+        public class ColEdgeData
+        {
+            public int X { get; set; }
+            public List<int> YEdges { get; set; }
+
+            public ColEdgeData(int x)
+            {
+                X = x;
+                YEdges = new List<int>();
+            }
+        }
+
+
 
         public Bitmap MergeAndClearEdges(Bitmap newBitmap, Bitmap oldBitmap, Color fillColor)
         {
@@ -1009,36 +1022,7 @@ namespace Photoapp
             }
 
 
-
-            // Third foreach: Process even-count edge lists and draw blue lines between pairs.
-            //foreach (var rowData in edgeDataList)
-            //{
-            //    if (rowData.XEdges.Count % 2 == 0)
-            //    {
-            //        for (int i = 0; i < rowData.XEdges.Count; i += 2)
-            //        {
-            //            int xStart = rowData.XEdges[i];
-            //            int xEnd = rowData.XEdges[i + 1];
-            //            int y = rowData.Y;
-
-            //            // Draw a horizontal blue line between the pairs.
-            //            for (int x = xStart; x <= xEnd; x++)
-            //            {
-            //                if (x >= 0 && x < result.Width && y >= 0 && y < result.Height)
-            //                {
-            //                    result.SetPixel(x, y, Color.Purple);
-            //                }
-            //            }
-            //        }
-            //    }
-            //} 
-            // prev
-
-
-
-
-
-          //  Third foreach: Process even-count edge lists and draw blue lines between pairs.
+            //  Third foreach: Process even-count edge lists and draw blue lines between pairs.
             foreach (var rowData in edgeDataList)
             {
                 if (rowData.XEdges.Count % 2 == 0)
@@ -1061,124 +1045,136 @@ namespace Photoapp
                 }
             }
 
-            // fill in pattern checking which one pair disappeared most likely
-            //List<int> previousRowEdges = null;
+            //y values
 
-            //foreach (var rowData in edgeDataList)
-            //{
-            //    if (rowData.XEdges.Count % 2 == 1 && previousRowEdges != null) // Odd number of points & has previous data
-            //    {
-            //        int minDistance = int.MaxValue;
-            //        int minIndex1 = -1;
-            //        int minIndex2 = -1;
+            // List to store edge data per column.
+            List<ColEdgeData> edgeDataListy = new List<ColEdgeData>();
 
-            //        // Check pairs in the previous row
-            //        for (int i = 0; i < previousRowEdges.Count - 1; i += 2)
-            //        {
-            //            int prevStart = previousRowEdges[i];
-            //            int prevEnd = previousRowEdges[i + 1];
-            //            int prevDistance = Math.Abs(prevStart - prevEnd);
+            // Process each column of the bitmap.
+            for (int x = 0; x < newBitmap.Width; x++)
+            {
+                bool inSegment = false; // Are we in a continuous (non-transparent) segment?
+                int segStart = 0;       // Start y coordinate of the segment.
+                int count = 0;          // Number of continuous pixels.
 
-            //            // Find the closest pair (potentially disappeared)
-            //            if (prevDistance < minDistance)
-            //            {
-            //                minDistance = prevDistance;
-            //                minIndex1 = prevStart;
-            //                minIndex2 = prevEnd;
-            //            }
-            //        }
+                ColEdgeData colEdgeData = new ColEdgeData(x); // Create new column data.
 
-            //        // Highlight the closest (disappeared) pair in yellow
-            //        if (minIndex1 != -1 && minIndex2 != -1)
-            //        {
-            //            for (int x = Math.Min(minIndex1, minIndex2); x <= Math.Max(minIndex1, minIndex2); x++)
-            //            {
-            //                result.SetPixel(x, rowData.Y, Color.Yellow); // Draw the line
-            //            }
-            //        }
-            //    }
+                // Iterate through every pixel in the current column.
+                for (int y = 0; y < newBitmap.Height; y++)
+                {
+                    Color pixel = newBitmap.GetPixel(x, y);
 
-            //    // Update previousRowEdges for the next iteration
-            //    previousRowEdges = new List<int>(rowData.XEdges);
-            //}
+                    if (pixel.A > 0) // Non-transparent pixel
+                    {
+                        if (!inSegment)
+                        {
+                            // Start a new segment.
+                            inSegment = true;
+                            segStart = y;
+                            count = 1;
+                        }
+                        else
+                        {
+                            count++;
+                        }
 
+                        // Fill the pixel.
+                        result.SetPixel(x, y, fillColor);
+                    }
+                    else
+                    {
+                        if (inSegment)
+                        {
+                            // Segment ended.
+                            int mid = segStart + (count / 2);
+                            colEdgeData.YEdges.Add(mid);
+                            inSegment = false;
+                            count = 0;
+                        }
+                    }
+                }
 
+                // If still in a segment at end of column.
+                if (inSegment)
+                {
+                    int mid = segStart + (count / 2);
+                    colEdgeData.YEdges.Add(mid);
+                }
 
-            // multiple pairs fill in
-            //List<int> previousRowEdges = null;
-            //foreach (var rowData in edgeDataList)
-            //{
-            //    if (rowData.XEdges.Count % 2 == 1 && previousRowEdges != null)
-            //    {
-            //        int difference = previousRowEdges.Count - rowData.XEdges.Count;
-            //        if (difference <= 0)
-            //        {
-            //            continue;
-            //        }
+                // Add column edge data if there are any edges.
+                if (colEdgeData.YEdges.Count > 0)
+                    edgeDataListy.Add(colEdgeData);
+            }
 
-            //        int pairDifference = difference / 2;
-            //        Console.WriteLine("Now Disappeared {0} pairs", pairDifference);
+            //// Draw edge points after processing.
+            //int markerSize = 5; // Size of green marker.
+            //int half = markerSize / 2;
 
-            //        List<Tuple<int, int>> disappearedPairs = new List<Tuple<int, int>>();
+            foreach (var colData in edgeDataListy)
+            {
+                foreach (var yEdge in colData.YEdges)
+                {
+                    for (int dx = -half; dx <= half; dx++)
+                    {
+                        for (int dy = -half; dy <= half; dy++)
+                        {
+                            int px = colData.X + dx;
+                            int py = yEdge + dy;
 
-            //        // Attempt to find disappeared pairs
-            //        for (int i = 0; i < previousRowEdges.Count - 1; i += 2)
-            //        {
-            //            int prevStart = previousRowEdges[i];
-            //            int prevEnd = previousRowEdges[i + 1];
+                            if (px >= 0 && px < result.Width && py >= 0 && py < result.Height)
+                            {
+                                result.SetPixel(px, py, Color.Green);
+                            }
+                        }
+                    }
+                }
+            }
 
-            //            bool startFound = false;
-            //            bool endFound = false;
+            // Overwrite single edge points with red (for testing).
+            foreach (var colData in edgeDataListy)
+            {
+                if (colData.YEdges.Count == 1) // Only single edge points
+                {
+                    int yEdge = colData.YEdges[0];
 
-            //            //check if both edges are in the new row.
-            //            foreach (int currentEdge in rowData.XEdges)
-            //            {
-            //                if (currentEdge == prevStart) { startFound = true; }
-            //                if (currentEdge == prevEnd) { endFound = true; }
-            //            }
+                    for (int dx = -half; dx <= half; dx++)
+                    {
+                        for (int dy = -half; dy <= half; dy++)
+                        {
+                            int px = colData.X + dx;
+                            int py = yEdge + dy;
 
-            //            if (!startFound || !endFound)
-            //            {
-            //                disappearedPairs.Add(new Tuple<int, int>(prevStart, prevEnd));
-            //            }
-            //        }
+                            if (px >= 0 && px < result.Width && py >= 0 && py < result.Height)
+                            {
+                                result.SetPixel(px, py, Color.Red); // Overwrite with red
+                            }
+                        }
+                    }
+                }
+            }
 
-            //        // Highlight disappeared pairs
-            //        foreach (var pair in disappearedPairs)
-            //        {
-            //            int minIndex1 = pair.Item1;
-            //            int minIndex2 = pair.Item2;
+            // Process even-count edge lists and draw blue lines between pairs.
+            foreach (var colData in edgeDataListy)
+            {
+                if (colData.YEdges.Count % 2 == 0)
+                {
+                    for (int i = 0; i < colData.YEdges.Count; i += 2)
+                    {
+                        int yStart = colData.YEdges[i];
+                        int yEnd = colData.YEdges[i + 1];
+                        int x = colData.X;
 
-            //            for (int xcord = Math.Min(minIndex1, minIndex2); xcord <= Math.Max(minIndex1, minIndex2); xcord++)
-            //            {
-            //                for (int dx = -half; dx <= half; dx++)
-            //                {
-            //                    for (int dy = -half; dy <= half; dy++)
-            //                    {
-            //                        int px = xcord + dx;
-            //                        int py = rowData.Y + dy;
-
-            //                        if (px >= 0 && px < result.Width && py >= 0 && py < result.Height)
-            //                        {
-            //                            result.SetPixel(px, py, Color.Yellow);
-            //                        }
-            //                    }
-            //                }
-            //            }
-            //        }
-            //    }
-
-            //    previousRowEdges = new List<int>(rowData.XEdges);
-            //}
-
-
-
-            
-
-
-
-
-
+                        // Draw a vertical blue line between the pairs.
+                        for (int y = yStart; y <= yEnd; y++)
+                        {
+                            if (x >= 0 && x < result.Width && y >= 0 && y < result.Height)
+                            {
+                                result.SetPixel(x, y, Color.Purple);
+                            }
+                        }
+                    }
+                }
+            }
             return result;
         }
 

@@ -59,9 +59,50 @@ namespace Photoapp
 
 
 
+        // by my opinion correct masking
+        public static int[,] FloodFill(int[,] image, int sr, int sc, int newColor)
+        {
+            if (image == null || image.Length == 0)
+            {
+                return image;
+            }
+
+            int oldColor = image[sr, sc];
+            if (oldColor == newColor)
+            {
+                return image;
+            }
+
+            int rows = image.GetLength(0);
+            int cols = image.GetLength(1);
+            Queue<(int, int)> queue = new Queue<(int, int)>();
+            queue.Enqueue((sr, sc));
+            image[sr, sc] = newColor;
+
+            while (queue.Count > 0)
+            {
+                (int x, int y) = queue.Dequeue();
+
+                int[] dx = { 0, 0, 1, -1 };
+                int[] dy = { 1, -1, 0, 0 };
+
+                for (int i = 0; i < 4; i++)
+                {
+                    int nx = x + dx[i];
+                    int ny = y + dy[i];
+
+                    if (nx >= 0 && nx < rows && ny >= 0 && ny < cols && image[nx, ny] == oldColor)
+                    {
+                        image[nx, ny] = newColor;
+                        queue.Enqueue((nx, ny));
+                    }
+                }
+            }
+
+            return image;
+        }
 
 
-        
 
         // virtual canvas due to compositing when updating a layer in any way first draw onto this then take its bitmap save into layer and then trigger a repaint in the main UI one
         private void CreateVirtualCanvas()
@@ -564,8 +605,91 @@ namespace Photoapp
                 Console.WriteLine($"Error saving bitmap: {ex.Message}");
             }
         }
+        public int invert(int max, int value, int min)
+        {
+            return (max - value + min);
+        }
+
+        public Bitmap CalcreturnFull(Bitmap newBitmap)
+        {
+            if (newBitmap == null)
+            {
+                return null;
+            }
+
+            int width = newBitmap.Width;
+            int height = newBitmap.Height;
+
+            int[,] imageColors = new int[width, height];
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    Color pixelColor = newBitmap.GetPixel(x, y);
+                    if(pixelColor.A == 0)
+                    {
+                        imageColors[x, y] = 0;
+                    }
+                    else
+                    {
+                        imageColors[x, y] = 1;
+                    }
+                     
+                }
+            }
+
+            int[,] result = FloodFill(imageColors, 0, 0, 2);
 
 
+            // invert
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    result[x, y] = invert(2, result[x, y], 0);
+                }
+            }
+
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    if(result[x, y] == 0)
+                    {
+                        newBitmap.SetPixel(x, y, Color.Transparent);
+                    }else if (result[x,y] == 1) // for now also blue
+                    {
+                        newBitmap.SetPixel(x, y, Color.Blue);
+                    }
+                    else
+                    {
+                        newBitmap.SetPixel(x, y, Color.Blue);
+                    }
+                       
+                }
+            }
+
+
+            // Now 'imageColors' contains the color data of the bitmap.
+            // You can perform your calculations here.
+
+            // Example: Print some color values (for debugging)
+            /*
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    Console.WriteLine($"Pixel ({x}, {y}): {imageColors[x, y]}");
+                }
+            }
+            */
+
+            // ... your image processing logic using imageColors ...
+
+            return newBitmap;
+        }
 
         // If I was to have a matrix the size of the line and a bit bigger I can check if neighboring are now more given the line keeps the same width
         public Bitmap MergeAndClearEdges(Bitmap newBitmap, Bitmap oldBitmap, Color fillColor)
@@ -577,161 +701,10 @@ namespace Photoapp
             string filePath = "result_bitmap.png";
             newBitmap.Save(filePath, System.Drawing.Imaging.ImageFormat.Png);
 
-            // Process rows (horizontal filling)
-            for (int y = 0; y < newBitmap.Height; y++)
-            {
-                for (int direction = 0; direction < 2; direction++) // 0: forward, 1: backward
-                {
-                    bool insideFill = false;
-                    bool continuousRow = false;
 
-                    if (direction == 0) // Forward
-                    {
-                        for (int x = 0; x < newBitmap.Width; x++)
-                        {
-                            Color pixel = newBitmap.GetPixel(x, y);
-
-                            if (pixel.A > 0)
-                            {
-                                continuousRow = true;
-                            }
-                            else
-                            {
-                                if (continuousRow)
-                                {
-                                    continuousRow = false;
-                                    insideFill = !insideFill;
-                                }
-                            }
-
-                            if (insideFill)
-                            {
-                                result.SetPixel(x, y, Color.Blue);
-                            }
-                        }
-                    }
-                    else // Backward
-                    {
-                        for (int x = newBitmap.Width - 1; x >= 0; x--)
-                        {
-                            Color pixel = newBitmap.GetPixel(x, y);
-
-                            if (pixel.A > 0)
-                            {
-                                continuousRow = true;
-                            }
-                            else
-                            {
-                                if (continuousRow)
-                                {
-                                    continuousRow = false;
-                                    insideFill = !insideFill;
-                                }
-                            }
-
-                            if (insideFill)
-                            {
-                                result.SetPixel(x, y, Color.Blue);
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Process columns (vertical filling)
-            for (int x = 0; x < newBitmap.Width; x++)
-            {
-                for (int direction = 0; direction < 2; direction++) // 0: forward, 1: backward
-                {
-                    bool insideFill = false;
-                    bool continuousCol = false;
-
-                    if (direction == 0) // Forward
-                    {
-                        for (int y = 0; y < newBitmap.Height; y++)
-                        {
-                            Color pixel = newBitmap.GetPixel(x, y);
-
-                            if (pixel.A > 0)
-                            {
-                                continuousCol = true;
-                            }
-                            else
-                            {
-                                if (continuousCol)
-                                {
-                                    continuousCol = false;
-                                    insideFill = !insideFill;
-                                }
-                            }
-
-                            if (insideFill)
-                            {
-                                result.SetPixel(x, y, Color.Blue);
-                            }
-                        }
-                    }
-                    else // Backward
-                    {
-                        for (int y = newBitmap.Height - 1; y >= 0; y--)
-                        {
-                            Color pixel = newBitmap.GetPixel(x, y);
-
-                            if (pixel.A > 0)
-                            {
-                                continuousCol = true;
-                            }
-                            else
-                            {
-                                if (continuousCol)
-                                {
-                                    continuousCol = false;
-                                    insideFill = !insideFill;
-                                }
-                            }
-
-                            if (insideFill)
-                            {
-                                result.SetPixel(x, y, Color.Blue);
-                            }
-                        }
-                    }
-                }
-            }
-
-
+            result = CalcreturnFull(newBitmap);
             SaveBitmap(result, "numberone.png", ImageFormat.Png);
 
-            Color blue = Color.Blue;
-            Color transparent = Color.Transparent; // Fully transparent
-
-           // Find the first blue edge pixel
-            for (int y = 0; y < newBitmap.Height; y++)
-            {
-                if (result.GetPixel(0, y).B == 255)
-                {
-                    for(int x = 0; x < newBitmap.Width; x++)
-                    {
-                        result.SetPixel(x, y, transparent);
-                    }
-                }
-            }
-            for (int x = 0; x < newBitmap.Width; x++)
-            {
-                if (result.GetPixel(x, 0).B == 255)
-                {
-                    for (int y = 0; y < newBitmap.Height; y++)
-                    {
-                        result.SetPixel(x, y, transparent);
-                    }
-                }
-            }
-
-            //SaveBitmap(result, "numberone.png", ImageFormat.Png);
-
-
-
-            SaveBitmap(result, "numbertwo.png", ImageFormat.Png);
 
             return result;
         }

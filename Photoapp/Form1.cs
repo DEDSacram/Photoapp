@@ -545,343 +545,7 @@ namespace Photoapp
             virtualCanvas = new Bitmap(selected.Bitmap);
         }
 
-        //Bitmap copyBitmap = new Bitmap(originalBitmap);
-
-
-
-
-
-        //public Bitmap MergeAndClearEdges(Bitmap newBitmap, Bitmap oldBitmap, Color fillColor)
-        //{
-        //    if (newBitmap.Width != oldBitmap.Width || newBitmap.Height != oldBitmap.Height)
-        //        throw new ArgumentException("Bitmaps must be of the same dimensions");
-
-        //    Bitmap result = new Bitmap(oldBitmap);
-
-        //    // Iterate through every row of the bitmap
-        //    for (int y = 0; y < newBitmap.Height; y++)
-        //    {
-        //        bool insideFill = false; // Track if we are inside a fillable region
-        //        bool continuousrow = false;
-        //        int startX = -1; // Start of fill range
-
-        //        // Iterate through every pixel in the current row
-        //        for (int x = 0; x < newBitmap.Width; x++)
-        //        {
-        //            Color pixel = newBitmap.GetPixel(x, y);
-
-        //            if (pixel.A > 0) // Non-transparent pixel
-        //            {
-        //                continuousrow = true;
-        //            }
-        //            else
-        //            {
-        //                if (continuousrow)
-        //                {
-        //                    continuousrow = false;
-        //                    if (insideFill == false)
-        //                    {
-        //                        insideFill = true;
-        //                    }
-        //                    else
-        //                    {
-        //                        insideFill = false;
-        //                    }
-
-        //                }
-        //            }
-        //            if (insideFill)
-        //            {
-        //                result.SetPixel(x, y, fillColor);
-        //            }
-
-        //        }
-        //    }
-
-        //    return result;
-        //}
-
-        // find pairs group them into pairs of two and only between them fill in
-        //public Bitmap MergeAndClearEdges(Bitmap newBitmap, Bitmap oldBitmap, Color fillColor)
-        //{
-        //    if (newBitmap.Width != oldBitmap.Width || newBitmap.Height != oldBitmap.Height)
-        //        throw new ArgumentException("Bitmaps must be of the same dimensions");
-
-        //    Bitmap result = new Bitmap(oldBitmap);
-
-        //    // dvourozmerny pole s int hodnotou
-        //    List<List<(int[] Array, bool Flag)>> data = new List<List<(int[], bool)>>();
-
-
-
-        //    // Iterate through every row of the bitmap
-        //    for (int y = 0; y < newBitmap.Height; y++)
-        //    {
-        //        bool continuousrow = false;
-
-        //        int numberinrow = 0;
-
-        //        // Iterate through every pixel in the current row
-        //        for (int x = 0; x < newBitmap.Width; x++)
-        //        {
-
-
-        //            Color pixel = newBitmap.GetPixel(x, y);
-
-        //            if (pixel.A > 0) // Non-transparent pixel
-        //            {
-        //                numberinrow += 1;
-        //                continuousrow = true;
-        //            }
-        //            else
-        //            {
-        //                if(numberinrow == 1 && continuousrow)
-        //                {
-        //                    result.SetPixel(x, y, fillColor);
-        //                    continuousrow = false;
-        //                }
-        //                else
-        //                {
-        //                    if (continuousrow)
-        //                    {
-        //                        // get middle
-        //                        int savecord = (x - (x - numberinrow)) / numberinrow;
-
-
-
-        //                        continuousrow = false;
-
-        //                    }
-        //                }
-
-        //            }
-        //            //if (insideFill)
-        //            //{
-        //            //    result.SetPixel(x, y, fillColor);
-        //            //}
-
-        //        }
-        //    }
-
-        //    return result;
-        //}
-
-
-
- 
-        //public class RowEdgeData
-        //{
-        //    // The row (y coordinate) for these edge points.
-        //    public int Row { get; set; }
-        //    // The x coordinates of the detected edges in that row.
-        //    public List<int> EdgeXs { get; set; } = new List<int>();
-
-        //    // A property indicating whether the number of edge points is even.
-        //    public bool IsCountEven => (EdgeXs.Count % 2 == 0);
-
-        //    public RowEdgeData(int row)
-        //    {
-        //        Row = row;
-        //    }
-        //}
-
-        //public List<RowEdgeData> ExtractEdgeData(Bitmap newBitmap)
-        //{
-        //    List<RowEdgeData> allRowEdges = new List<RowEdgeData>();
-
-        //    // Process each row.
-        //    for (int y = 0; y < newBitmap.Height; y++)
-        //    {
-        //        RowEdgeData rowData = new RowEdgeData(y);
-        //        bool inSegment = false;
-        //        int segStart = -1;
-
-        //        // Process every pixel in the row.
-        //        for (int x = 0; x < newBitmap.Width; x++)
-        //        {
-        //            Color pixel = newBitmap.GetPixel(x, y);
-        //            if (pixel.A > 0) // Non-transparent pixel
-        //            {
-        //                if (!inSegment)
-        //                {
-        //                    inSegment = true;
-        //                    segStart = x;
-        //                }
-        //            }
-        //            else
-        //            {
-        //                // We hit a transparent pixel, so if we were in a segment, close it.
-        //                if (inSegment)
-        //                {
-        //                    int segEnd = x - 1;
-        //                    // Calculate the center x of the segment.
-        //                    int center = (segStart + segEnd) / 2;
-        //                    rowData.EdgeXs.Add(center);
-        //                    inSegment = false;
-        //                }
-        //            }
-        //        }
-
-        //        // If the row ended while still in a segment, close that segment.
-        //        if (inSegment)
-        //        {
-        //            int segEnd = newBitmap.Width - 1;
-        //            int center = (segStart + segEnd) / 2;
-        //            rowData.EdgeXs.Add(center);
-        //        }
-
-        //        if (rowData.EdgeXs.Count > 0)
-        //        {
-        //            allRowEdges.Add(rowData);
-        //        }
-        //    }
-        //    return allRowEdges;
-        //}
-
-
-        //public Bitmap MergeAndClearEdges(Bitmap newBitmap, Bitmap oldBitmap, Color fillColor)
-        //{
-        //    if (newBitmap.Width != oldBitmap.Width || newBitmap.Height != oldBitmap.Height)
-        //        throw new ArgumentException("Bitmaps must be of the same dimensions");
-
-        //    Bitmap result = new Bitmap(oldBitmap);
-
-        //    // dvourozmerny pole s int hodnotou
-        //    //List<List<(int[] Array, bool Flag)>> data = new List<List<(int[], bool)>>();
-
-
-
-        //    // Iterate through every row of the bitmap
-        //    for (int y = 0; y < newBitmap.Height; y++)
-        //    {
-        //        bool continuousrow = false;
-
-        //        int numberinrow = 0;
-
-        //        // Iterate through every pixel in the current row
-        //        for (int x = 0; x < newBitmap.Width; x++)
-        //        {
-
-
-        //            Color pixel = newBitmap.GetPixel(x, y);
-
-        //            if (pixel.A > 0) // Non-transparent pixel
-        //            {
-        //                numberinrow += 1;
-        //                continuousrow = true;
-        //                result.SetPixel(x, y, fillColor);
-        //            }
-        //            else
-        //            {
-        //                if (numberinrow == 1 && continuousrow)
-        //                {
-
-        //                    continuousrow = false;
-        //                }
-        //                else
-        //                {
-        //                    if (continuousrow)
-        //                    {
-        //                        // get middle
-        //                        int savecord = (x - (x - numberinrow)) / numberinrow;
-
-
-
-        //                        continuousrow = false;
-
-        //                    }
-        //                }
-
-        //            }
-
-        //        }
-        //    }
-
-        //    return result;
-        //}
-
-        //public Bitmap MergeAndClearEdges(Bitmap newBitmap, Bitmap oldBitmap, Color fillColor)
-        //{
-        //    if (newBitmap.Width != oldBitmap.Width || newBitmap.Height != oldBitmap.Height)
-        //        throw new ArgumentException("Bitmaps must be of the same dimensions");
-
-        //    Bitmap result = new Bitmap(oldBitmap);
-
-        //    // Process each row of the bitmap.
-        //    for (int y = 0; y < newBitmap.Height; y++)
-        //    {
-        //        bool inSegment = false; // Are we currently in a continuous (non-transparent) segment?
-        //        int segStart = 0;       // Starting x coordinate of the current segment.
-        //        int count = 0;          // How many consecutive non-transparent pixels have been seen.
-        //        List<int> edgeXs = new List<int>(); // To store the computed center x values for this row.
-
-        //        // Iterate through every pixel in the current row.
-        //        for (int x = 0; x < newBitmap.Width; x++)
-        //        {
-        //            Color pixel = newBitmap.GetPixel(x, y);
-
-        //            if (pixel.A > 0) // Non-transparent pixel
-        //            {
-        //                if (!inSegment)
-        //                {
-        //                    // Start a new segment.
-        //                    inSegment = true;
-        //                    segStart = x;
-        //                    count = 1;
-        //                }
-        //                else
-        //                {
-        //                    count++;
-        //                }
-
-        //                // Set the pixel in the result to the fill color.
-        //                result.SetPixel(x, y, fillColor);
-        //            }
-        //            else
-        //            {
-        //                // Transparent pixel.
-        //                if (inSegment)
-        //                {
-        //                    // The segment just ended.
-        //                    // Even if count is 1, record the edge point.
-        //                    int mid = segStart + (count / 2);
-        //                    edgeXs.Add(mid);
-        //                    inSegment = false;
-        //                    count = 0;
-        //                }
-        //            }
-        //        }
-        //        // If the row ended while still in a segment, close the segment.
-        //        if (inSegment)
-        //        {
-        //            int mid = segStart + (count / 2);
-        //            edgeXs.Add(mid);
-        //        }
-
-        //        // Now draw the edge points for this row in green.
-        //        // We'll draw a 3x3 square centered at each edge point.
-        //        int markerSize = 3;
-        //        int half = markerSize / 2;
-        //        foreach (int mid in edgeXs)
-        //        {
-        //            for (int dx = -half; dx <= half; dx++)
-        //            {
-        //                for (int dy = -half; dy <= half; dy++)
-        //                {
-        //                    int px = mid + dx;
-        //                    int py = y + dy;
-        //                    if (px >= 0 && px < result.Width && py >= 0 && py < result.Height)
-        //                    {
-        //                        result.SetPixel(px, py, Color.Green);
-        //                    }
-        //                }
-        //            }
-        //        }
-        //    }
-
-        //    return result;
-        //}
-
+   
         public class RowEdgeData
         {
             public int Y { get; set; }
@@ -906,7 +570,173 @@ namespace Photoapp
             }
         }
 
+        public class ContourDetector
+        {
+            private Bitmap bitmap;
+            private bool[,] visited;
+            private Color edgeColor = Color.Green;
+            private Color fillColor = Color.Purple;
+            private Color openEdgeColor = Color.Red;
 
+            public ContourDetector(Bitmap inputBitmap)
+            {
+                bitmap = new Bitmap(inputBitmap);
+                visited = new bool[bitmap.Width, bitmap.Height];
+            }
+
+            public Bitmap ProcessImage()
+            {
+                for (int y = 0; y < bitmap.Height; y++)
+                {
+                    for (int x = 0; x < bitmap.Width; x++)
+                    {
+                        if (!visited[x, y] && IsEdgePixel(x, y))
+                        {
+                            List<Point> contour = TraceContour(x, y);
+
+                            if (IsClosedContour(contour))
+                            {
+                                DrawContour(contour, edgeColor);
+                                FillEnclosedArea(contour, fillColor);
+                            }
+                            else
+                            {
+                                DrawContour(contour, openEdgeColor);
+                            }
+                        }
+                    }
+                }
+
+                return bitmap;
+            }
+
+            private bool IsEdgePixel(int x, int y)
+            {
+                Color pixel = bitmap.GetPixel(x, y);
+                return pixel.A > 0 && HasTransparentNeighbor(x, y);
+            }
+
+            private bool HasTransparentNeighbor(int x, int y)
+            {
+                int[] dx = { -1, 1, 0, 0 };
+                int[] dy = { 0, 0, -1, 1 };
+
+                for (int i = 0; i < 4; i++)
+                {
+                    int nx = x + dx[i];
+                    int ny = y + dy[i];
+
+                    if (nx >= 0 && nx < bitmap.Width && ny >= 0 && ny < bitmap.Height)
+                    {
+                        if (bitmap.GetPixel(nx, ny).A == 0)
+                            return true;
+                    }
+                }
+
+                return false;
+            }
+
+            private List<Point> TraceContour(int startX, int startY)
+            {
+                List<Point> contour = new List<Point>();
+                Queue<Point> queue = new Queue<Point>();
+                queue.Enqueue(new Point(startX, startY));
+                visited[startX, startY] = true;
+
+                int[] dx = { -1, -1, 0, 1, 1, 1, 0, -1 };
+                int[] dy = { 0, -1, -1, -1, 0, 1, 1, 1 };
+
+                while (queue.Count > 0)
+                {
+                    Point p = queue.Dequeue();
+                    contour.Add(p);
+
+                    for (int i = 0; i < 8; i++)
+                    {
+                        int nx = p.X + dx[i];
+                        int ny = p.Y + dy[i];
+
+                        if (nx >= 0 && nx < bitmap.Width && ny >= 0 && ny < bitmap.Height &&
+                            !visited[nx, ny] && IsEdgePixel(nx, ny))
+                        {
+                            visited[nx, ny] = true;
+                            queue.Enqueue(new Point(nx, ny));
+                        }
+                    }
+                }
+
+                return contour;
+            }
+
+            private bool IsClosedContour(List<Point> contour)
+            {
+                if (contour.Count < 3) return false;
+
+                Point start = contour.First();
+                Point end = contour.Last();
+
+                // Calculate distance between start and end points
+                double distance = Math.Sqrt(Math.Pow(end.X - start.X, 2) + Math.Pow(end.Y - start.Y, 2));
+
+                // Consider contour closed if the end is within 2 pixels of the start
+                return distance <= 2;
+            }
+
+            private void DrawContour(List<Point> contour, Color color)
+            {
+                foreach (var point in contour)
+                {
+                    bitmap.SetPixel(point.X, point.Y, color);
+                }
+            }
+
+            private void FillEnclosedArea(List<Point> contour, Color fillColor)
+            {
+                Rectangle bounds = GetContourBounds(contour);
+
+                for (int y = bounds.Top; y <= bounds.Bottom; y++)
+                {
+                    for (int x = bounds.Left; x <= bounds.Right; x++)
+                    {
+                        if (!visited[x, y] && IsInsideContour(x, y, contour))
+                        {
+                            bitmap.SetPixel(x, y, fillColor);
+                            visited[x, y] = true;
+                        }
+                    }
+                }
+            }
+
+            private Rectangle GetContourBounds(List<Point> contour)
+            {
+                int minX = contour.Min(p => p.X);
+                int maxX = contour.Max(p => p.X);
+                int minY = contour.Min(p => p.Y);
+                int maxY = contour.Max(p => p.Y);
+
+                return new Rectangle(minX, minY, maxX - minX, maxY - minY);
+            }
+
+            private bool IsInsideContour(int x, int y, List<Point> contour)
+            {
+                // Ray casting algorithm for point-in-polygon test
+                int crossings = 0;
+                for (int i = 0; i < contour.Count; i++)
+                {
+                    Point p1 = contour[i];
+                    Point p2 = contour[(i + 1) % contour.Count];
+
+                    if (((p1.Y > y) != (p2.Y > y)) &&
+                        (x < (p2.X - p1.X) * (y - p1.Y) / (p2.Y - p1.Y) + p1.X))
+                    {
+                        crossings++;
+                    }
+                }
+                return (crossings % 2) == 1;
+            }
+        }
+
+     
 
         public Bitmap MergeAndClearEdges(Bitmap newBitmap, Bitmap oldBitmap, Color fillColor)
         {
@@ -914,6 +744,9 @@ namespace Photoapp
                 throw new ArgumentException("Bitmaps must be of the same dimensions");
 
             Bitmap result = new Bitmap(oldBitmap);
+
+            string filePath = "preprocessed_bitmap.png";
+            newBitmap.Save(filePath, System.Drawing.Imaging.ImageFormat.Png);
 
             // List to store edge data per row.
             List<RowEdgeData> edgeDataList = new List<RowEdgeData>();

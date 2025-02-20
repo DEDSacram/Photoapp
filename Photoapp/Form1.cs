@@ -1008,7 +1008,37 @@ namespace Photoapp
                 }
             }
 
+
+
             // Third foreach: Process even-count edge lists and draw blue lines between pairs.
+            //foreach (var rowData in edgeDataList)
+            //{
+            //    if (rowData.XEdges.Count % 2 == 0)
+            //    {
+            //        for (int i = 0; i < rowData.XEdges.Count; i += 2)
+            //        {
+            //            int xStart = rowData.XEdges[i];
+            //            int xEnd = rowData.XEdges[i + 1];
+            //            int y = rowData.Y;
+
+            //            // Draw a horizontal blue line between the pairs.
+            //            for (int x = xStart; x <= xEnd; x++)
+            //            {
+            //                if (x >= 0 && x < result.Width && y >= 0 && y < result.Height)
+            //                {
+            //                    result.SetPixel(x, y, Color.Purple);
+            //                }
+            //            }
+            //        }
+            //    }
+            //} 
+            // prev
+
+
+
+
+
+          //  Third foreach: Process even-count edge lists and draw blue lines between pairs.
             foreach (var rowData in edgeDataList)
             {
                 if (rowData.XEdges.Count % 2 == 0)
@@ -1031,8 +1061,128 @@ namespace Photoapp
                 }
             }
 
+            // fill in pattern checking which one pair disappeared most likely
+            //List<int> previousRowEdges = null;
+
+            //foreach (var rowData in edgeDataList)
+            //{
+            //    if (rowData.XEdges.Count % 2 == 1 && previousRowEdges != null) // Odd number of points & has previous data
+            //    {
+            //        int minDistance = int.MaxValue;
+            //        int minIndex1 = -1;
+            //        int minIndex2 = -1;
+
+            //        // Check pairs in the previous row
+            //        for (int i = 0; i < previousRowEdges.Count - 1; i += 2)
+            //        {
+            //            int prevStart = previousRowEdges[i];
+            //            int prevEnd = previousRowEdges[i + 1];
+            //            int prevDistance = Math.Abs(prevStart - prevEnd);
+
+            //            // Find the closest pair (potentially disappeared)
+            //            if (prevDistance < minDistance)
+            //            {
+            //                minDistance = prevDistance;
+            //                minIndex1 = prevStart;
+            //                minIndex2 = prevEnd;
+            //            }
+            //        }
+
+            //        // Highlight the closest (disappeared) pair in yellow
+            //        if (minIndex1 != -1 && minIndex2 != -1)
+            //        {
+            //            for (int x = Math.Min(minIndex1, minIndex2); x <= Math.Max(minIndex1, minIndex2); x++)
+            //            {
+            //                result.SetPixel(x, rowData.Y, Color.Yellow); // Draw the line
+            //            }
+            //        }
+            //    }
+
+            //    // Update previousRowEdges for the next iteration
+            //    previousRowEdges = new List<int>(rowData.XEdges);
+            //}
+
+
+
+            // multiple pairs fill in
+            //List<int> previousRowEdges = null;
+            //foreach (var rowData in edgeDataList)
+            //{
+            //    if (rowData.XEdges.Count % 2 == 1 && previousRowEdges != null)
+            //    {
+            //        int difference = previousRowEdges.Count - rowData.XEdges.Count;
+            //        if (difference <= 0)
+            //        {
+            //            continue;
+            //        }
+
+            //        int pairDifference = difference / 2;
+            //        Console.WriteLine("Now Disappeared {0} pairs", pairDifference);
+
+            //        List<Tuple<int, int>> disappearedPairs = new List<Tuple<int, int>>();
+
+            //        // Attempt to find disappeared pairs
+            //        for (int i = 0; i < previousRowEdges.Count - 1; i += 2)
+            //        {
+            //            int prevStart = previousRowEdges[i];
+            //            int prevEnd = previousRowEdges[i + 1];
+
+            //            bool startFound = false;
+            //            bool endFound = false;
+
+            //            //check if both edges are in the new row.
+            //            foreach (int currentEdge in rowData.XEdges)
+            //            {
+            //                if (currentEdge == prevStart) { startFound = true; }
+            //                if (currentEdge == prevEnd) { endFound = true; }
+            //            }
+
+            //            if (!startFound || !endFound)
+            //            {
+            //                disappearedPairs.Add(new Tuple<int, int>(prevStart, prevEnd));
+            //            }
+            //        }
+
+            //        // Highlight disappeared pairs
+            //        foreach (var pair in disappearedPairs)
+            //        {
+            //            int minIndex1 = pair.Item1;
+            //            int minIndex2 = pair.Item2;
+
+            //            for (int xcord = Math.Min(minIndex1, minIndex2); xcord <= Math.Max(minIndex1, minIndex2); xcord++)
+            //            {
+            //                for (int dx = -half; dx <= half; dx++)
+            //                {
+            //                    for (int dy = -half; dy <= half; dy++)
+            //                    {
+            //                        int px = xcord + dx;
+            //                        int py = rowData.Y + dy;
+
+            //                        if (px >= 0 && px < result.Width && py >= 0 && py < result.Height)
+            //                        {
+            //                            result.SetPixel(px, py, Color.Yellow);
+            //                        }
+            //                    }
+            //                }
+            //            }
+            //        }
+            //    }
+
+            //    previousRowEdges = new List<int>(rowData.XEdges);
+            //}
+
+
+
+            
+
+
+
+
+
             return result;
         }
+
+
 
 
 

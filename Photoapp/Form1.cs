@@ -880,8 +880,7 @@ namespace Photoapp
                             // Draw the final line connecting the last point to the first point
                             g.DrawLine(Pens.Red, points.Last(), points.First());
 
-                            // Optionally, you can also make the path stand out by drawing it thicker or with a different style.
-                            g.DrawPolygon(Pens.Red, points.ToArray()); // Draw the full polygon if needed
+             
                         }
                    
                         break;

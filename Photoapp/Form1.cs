@@ -56,6 +56,13 @@ namespace Photoapp
 
 
         LayerManager layerManager = new LayerManager();
+
+
+
+
+
+        
+
         // virtual canvas due to compositing when updating a layer in any way first draw onto this then take its bitmap save into layer and then trigger a repaint in the main UI one
         private void CreateVirtualCanvas()
         {
@@ -545,472 +552,189 @@ namespace Photoapp
             virtualCanvas = new Bitmap(selected.Bitmap);
         }
 
-   
-        public class RowEdgeData
+        public static void SaveBitmap(Bitmap bitmap, string filePath, ImageFormat format)
         {
-            public int Y { get; set; }
-            public List<int> XEdges { get; set; }
-
-            public RowEdgeData(int y)
+            try
             {
-                Y = y;
-                XEdges = new List<int>();
+                bitmap.Save(filePath, format);
+                Console.WriteLine($"Bitmap saved successfully to {filePath}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving bitmap: {ex.Message}");
             }
         }
 
-        public class ColEdgeData
-        {
-            public int X { get; set; }
-            public List<int> YEdges { get; set; }
 
-            public ColEdgeData(int x)
-            {
-                X = x;
-                YEdges = new List<int>();
-            }
-        }
 
-        public class ContourDetector
-        {
-            private Bitmap bitmap;
-            private bool[,] visited;
-            private Color edgeColor = Color.Green;
-            private Color fillColor = Color.Purple;
-            private Color openEdgeColor = Color.Red;
-
-            public ContourDetector(Bitmap inputBitmap)
-            {
-                bitmap = new Bitmap(inputBitmap);
-                visited = new bool[bitmap.Width, bitmap.Height];
-            }
-
-            public Bitmap ProcessImage()
-            {
-                for (int y = 0; y < bitmap.Height; y++)
-                {
-                    for (int x = 0; x < bitmap.Width; x++)
-                    {
-                        if (!visited[x, y] && IsEdgePixel(x, y))
-                        {
-                            List<Point> contour = TraceContour(x, y);
-
-                            if (IsClosedContour(contour))
-                            {
-                                DrawContour(contour, edgeColor);
-                                FillEnclosedArea(contour, fillColor);
-                            }
-                            else
-                            {
-                                DrawContour(contour, openEdgeColor);
-                            }
-                        }
-                    }
-                }
-
-                return bitmap;
-            }
-
-            private bool IsEdgePixel(int x, int y)
-            {
-                Color pixel = bitmap.GetPixel(x, y);
-                return pixel.A > 0 && HasTransparentNeighbor(x, y);
-            }
-
-            private bool HasTransparentNeighbor(int x, int y)
-            {
-                int[] dx = { -1, 1, 0, 0 };
-                int[] dy = { 0, 0, -1, 1 };
-
-                for (int i = 0; i < 4; i++)
-                {
-                    int nx = x + dx[i];
-                    int ny = y + dy[i];
-
-                    if (nx >= 0 && nx < bitmap.Width && ny >= 0 && ny < bitmap.Height)
-                    {
-                        if (bitmap.GetPixel(nx, ny).A == 0)
-                            return true;
-                    }
-                }
-
-                return false;
-            }
-
-            private List<Point> TraceContour(int startX, int startY)
-            {
-                List<Point> contour = new List<Point>();
-                Queue<Point> queue = new Queue<Point>();
-                queue.Enqueue(new Point(startX, startY));
-                visited[startX, startY] = true;
-
-                int[] dx = { -1, -1, 0, 1, 1, 1, 0, -1 };
-                int[] dy = { 0, -1, -1, -1, 0, 1, 1, 1 };
-
-                while (queue.Count > 0)
-                {
-                    Point p = queue.Dequeue();
-                    contour.Add(p);
-
-                    for (int i = 0; i < 8; i++)
-                    {
-                        int nx = p.X + dx[i];
-                        int ny = p.Y + dy[i];
-
-                        if (nx >= 0 && nx < bitmap.Width && ny >= 0 && ny < bitmap.Height &&
-                            !visited[nx, ny] && IsEdgePixel(nx, ny))
-                        {
-                            visited[nx, ny] = true;
-                            queue.Enqueue(new Point(nx, ny));
-                        }
-                    }
-                }
-
-                return contour;
-            }
-
-            private bool IsClosedContour(List<Point> contour)
-            {
-                if (contour.Count < 3) return false;
-
-                Point start = contour.First();
-                Point end = contour.Last();
-
-                // Calculate distance between start and end points
-                double distance = Math.Sqrt(Math.Pow(end.X - start.X, 2) + Math.Pow(end.Y - start.Y, 2));
-
-                // Consider contour closed if the end is within 2 pixels of the start
-                return distance <= 2;
-            }
-
-            private void DrawContour(List<Point> contour, Color color)
-            {
-                foreach (var point in contour)
-                {
-                    bitmap.SetPixel(point.X, point.Y, color);
-                }
-            }
-
-            private void FillEnclosedArea(List<Point> contour, Color fillColor)
-            {
-                Rectangle bounds = GetContourBounds(contour);
-
-                for (int y = bounds.Top; y <= bounds.Bottom; y++)
-                {
-                    for (int x = bounds.Left; x <= bounds.Right; x++)
-                    {
-                        if (!visited[x, y] && IsInsideContour(x, y, contour))
-                        {
-                            bitmap.SetPixel(x, y, fillColor);
-                            visited[x, y] = true;
-                        }
-                    }
-                }
-            }
-
-            private Rectangle GetContourBounds(List<Point> contour)
-            {
-                int minX = contour.Min(p => p.X);
-                int maxX = contour.Max(p => p.X);
-                int minY = contour.Min(p => p.Y);
-                int maxY = contour.Max(p => p.Y);
-
-                return new Rectangle(minX, minY, maxX - minX, maxY - minY);
-            }
-
-            private bool IsInsideContour(int x, int y, List<Point> contour)
-            {
-                // Ray casting algorithm for point-in-polygon test
-                int crossings = 0;
-                for (int i = 0; i < contour.Count; i++)
-                {
-                    Point p1 = contour[i];
-                    Point p2 = contour[(i + 1) % contour.Count];
-
-                    if (((p1.Y > y) != (p2.Y > y)) &&
-                        (x < (p2.X - p1.X) * (y - p1.Y) / (p2.Y - p1.Y) + p1.X))
-                    {
-                        crossings++;
-                    }
-                }
-                return (crossings % 2) == 1;
-            }
-        }
-
-     
-
+        // If I was to have a matrix the size of the line and a bit bigger I can check if neighboring are now more given the line keeps the same width
         public Bitmap MergeAndClearEdges(Bitmap newBitmap, Bitmap oldBitmap, Color fillColor)
         {
             if (newBitmap.Width != oldBitmap.Width || newBitmap.Height != oldBitmap.Height)
                 throw new ArgumentException("Bitmaps must be of the same dimensions");
 
             Bitmap result = new Bitmap(oldBitmap);
-
-            string filePath = "preprocessed_bitmap.png";
+            string filePath = "result_bitmap.png";
             newBitmap.Save(filePath, System.Drawing.Imaging.ImageFormat.Png);
 
-            // List to store edge data per row.
-            List<RowEdgeData> edgeDataList = new List<RowEdgeData>();
-
-            // Process each row of the bitmap.
+            // Process rows (horizontal filling)
             for (int y = 0; y < newBitmap.Height; y++)
             {
-                bool inSegment = false; // Are we in a continuous (non-transparent) segment?
-                int segStart = 0;       // Start x coordinate of the segment.
-                int count = 0;          // Number of continuous pixels.
-
-                RowEdgeData rowEdgeData = new RowEdgeData(y); // Create new row data.
-
-                // Iterate through every pixel in the current row.
-                for (int x = 0; x < newBitmap.Width; x++)
+                for (int direction = 0; direction < 2; direction++) // 0: forward, 1: backward
                 {
-                    Color pixel = newBitmap.GetPixel(x, y);
+                    bool insideFill = false;
+                    bool continuousRow = false;
 
-                    if (pixel.A > 0) // Non-transparent pixel
+                    if (direction == 0) // Forward
                     {
-                        if (!inSegment)
+                        for (int x = 0; x < newBitmap.Width; x++)
                         {
-                            // Start a new segment.
-                            inSegment = true;
-                            segStart = x;
-                            count = 1;
-                        }
-                        else
-                        {
-                            count++;
-                        }
+                            Color pixel = newBitmap.GetPixel(x, y);
 
-                        // Fill the pixel.
-                        result.SetPixel(x, y, fillColor);
-                    }
-                    else
-                    {
-                        if (inSegment)
-                        {
-                            // Segment ended.
-                            int mid = segStart + (count / 2);
-                            rowEdgeData.XEdges.Add(mid);
-                            inSegment = false;
-                            count = 0;
-                        }
-                    }
-                }
-
-                // If still in a segment at end of row.
-                if (inSegment)
-                {
-                    int mid = segStart + (count / 2);
-                    rowEdgeData.XEdges.Add(mid);
-                }
-
-                // Add row edge data if there are any edges.
-                if (rowEdgeData.XEdges.Count > 0)
-                    edgeDataList.Add(rowEdgeData);
-            }
-
-            // Draw edge points after processing.
-            int markerSize = 5; // Size of green marker.
-            int half = markerSize / 2;
-
-            foreach (var rowData in edgeDataList)
-            {
-                foreach (var xEdge in rowData.XEdges)
-                {
-                    for (int dx = -half; dx <= half; dx++)
-                    {
-                        for (int dy = -half; dy <= half; dy++)
-                        {
-                            int px = xEdge + dx;
-                            int py = rowData.Y + dy;
-
-                            if (px >= 0 && px < result.Width && py >= 0 && py < result.Height)
+                            if (pixel.A > 0)
                             {
-                                result.SetPixel(px, py, Color.Green);
+                                continuousRow = true;
+                            }
+                            else
+                            {
+                                if (continuousRow)
+                                {
+                                    continuousRow = false;
+                                    insideFill = !insideFill;
+                                }
+                            }
+
+                            if (insideFill)
+                            {
+                                result.SetPixel(x, y, Color.Blue);
+                            }
+                        }
+                    }
+                    else // Backward
+                    {
+                        for (int x = newBitmap.Width - 1; x >= 0; x--)
+                        {
+                            Color pixel = newBitmap.GetPixel(x, y);
+
+                            if (pixel.A > 0)
+                            {
+                                continuousRow = true;
+                            }
+                            else
+                            {
+                                if (continuousRow)
+                                {
+                                    continuousRow = false;
+                                    insideFill = !insideFill;
+                                }
+                            }
+
+                            if (insideFill)
+                            {
+                                result.SetPixel(x, y, Color.Blue);
                             }
                         }
                     }
                 }
             }
 
-            // Second foreach: Overwrite single edge points with red (for testing).
-            foreach (var rowData in edgeDataList)
-            {
-                if (rowData.XEdges.Count == 1) // Only single edge points
-                {
-                    int xEdge = rowData.XEdges[0];
-
-                    for (int dx = -half; dx <= half; dx++)
-                    {
-                        for (int dy = -half; dy <= half; dy++)
-                        {
-                            int px = xEdge + dx;
-                            int py = rowData.Y + dy;
-
-                            if (px >= 0 && px < result.Width && py >= 0 && py < result.Height)
-                            {
-                                result.SetPixel(px, py, Color.Red); // Overwrite with red
-                            }
-                        }
-                    }
-                }
-            }
-
-
-            //  Third foreach: Process even-count edge lists and draw blue lines between pairs.
-            foreach (var rowData in edgeDataList)
-            {
-                if (rowData.XEdges.Count % 2 == 0)
-                {
-                    for (int i = 0; i < rowData.XEdges.Count; i += 2)
-                    {
-                        int xStart = rowData.XEdges[i];
-                        int xEnd = rowData.XEdges[i + 1];
-                        int y = rowData.Y;
-
-                        // Draw a horizontal blue line between the pairs.
-                        for (int x = xStart; x <= xEnd; x++)
-                        {
-                            if (x >= 0 && x < result.Width && y >= 0 && y < result.Height)
-                            {
-                                result.SetPixel(x, y, Color.Purple);
-                            }
-                        }
-                    }
-                }
-            }
-
-            //y values
-
-            // List to store edge data per column.
-            List<ColEdgeData> edgeDataListy = new List<ColEdgeData>();
-
-            // Process each column of the bitmap.
+            // Process columns (vertical filling)
             for (int x = 0; x < newBitmap.Width; x++)
             {
-                bool inSegment = false; // Are we in a continuous (non-transparent) segment?
-                int segStart = 0;       // Start y coordinate of the segment.
-                int count = 0;          // Number of continuous pixels.
-
-                ColEdgeData colEdgeData = new ColEdgeData(x); // Create new column data.
-
-                // Iterate through every pixel in the current column.
-                for (int y = 0; y < newBitmap.Height; y++)
+                for (int direction = 0; direction < 2; direction++) // 0: forward, 1: backward
                 {
-                    Color pixel = newBitmap.GetPixel(x, y);
+                    bool insideFill = false;
+                    bool continuousCol = false;
 
-                    if (pixel.A > 0) // Non-transparent pixel
+                    if (direction == 0) // Forward
                     {
-                        if (!inSegment)
+                        for (int y = 0; y < newBitmap.Height; y++)
                         {
-                            // Start a new segment.
-                            inSegment = true;
-                            segStart = y;
-                            count = 1;
-                        }
-                        else
-                        {
-                            count++;
-                        }
+                            Color pixel = newBitmap.GetPixel(x, y);
 
-                        // Fill the pixel.
-                        result.SetPixel(x, y, fillColor);
-                    }
-                    else
-                    {
-                        if (inSegment)
-                        {
-                            // Segment ended.
-                            int mid = segStart + (count / 2);
-                            colEdgeData.YEdges.Add(mid);
-                            inSegment = false;
-                            count = 0;
-                        }
-                    }
-                }
-
-                // If still in a segment at end of column.
-                if (inSegment)
-                {
-                    int mid = segStart + (count / 2);
-                    colEdgeData.YEdges.Add(mid);
-                }
-
-                // Add column edge data if there are any edges.
-                if (colEdgeData.YEdges.Count > 0)
-                    edgeDataListy.Add(colEdgeData);
-            }
-
-            //// Draw edge points after processing.
-            //int markerSize = 5; // Size of green marker.
-            //int half = markerSize / 2;
-
-            foreach (var colData in edgeDataListy)
-            {
-                foreach (var yEdge in colData.YEdges)
-                {
-                    for (int dx = -half; dx <= half; dx++)
-                    {
-                        for (int dy = -half; dy <= half; dy++)
-                        {
-                            int px = colData.X + dx;
-                            int py = yEdge + dy;
-
-                            if (px >= 0 && px < result.Width && py >= 0 && py < result.Height)
+                            if (pixel.A > 0)
                             {
-                                result.SetPixel(px, py, Color.Green);
+                                continuousCol = true;
+                            }
+                            else
+                            {
+                                if (continuousCol)
+                                {
+                                    continuousCol = false;
+                                    insideFill = !insideFill;
+                                }
+                            }
+
+                            if (insideFill)
+                            {
+                                result.SetPixel(x, y, Color.Blue);
+                            }
+                        }
+                    }
+                    else // Backward
+                    {
+                        for (int y = newBitmap.Height - 1; y >= 0; y--)
+                        {
+                            Color pixel = newBitmap.GetPixel(x, y);
+
+                            if (pixel.A > 0)
+                            {
+                                continuousCol = true;
+                            }
+                            else
+                            {
+                                if (continuousCol)
+                                {
+                                    continuousCol = false;
+                                    insideFill = !insideFill;
+                                }
+                            }
+
+                            if (insideFill)
+                            {
+                                result.SetPixel(x, y, Color.Blue);
                             }
                         }
                     }
                 }
             }
 
-            // Overwrite single edge points with red (for testing).
-            foreach (var colData in edgeDataListy)
+
+            SaveBitmap(result, "numberone.png", ImageFormat.Png);
+
+            Color blue = Color.Blue;
+            Color transparent = Color.Transparent; // Fully transparent
+
+           // Find the first blue edge pixel
+            for (int y = 0; y < newBitmap.Height; y++)
             {
-                if (colData.YEdges.Count == 1) // Only single edge points
+                if (result.GetPixel(0, y).B == 255)
                 {
-                    int yEdge = colData.YEdges[0];
-
-                    for (int dx = -half; dx <= half; dx++)
+                    for(int x = 0; x < newBitmap.Width; x++)
                     {
-                        for (int dy = -half; dy <= half; dy++)
-                        {
-                            int px = colData.X + dx;
-                            int py = yEdge + dy;
-
-                            if (px >= 0 && px < result.Width && py >= 0 && py < result.Height)
-                            {
-                                result.SetPixel(px, py, Color.Red); // Overwrite with red
-                            }
-                        }
+                        result.SetPixel(x, y, transparent);
+                    }
+                }
+            }
+            for (int x = 0; x < newBitmap.Width; x++)
+            {
+                if (result.GetPixel(x, 0).B == 255)
+                {
+                    for (int y = 0; y < newBitmap.Height; y++)
+                    {
+                        result.SetPixel(x, y, transparent);
                     }
                 }
             }
 
-            // Process even-count edge lists and draw blue lines between pairs.
-            foreach (var colData in edgeDataListy)
-            {
-                if (colData.YEdges.Count % 2 == 0)
-                {
-                    for (int i = 0; i < colData.YEdges.Count; i += 2)
-                    {
-                        int yStart = colData.YEdges[i];
-                        int yEnd = colData.YEdges[i + 1];
-                        int x = colData.X;
+            //SaveBitmap(result, "numberone.png", ImageFormat.Png);
 
-                        // Draw a vertical blue line between the pairs.
-                        for (int y = yStart; y <= yEnd; y++)
-                        {
-                            if (x >= 0 && x < result.Width && y >= 0 && y < result.Height)
-                            {
-                                result.SetPixel(x, y, Color.Purple);
-                            }
-                        }
-                    }
-                }
-            }
+
+
+            SaveBitmap(result, "numbertwo.png", ImageFormat.Png);
+
             return result;
         }
-
 
 
 

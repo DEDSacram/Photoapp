@@ -616,18 +616,23 @@ namespace Photoapp
             {
                 return null;
             }
+            // make it +1 bigger but do not count it into it on each side meaning +2
 
-            int width = newBitmap.Width;
-            int height = newBitmap.Height;
+            int width = newBitmap.Width +2;
+            int height = newBitmap.Height+2;
 
             int[,] imageColors = new int[width, height];
+            //imageColors[0, 0] = 0;
+            //imageColors[0, height-1] = 0;
+            //imageColors[width-1, 0] = 0;
+            //imageColors[height - 1, width - 1] = 0;
 
-            for (int y = 0; y < height; y++)
+            for (int y = 1; y < height - 1; y++)
             {
-                for (int x = 0; x < width; x++)
+                for (int x = 1; x < width - 1; x++)
                 {
-                    Color pixelColor = newBitmap.GetPixel(x, y);
-                    if(pixelColor.A == 0)
+                    Color pixelColor = newBitmap.GetPixel(x-1, y-1);
+                    if (pixelColor.A == 0)
                     {
                         imageColors[x, y] = 0;
                     }
@@ -635,7 +640,6 @@ namespace Photoapp
                     {
                         imageColors[x, y] = 1;
                     }
-                     
                 }
             }
 
@@ -652,20 +656,20 @@ namespace Photoapp
             }
 
 
-            for (int y = 0; y < height; y++)
+            for (int y = 1; y < height - 1; y++)
             {
-                for (int x = 0; x < width; x++)
+                for (int x = 1; x < width - 1; x++)
                 {
                     if(result[x, y] == 0)
                     {
-                        newBitmap.SetPixel(x, y, Color.Transparent);
+                        newBitmap.SetPixel(x-1, y-1, Color.Transparent);
                     }else if (result[x,y] == 1) // for now also blue
                     {
-                        newBitmap.SetPixel(x, y, Color.Blue);
+                        newBitmap.SetPixel(x-1, y-1, Color.Blue);
                     }
                     else
                     {
-                        newBitmap.SetPixel(x, y, Color.Blue);
+                        newBitmap.SetPixel(x - 1, y - 1, Color.Blue);
                     }
                        
                 }
@@ -807,8 +811,14 @@ namespace Photoapp
         // regional edits would be great to avoid checking whole bitmap
         private void canvasPanel_MouseMove(object sender, MouseEventArgs e)
         {
+         
             if (isDrawing)
             {
+                // Check if the mouse is within canvasPanel bounds solves two issues
+                if (e.X < 0 || e.Y < 0 || e.X >= canvasPanel.Width || e.Y >= canvasPanel.Height)
+                {
+                    return; // Exit if out of bounds
+                }
                 Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
 
                 switch (currentMode)
@@ -833,6 +843,7 @@ namespace Photoapp
                         break;
                     case Mode.freeSelect:
                         // Draw freehand selection on the UILayer
+                        Console.WriteLine("saddas");
                         using (Graphics g = Graphics.FromImage(UILayer))
                         {
                             g.SmoothingMode = SmoothingMode.AntiAlias;

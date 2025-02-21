@@ -745,7 +745,13 @@ namespace Photoapp
             }
         }
 
-     
+        private Point ClampPoint(Point p)
+        {
+            int x = Math.Max(0, Math.Min(canvasPanel.Width - 1, p.X));
+            int y = Math.Max(0, Math.Min(canvasPanel.Height - 1, p.Y));
+            return new Point(x, y);
+        }
+
 
 
         private void ExportCanvas(string filePath, Bitmap inputBitmap)
@@ -774,7 +780,11 @@ namespace Photoapp
         }
 
         // Canvas panel functions
-
+        private void RedrawCanvas()
+        {
+            buildCombinedBitmap();
+            canvasPanel.Invalidate();
+        }
         private void canvasPanel_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
@@ -836,17 +846,15 @@ namespace Photoapp
 
                     case Mode.rubber:
                         using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
+                        using (SolidBrush transparentBrush = new SolidBrush(Color.Transparent))
                         {
-                            g.CompositingMode = CompositingMode.SourceCopy; // Ensure transparency is drawn
+                            g.CompositingMode = CompositingMode.SourceCopy;
                             g.SmoothingMode = SmoothingMode.AntiAlias;
-                            g.FillEllipse(new SolidBrush(Color.Transparent), e.X - 10, e.Y - 10, 20, 20); // Erase area
+                            g.FillEllipse(transparentBrush, e.X - 10, e.Y - 10, 20, 20);
                         }
                         break;
                     case Mode.freeSelect:
-                        // Manually clamp mouse position to canvasPanel bounds
-                        int clampedX = e.X < 0 ? 0 : (e.X >= canvasPanel.Width ? canvasPanel.Width - 1 : e.X);
-                        int clampedY = e.Y < 0 ? 0 : (e.Y >= canvasPanel.Height ? canvasPanel.Height - 1 : e.Y);
-                        Point clampedPoint = new Point(clampedX, clampedY);
+                        Point clampedPoint = ClampPoint(e.Location);
 
                         // Draw freehand selection on the UILayer
                         using (Graphics g = Graphics.FromImage(UILayer))
@@ -855,8 +863,9 @@ namespace Photoapp
 
                             if (points.Count > 1)
                             {
-                                g.DrawLines(Pens.Red, points.ToArray()); // Draw the freehand path
+                                g.DrawLine(Pens.Red, points[points.Count - 2], points.Last());
                             }
+
                             g.DrawLine(Pens.Red, points.Last(), clampedPoint); // Draw to clamped position
                         }
 
@@ -869,8 +878,7 @@ namespace Photoapp
                 }
 
                 // Redraw the combined bitmap and refresh the canvas
-                buildCombinedBitmap();
-                canvasPanel.Invalidate();
+                RedrawCanvas();
             }
         }
 
@@ -908,9 +916,7 @@ namespace Photoapp
                         break;
                     case Mode.rectangleSelect:
                         // Manually clamp mouse position to canvasPanel bounds
-                        int clampedX = e.X < 0 ? 0 : (e.X >= canvasPanel.Width ? canvasPanel.Width - 1 : e.X);
-                        int clampedY = e.Y < 0 ? 0 : (e.Y >= canvasPanel.Height ? canvasPanel.Height - 1 : e.Y);
-                        selectionLastPoint = new Point(clampedX, clampedY);
+                        selectionLastPoint = ClampPoint(e.Location);
 
                         // Draw rectangle selection on the UILayer
                         using (Graphics g = Graphics.FromImage(UILayer))
@@ -933,9 +939,6 @@ namespace Photoapp
                 
                   
                         UILayer = new Bitmap(MergeAndClearEdges(UILayer, LastUILayer, Color.Blue));
-
-                 
-
                 }
                 else
                 {
@@ -948,8 +951,7 @@ namespace Photoapp
                 isDrawing = false;
 
                 // Update the combined bitmap and refresh the canvas
-                buildCombinedBitmap();
-                canvasPanel.Invalidate();
+                RedrawCanvas();
             }
         }
 

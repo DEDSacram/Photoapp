@@ -394,6 +394,7 @@ namespace Photoapp
 
         private Bitmap combinedBitmap;
         private Point selectionStartPoint;
+        private Point selectionLastPoint;
 
         public Form1()
         {
@@ -855,6 +856,10 @@ namespace Photoapp
                         }
                         points.Add(e.Location);
                         break;
+                    case Mode.rectangleSelect:
+                        // Draw rectangle selection on the UILayer
+                        selectionLastPoint = e.Location;
+                        break;
                 }
 
                 // Redraw the combined bitmap and refresh the canvas
@@ -900,13 +905,18 @@ namespace Photoapp
                         using (Graphics g = Graphics.FromImage(UILayer))
                         {
                             g.SmoothingMode = SmoothingMode.AntiAlias;
-                            int width = e.X - selectionStartPoint.X;
-                            int height = e.Y - selectionStartPoint.Y;
-                            g.DrawRectangle(Pens.Red, selectionStartPoint.X, selectionStartPoint.Y, width, height); // Draw the rectangle
+
+                            // Calculate top-left corner and positive width/height
+                            int startX = Math.Min(selectionStartPoint.X, selectionLastPoint.X);
+                            int startY = Math.Min(selectionStartPoint.Y, selectionLastPoint.Y);
+                            int width = Math.Abs(selectionLastPoint.X - selectionStartPoint.X);
+                            int height = Math.Abs(selectionLastPoint.Y - selectionStartPoint.Y);
+
+                            g.DrawRectangle(Pens.Red, startX, startY, width, height); // Draw the rectangle
                         }
                         break;
-                }
-                if(LastUILayer != null)
+                        }
+                        if (LastUILayer != null)
                 {
                 
                   

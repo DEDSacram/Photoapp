@@ -815,11 +815,11 @@ namespace Photoapp
          
             if (isDrawing)
             {
-                // Check if the mouse is within canvasPanel bounds solves two issues
-                if (e.X < 0 || e.Y < 0 || e.X >= canvasPanel.Width || e.Y >= canvasPanel.Height)
-                {
-                    return; // Exit if out of bounds
-                }
+                //// Check if the mouse is within canvasPanel bounds solves two issues
+                //if (e.X < 0 || e.Y < 0 || e.X >= canvasPanel.Width || e.Y >= canvasPanel.Height)
+                //{
+                //    return; // Exit if out of bounds
+                //}
                 Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
 
                 switch (currentMode)
@@ -843,22 +843,28 @@ namespace Photoapp
                         }
                         break;
                     case Mode.freeSelect:
+                        // Manually clamp mouse position to canvasPanel bounds
+                        int clampedX = e.X < 0 ? 0 : (e.X >= canvasPanel.Width ? canvasPanel.Width - 1 : e.X);
+                        int clampedY = e.Y < 0 ? 0 : (e.Y >= canvasPanel.Height ? canvasPanel.Height - 1 : e.Y);
+                        Point clampedPoint = new Point(clampedX, clampedY);
+
                         // Draw freehand selection on the UILayer
-                        Console.WriteLine("saddas");
                         using (Graphics g = Graphics.FromImage(UILayer))
                         {
                             g.SmoothingMode = SmoothingMode.AntiAlias;
+
                             if (points.Count > 1)
                             {
                                 g.DrawLines(Pens.Red, points.ToArray()); // Draw the freehand path
                             }
-                            g.DrawLine(Pens.Red, points.Last(), e.Location); // Continuously draw the freehand line
+                            g.DrawLine(Pens.Red, points.Last(), clampedPoint); // Draw to clamped position
                         }
-                        points.Add(e.Location);
+
+                        points.Add(clampedPoint); // Add the clamped point to the path
                         break;
+
                     case Mode.rectangleSelect:
-                        // Draw rectangle selection on the UILayer
-                        selectionLastPoint = e.Location;
+                        // do nth
                         break;
                 }
 
@@ -901,6 +907,11 @@ namespace Photoapp
                    
                         break;
                     case Mode.rectangleSelect:
+                        // Manually clamp mouse position to canvasPanel bounds
+                        int clampedX = e.X < 0 ? 0 : (e.X >= canvasPanel.Width ? canvasPanel.Width - 1 : e.X);
+                        int clampedY = e.Y < 0 ? 0 : (e.Y >= canvasPanel.Height ? canvasPanel.Height - 1 : e.Y);
+                        selectionLastPoint = new Point(clampedX, clampedY);
+
                         // Draw rectangle selection on the UILayer
                         using (Graphics g = Graphics.FromImage(UILayer))
                         {
@@ -915,8 +926,9 @@ namespace Photoapp
                             g.DrawRectangle(Pens.Red, startX, startY, width, height); // Draw the rectangle
                         }
                         break;
-                        }
-                        if (LastUILayer != null)
+
+                }
+                if (LastUILayer != null)
                 {
                 
                   

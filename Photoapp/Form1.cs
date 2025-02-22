@@ -1,108 +1,45 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Windows.Media;
-using System.Windows.Forms.Integration;
-using static Photoapp.Form1.CustomMenuRenderer;
-using System.Windows.Controls;
 using System.Drawing.Imaging;
-using System.IO.Compression;
-using System.IO;
-using System.Reflection.Emit;
 using Label = System.Windows.Forms.Label;
 using Color = System.Drawing.Color;
 using Panel = System.Windows.Forms.Panel;
 using Button = System.Windows.Forms.Button;
-using static Photoapp.Form1;
 using PixelFormat = System.Drawing.Imaging.PixelFormat;
-using System.Runtime.Remoting;
-using System.Runtime.InteropServices;
 using Control = System.Windows.Forms.Control;
-using System.Reflection;
-using System.Windows.Media.Media3D;
 using System.Drawing.Drawing2D;
-using FormsExtensions.Controls.Entrys;
-using static System.Net.WebRequestMethods;
+
 
 namespace Photoapp
 {
-  
+
     // UNIONIZING
     // REMOVING
-    public partial class Form1: Form
+    public partial class Form1 : Form
     {
 
         private int selectedLayerId = 1; // Default to -1, indicating no layer is selected initially
 
         private bool isDrawing = false;
         private Point lastPoint;
-        private Mode currentMode = Mode.pencil;  // Start in drawing mode
-        private List<Point> points = new List<Point>();  // Store points for freehand drawing
+        private Mode currentMode = Mode.pencil; // Start in drawing mode
+        private List<Point> points = new List<Point>(); // Store points for freehand drawing
 
         private Bitmap virtualCanvas; // for double buffering
 
-
         // previous bitmap of UI layer save then draw new one compare if SHIFT OR CTRL WAS HELD DOWN
-
 
         private Bitmap UILayer;
         private Bitmap LastUILayer;
 
-
         LayerManager layerManager = new LayerManager();
 
-
+        MaskControl MaskControl = new MaskControl();
 
         // by my opinion correct masking
-        public static int[,] FloodFill(int[,] image, int sr, int sc, int newColor)
-        {
-            if (image == null || image.Length == 0)
-            {
-                return image;
-            }
-
-            int oldColor = image[sr, sc];
-            if (oldColor == newColor)
-            {
-                return image;
-            }
-
-            int rows = image.GetLength(0);
-            int cols = image.GetLength(1);
-            Queue<(int, int)> queue = new Queue<(int, int)>();
-            queue.Enqueue((sr, sc));
-            image[sr, sc] = newColor;
-
-            while (queue.Count > 0)
-            {
-                (int x, int y) = queue.Dequeue();
-
-                int[] dx = { 0, 0, 1, -1 };
-                int[] dy = { 1, -1, 0, 0 };
-
-                for (int i = 0; i < 4; i++)
-                {
-                    int nx = x + dx[i];
-                    int ny = y + dy[i];
-
-                    if (nx >= 0 && nx < rows && ny >= 0 && ny < cols && image[nx, ny] == oldColor)
-                    {
-                        image[nx, ny] = newColor;
-                        queue.Enqueue((nx, ny));
-                    }
-                }
-            }
-
-            return image;
-        }
-
-
 
         // virtual canvas due to compositing when updating a layer in any way first draw onto this then take its bitmap save into layer and then trigger a repaint in the main UI one
         private void CreateVirtualCanvas()
@@ -129,9 +66,9 @@ namespace Photoapp
         // function Modes
         public enum Mode
         {
-            pencil,  // Free drawing mode
+            pencil, // Free drawing mode
             pen,
-            rubber,  // Erase mode (optional for future extension)
+            rubber, // Erase mode (optional for future extension)
             drag,
             eyedropper,
             zoom,
@@ -139,186 +76,7 @@ namespace Photoapp
             rectangleSelect,
             freeSelect
         }
-        // version and layer control
-        public class Layer
-        {
-            public int LayerId { get; set; }
-            public Bitmap Bitmap { get; set; }
-            public int Order { get; set; }  // Added to track the order of layers
 
-            public Layer(int layerId, Bitmap bitmap)
-            {
-                LayerId = layerId;
-                Bitmap = bitmap;
-                Order = 0; // Default order value
-            }
-        }
-        public class UndoEntry
-        {
-            public int LayerId { get; private set; }
-            public byte[] ZippedBitmap { get; private set; }
-
-            public UndoEntry(int layerId, byte[] zippedBitmap)
-            {
-                LayerId = layerId;
-                ZippedBitmap = zippedBitmap;
-            }
-        }
-        public class LayerManager
-        {
-            private List<Layer> layers;
-            private Stack<UndoEntry> undoStack;
-            private int nextLayerId;
-
-            public LayerManager()
-            {
-                layers = new List<Layer>();
-                undoStack = new Stack<UndoEntry>();
-                nextLayerId = 1;
-            }
-
-            public int GetNextLayerId()
-            {
-                return nextLayerId++;
-            }
-            public List<Layer> GetLayers()
-            {
-                return layers;
-            }
-            public void PrintLayerOrder()
-            {
-                Console.WriteLine("Layer Order:");
-                foreach (var layer in layers)
-                {
-                    Console.WriteLine($"Layer ID: {layer.LayerId}");
-                }
-            }
-
-            // Add a new layer
-            public void AddLayer(int layerId, Bitmap bitmap)
-            {
-                var newLayer = new Layer(layerId, bitmap);
-                layers.Add(newLayer);
-                UpdateLayerOrder(); // Ensure correct ordering when a new layer is added
-            }
-
-            // Remove a layer by ID
-            public void RemoveLayer(int layerId)
-            {
-                layers.RemoveAll(layer => layer.LayerId == layerId);
-                UpdateLayerOrder(); // Update order after removal
-            }
-
-            // Update the layer order based on visual stacking or manual manipulation
-            private void UpdateLayerOrder()
-            {
-                // Sort layers based on the 'Order' value (ascending)
-                var orderedLayers = layers.OrderBy(layer => layer.Order).ToList();
-                layers.Clear();
-                layers.AddRange(orderedLayers);
-            }
-
-            // Update a layer's bitmap and save an undo state
-            public void UpdateLayer(int layerId, Bitmap newBitmap)
-            {
-                foreach (var layer in layers)
-                {
-                    if (layer.LayerId == layerId)
-                    {
-                        SaveUndoState(layer);
-                        layer.Bitmap = newBitmap;
-                        break;
-                    }
-                }
-            }
-
-            private void SaveUndoState(Layer layer)
-            {
-                using (var ms = new MemoryStream())
-                {
-                    layer.Bitmap.Save(ms, ImageFormat.Png);
-                    byte[] bitmapData = ms.ToArray();
-
-                    using (var zippedStream = new MemoryStream())
-                    {
-                        using (var gzipStream = new GZipStream(zippedStream, CompressionLevel.Optimal))
-                        {
-                            gzipStream.Write(bitmapData, 0, bitmapData.Length);
-                        }
-                        byte[] zippedData = zippedStream.ToArray();
-                        undoStack.Push(new UndoEntry(layer.LayerId, zippedData));
-                    }
-                }
-            }
-
-            // Undo the last action for a specific layer
-            public void Undo(int layerId)
-            {
-                var tempStack = new Stack<UndoEntry>();
-                while (undoStack.Count > 0)
-                {
-                    var entry = undoStack.Pop();
-                    if (entry.LayerId == layerId)
-                    {
-                        Bitmap restoredBitmap = UnzipBitmap(entry.ZippedBitmap);
-                        foreach (var layer in layers)
-                        {
-                            if (layer.LayerId == layerId)
-                            {
-                                layer.Bitmap = restoredBitmap;
-                                break;
-                            }
-                        }
-                        break;
-                    }
-                    else
-                    {
-                        tempStack.Push(entry);
-                    }
-                }
-
-                while (tempStack.Count > 0)
-                {
-                    undoStack.Push(tempStack.Pop());
-                }
-            }
-
-            public Layer GetLayer(int layerId)
-            {
-                return layers.Find(layer => layer.LayerId == layerId);
-            }
-
-            private Bitmap UnzipBitmap(byte[] zippedData)
-            {
-                using (var zippedStream = new MemoryStream(zippedData))
-                using (var gzipStream = new GZipStream(zippedStream, CompressionMode.Decompress))
-                using (var outputStream = new MemoryStream())
-                {
-                    gzipStream.CopyTo(outputStream);
-                    outputStream.Position = 0;
-                    return new Bitmap(outputStream);
-                }
-            }
-
-            public void ReorderLayers(int draggedLayerId, int targetLayerId)
-            {
-                var draggedLayer = layers.FirstOrDefault(layer => layer.LayerId == draggedLayerId);
-                var targetLayer = layers.FirstOrDefault(layer => layer.LayerId == targetLayerId);
-
-                if (draggedLayer != null && targetLayer != null)
-                {
-                    int draggedIndex = layers.IndexOf(draggedLayer);
-                    int targetIndex = layers.IndexOf(targetLayer);
-
-                    // Swap the two layers
-                    layers[draggedIndex] = targetLayer;
-                    layers[targetIndex] = draggedLayer;
-
-                    UpdateLayerOrder(); // Ensure layers are ordered correctly
-                }
-            }
-
-        }
         // load image into layer bitmap
         private void LoadImageIntoLayer(string filePath, int layerId)
         {
@@ -331,7 +89,7 @@ namespace Photoapp
                 var layer = layerManager.GetLayer(layerId);
                 if (layer != null)
                 {
-                    layer.Bitmap = loadedBitmap;  // Assign the loaded image to the layer's bitmap
+                    layer.Bitmap = loadedBitmap; // Assign the loaded image to the layer's bitmap
                 }
             }
             catch (Exception ex)
@@ -339,58 +97,15 @@ namespace Photoapp
                 MessageBox.Show($"Error loading image: {ex.Message}");
             }
         }
-
-     
-
-        // dark menu strip ovveride
-        public class CustomMenuRenderer : ToolStripProfessionalRenderer
-        {
-            protected override void OnRenderMenuItemBackground(ToolStripItemRenderEventArgs e)
-            {
-                // Clear the background before filling it
-                e.Graphics.FillRectangle(new SolidBrush(System.Drawing.Color.FromArgb(49, 54, 59)), e.Item.ContentRectangle);
-
-                // Check if the item is selected or hovered
-                if (e.Item.Selected)
-                {
-                    // Optional: slightly change the background when selected
-                    e.Graphics.FillRectangle(new SolidBrush(System.Drawing.Color.FromArgb(79, 84, 89)), e.Item.ContentRectangle);
-                    e.Item.ForeColor = System.Drawing.Color.White;  // Text color for hovered item
-                }
-                else
-                {
-                    e.Item.ForeColor = System.Drawing.Color.White;  // Text color for non-hovered items
-                }
-            }
-
-            protected override void OnRenderToolStripBackground(ToolStripRenderEventArgs e)
-            {
-                // Clear the background before filling it
-                e.Graphics.FillRectangle(new SolidBrush(System.Drawing.Color.FromArgb(49, 54, 59)), e.AffectedBounds);
-            }
-
-            protected override void OnRenderSeparator(ToolStripSeparatorRenderEventArgs e)
-            {
-                // Draw the separator color correctly
-                e.Graphics.FillRectangle(System.Drawing.Brushes.Gray, e.Item.ContentRectangle);
-            }
-        }
-        // enable double buffer
-
-
-
-
-        private Layer draggedLayer;  // Track the dragged layer
-        private int draggedLayerId;  // Track the ID of the dragged layer
-        private bool isDragging = false;  // Track if a drag operation is ongoing
-        private Panel draggedPanel = null;  // Track the dragged panel (the layer being dragged)
-        private Point mouseOffset;  // Track the offset between the mouse pos
-
+        private Layer draggedLayer; // Track the dragged layer
+        private int draggedLayerId; // Track the ID of the dragged layer
+        private bool isDragging = false; // Track if a drag operation is ongoing
+        private Panel draggedPanel = null; // Track the dragged panel (the layer being dragged)
+        private Point mouseOffset; // Track the offset between the mouse pos
 
         // only redraw when needed
         //private Timer redrawTimer;
         //private bool needsRedraw = false;
-
 
         private Bitmap combinedBitmap;
         private Point selectionStartPoint;
@@ -398,17 +113,15 @@ namespace Photoapp
 
         public Form1()
         {
-     
+
             InitializeComponent();
-           
+
             combinedBitmap = new Bitmap(canvasPanel.Width, canvasPanel.Height);
 
             // border
-            this.FormBorderStyle = FormBorderStyle.Sizable;  // Allow resizin
+            this.FormBorderStyle = FormBorderStyle.Sizable; // Allow resizin
             this.Text = "FoxToes";
             menuStrip1.Renderer = new CustomMenuRenderer();
-          
-
 
             //canvasPanel.Paint += canvasPanel_Paint;
             // Offset the first menu item to the right
@@ -416,12 +129,9 @@ namespace Photoapp
             if (firstItem != null)
             {
                 // Add padding to the left of the first item (this offsets it)
-                firstItem.Padding = new Padding(20, 0, 0, 0);  // 10px of padding on the left
+                firstItem.Padding = new Padding(20, 0, 0, 0); // 10px of padding on the left
             }
         }
-
-
-      
 
         // Initialize
         private void Form1_Load(object sender, EventArgs e)
@@ -439,21 +149,16 @@ namespace Photoapp
             layerManager.AddLayer(layerId, bitmap);
             layerManager.AddLayer(layerId + 1, bitmap);
 
-        
             // Update the LayerPanel to display the new layer
             AddLayerToLayerPanel(layerId);
             AddLayerToLayerPanel(layerId + 1);
             LoadImageIntoLayer(@"C:\Users\rlly\Pictures\fox.png", layerId + 1);
             CreateVirtualCanvas();
             CreateTransparentLayer();
-            
-        
+
         }
 
-
-   
-
-        // layerpanel UI (refresh)
+        // layerpanel UI (refresh) direct form method
         private void UpdateUIOrder()
         {
             // Clear existing controls from the layerPanel
@@ -487,7 +192,6 @@ namespace Photoapp
                 g.Clear(Color.Transparent);
             }
         }
-
 
         // layermanager moveup
         private void MoveLayerUp(int layerId)
@@ -569,8 +273,7 @@ namespace Photoapp
             downButton.Click += (sender, e) => MoveLayerDown(layerId);
 
             // Add a click event to select this layer when clicked
-            label.Click += (sender, e) =>
-            {
+            label.Click += (sender, e) => {
                 SelectLayer(layerId); // Update the selected layer label and variable
             };
 
@@ -606,119 +309,6 @@ namespace Photoapp
                 Console.WriteLine($"Error saving bitmap: {ex.Message}");
             }
         }
-        public int invert(int max, int value, int min)
-        {
-            return (max - value + min);
-        }
-
-        public Bitmap CalcreturnFull(Bitmap newBitmap)
-        {
-            if (newBitmap == null)
-            {
-                return null;
-            }
-            // make it +1 bigger but do not count it into it on each side meaning +2
-
-            int width = newBitmap.Width +2;
-            int height = newBitmap.Height+2;
-
-            int[,] imageColors = new int[width, height];
-            //imageColors[0, 0] = 0;
-            //imageColors[0, height-1] = 0;
-            //imageColors[width-1, 0] = 0;
-            //imageColors[height - 1, width - 1] = 0;
-
-            for (int y = 1; y < height - 1; y++)
-            {
-                for (int x = 1; x < width - 1; x++)
-                {
-                    Color pixelColor = newBitmap.GetPixel(x-1, y-1);
-                    if (pixelColor.A == 0)
-                    {
-                        imageColors[x, y] = 0;
-                    }
-                    else
-                    {
-                        imageColors[x, y] = 1;
-                    }
-                }
-            }
-
-            int[,] result = FloodFill(imageColors, 0, 0, 2);
-
-
-            // invert
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    result[x, y] = invert(2, result[x, y], 0);
-                }
-            }
-
-
-            for (int y = 1; y < height - 1; y++)
-            {
-                for (int x = 1; x < width - 1; x++)
-                {
-                    if(result[x, y] == 0)
-                    {
-                        newBitmap.SetPixel(x-1, y-1, Color.Transparent);
-                    }else if (result[x,y] == 1) // for now also blue
-                    {
-                        newBitmap.SetPixel(x-1, y-1, Color.Blue);
-                    }
-                    else
-                    {
-                        newBitmap.SetPixel(x - 1, y - 1, Color.Blue);
-                    }
-                       
-                }
-            }
-
-
-            // Now 'imageColors' contains the color data of the bitmap.
-            // You can perform your calculations here.
-
-            // Example: Print some color values (for debugging)
-            /*
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    Console.WriteLine($"Pixel ({x}, {y}): {imageColors[x, y]}");
-                }
-            }
-            */
-
-            // ... your image processing logic using imageColors ...
-
-            return newBitmap;
-        }
-
-        // If I was to have a matrix the size of the line and a bit bigger I can check if neighboring are now more given the line keeps the same width
-        public Bitmap MergeAndClearEdges(Bitmap newBitmap, Bitmap oldBitmap, Color fillColor)
-        {
-            if (newBitmap.Width != oldBitmap.Width || newBitmap.Height != oldBitmap.Height)
-                throw new ArgumentException("Bitmaps must be of the same dimensions");
-
-            Bitmap result = new Bitmap(oldBitmap);
-            string filePath = "result_bitmap.png";
-            newBitmap.Save(filePath, System.Drawing.Imaging.ImageFormat.Png);
-
-
-            result = CalcreturnFull(newBitmap);
-            SaveBitmap(result, "numberone.png", ImageFormat.Png);
-
-
-            return result;
-        }
-
-
-
-
-
-
         private void clearUIBitmap()
         {
             LastUILayer = new Bitmap(UILayer);
@@ -733,7 +323,7 @@ namespace Photoapp
                 {
                     g.Clear(Color.Transparent);
                 }
-         
+
             }
             else
             {
@@ -751,8 +341,6 @@ namespace Photoapp
             int y = Math.Max(0, Math.Min(canvasPanel.Height - 1, p.Y));
             return new Point(x, y);
         }
-
-
 
         private void ExportCanvas(string filePath, Bitmap inputBitmap)
         {
@@ -792,10 +380,6 @@ namespace Photoapp
                 isDrawing = true;
                 lastPoint = e.Location;
 
-
-           
-
-
                 switch (currentMode)
                 {
                     case Mode.pencil:
@@ -809,12 +393,12 @@ namespace Photoapp
                     case Mode.freeSelect:
                         clearUIBitmap();
                         points.Clear();
-                        points.Add(lastPoint);  // Start collecting points for the freehand selection
+                        points.Add(lastPoint); // Start collecting points for the freehand selection
                         break;
 
                     case Mode.rectangleSelect:
                         clearUIBitmap();
-                        selectionStartPoint = e.Location;  // Starting point for the rectangle
+                        selectionStartPoint = e.Location; // Starting point for the rectangle
                         break;
                 }
             }
@@ -822,14 +406,9 @@ namespace Photoapp
         // regional edits would be great to avoid checking whole bitmap
         private void canvasPanel_MouseMove(object sender, MouseEventArgs e)
         {
-         
+
             if (isDrawing)
             {
-                //// Check if the mouse is within canvasPanel bounds solves two issues
-                //if (e.X < 0 || e.Y < 0 || e.X >= canvasPanel.Width || e.Y >= canvasPanel.Height)
-                //{
-                //    return; // Exit if out of bounds
-                //}
                 Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
 
                 switch (currentMode)
@@ -910,9 +489,8 @@ namespace Photoapp
                             // Draw the final line connecting the last point to the first point
                             g.DrawLine(Pens.Red, points.Last(), points.First());
 
-             
                         }
-                   
+
                         break;
                     case Mode.rectangleSelect:
                         // Manually clamp mouse position to canvasPanel bounds
@@ -936,9 +514,8 @@ namespace Photoapp
                 }
                 if (LastUILayer != null)
                 {
-                
-                  
-                        UILayer = new Bitmap(MergeAndClearEdges(UILayer, LastUILayer, Color.Blue));
+
+                    UILayer = new Bitmap(MaskControl.MergeAndClearEdges(UILayer, LastUILayer, Color.Blue));
                 }
                 else
                 {
@@ -946,8 +523,7 @@ namespace Photoapp
 
                 }
 
-
-                    lastPoint = e.Location;
+                lastPoint = e.Location;
                 isDrawing = false;
 
                 // Update the combined bitmap and refresh the canvas
@@ -955,36 +531,34 @@ namespace Photoapp
             }
         }
 
-
         private void buildCombinedBitmap()
         {
             using (Graphics g = Graphics.FromImage(combinedBitmap))
             {
                 // Ensure transparency blending
                 g.CompositingMode = CompositingMode.SourceOver;
-                g.Clear(Color.Transparent);  // Clear with transparency to support layer blending
+                g.Clear(Color.Transparent); // Clear with transparency to support layer blending
 
                 // Draw all layers except the UI layer
                 foreach (var layer in layerManager.GetLayers())
                 {
                     if (layer.Bitmap != null)
                     {
-                        g.DrawImage(layer.Bitmap, 0, 0);  // Draw each layer at (0, 0)
+                        g.DrawImage(layer.Bitmap, 0, 0); // Draw each layer at (0, 0)
                     }
                 }
 
                 // Now draw the UI layer on top
                 if (UILayer != null)
                 {
-                    g.DrawImage(UILayer, 0, 0);  // Draw the UI layer on top
+                    g.DrawImage(UILayer, 0, 0); // Draw the UI layer on top
                 }
             }
         }
 
-
         // before paint first calculate the combined bitmap you are doing the paint to the buffer here for some reason it is even slower now
         private void canvasPanel_Paint(object sender, PaintEventArgs e)
-        {     
+        {
 
             // Draw the combined bitmap instead of individual layers
             if (combinedBitmap != null)
@@ -1024,7 +598,6 @@ namespace Photoapp
         private void selectBoxButton_MouseClick(object sender, MouseEventArgs e)
         {
             currentMode = Mode.rectangleSelect;
-            //layerManager.PrintLayerOrder();
         }
         private void selectFreeButton_MouseClick(object sender, MouseEventArgs e)
         {
@@ -1042,6 +615,5 @@ namespace Photoapp
             //}
         }
     }
-
 
 }

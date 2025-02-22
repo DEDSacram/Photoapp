@@ -1,4 +1,6 @@
-﻿namespace Photoapp
+﻿using System.Windows.Forms;
+
+namespace Photoapp
 {
     partial class Form1
     {
@@ -19,6 +21,15 @@
             }
             base.Dispose(disposing);
         }
+
+        //public class DoubleBufferedPanel : Panel
+        //{
+        //    public DoubleBufferedPanel()
+        //    {
+        //        this.SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint, true);
+        //        this.UpdateStyles();
+        //    }
+        //}
 
         #region Windows Form Designer generated code
 
@@ -43,7 +54,7 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importImageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.canvasPanel = new System.Windows.Forms.Panel();
+            this.canvasPanel = new System.Windows.Forms.DoubleBufferedPanel();
             this.selectedLayer = new System.Windows.Forms.Label();
             this.buttonPanel.SuspendLayout();
             this.menuStrip1.SuspendLayout();

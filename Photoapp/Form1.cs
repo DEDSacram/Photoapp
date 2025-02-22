@@ -16,10 +16,30 @@ using System.Drawing.Drawing2D;
 namespace Photoapp
 {
 
-    // UNIONIZING
-    // REMOVING
+    // as long as this is here this file gets treadted as a C# file not a desinger file
+    //public class RemoveDesignerclass
+    //{
+
+    //}
     public partial class Form1 : Form
     {
+
+   
+
+
+        // function Modes
+        public enum Mode
+        {
+            pencil, // Free drawing mode
+            pen,
+            rubber, // Erase mode (optional for future extension)
+            drag,
+            eyedropper,
+            zoom,
+            font,
+            rectangleSelect,
+            freeSelect
+        }
 
         private int selectedLayerId = 1; // Default to -1, indicating no layer is selected initially
 
@@ -27,6 +47,20 @@ namespace Photoapp
         private Point lastPoint;
         private Mode currentMode = Mode.pencil; // Start in drawing mode
         private List<Point> points = new List<Point>(); // Store points for freehand drawing
+
+        private Layer draggedLayer; // Track the dragged layer
+        private int draggedLayerId; // Track the ID of the dragged layer
+        private bool isDragging = false; // Track if a drag operation is ongoing
+        private Panel draggedPanel = null; // Track the dragged panel (the layer being dragged)
+        private Point mouseOffset; // Track the offset between the mouse pos
+
+        // only redraw when needed
+        //private Timer redrawTimer;
+        //private bool needsRedraw = false;
+
+        private Bitmap combinedBitmap;
+        private Point selectionStartPoint;
+        private Point selectionLastPoint;
 
         private Bitmap virtualCanvas; // for double buffering
 
@@ -63,19 +97,6 @@ namespace Photoapp
             // At this point, the virtualCanvas contains the selected layer's bitmap
             // but no invalidation or rendering of the panel occurs.
         }
-        // function Modes
-        public enum Mode
-        {
-            pencil, // Free drawing mode
-            pen,
-            rubber, // Erase mode (optional for future extension)
-            drag,
-            eyedropper,
-            zoom,
-            font,
-            rectangleSelect,
-            freeSelect
-        }
 
         // load image into layer bitmap
         private void LoadImageIntoLayer(string filePath, int layerId)
@@ -97,19 +118,7 @@ namespace Photoapp
                 MessageBox.Show($"Error loading image: {ex.Message}");
             }
         }
-        private Layer draggedLayer; // Track the dragged layer
-        private int draggedLayerId; // Track the ID of the dragged layer
-        private bool isDragging = false; // Track if a drag operation is ongoing
-        private Panel draggedPanel = null; // Track the dragged panel (the layer being dragged)
-        private Point mouseOffset; // Track the offset between the mouse pos
 
-        // only redraw when needed
-        //private Timer redrawTimer;
-        //private bool needsRedraw = false;
-
-        private Bitmap combinedBitmap;
-        private Point selectionStartPoint;
-        private Point selectionLastPoint;
 
         public Form1()
         {
@@ -118,11 +127,13 @@ namespace Photoapp
 
             combinedBitmap = new Bitmap(canvasPanel.Width, canvasPanel.Height);
 
+        
+
             // border
             this.FormBorderStyle = FormBorderStyle.Sizable; // Allow resizin
             this.Text = "FoxToes";
             menuStrip1.Renderer = new CustomMenuRenderer();
-
+            SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint, true);
             //canvasPanel.Paint += canvasPanel_Paint;
             // Offset the first menu item to the right
             ToolStripMenuItem firstItem = menuStrip1.Items[0] as ToolStripMenuItem;
@@ -223,67 +234,7 @@ namespace Photoapp
                 }
             }
         }
-        // layerpanel UI (Draw)
-        private void AddLayerToLayerPanel(int layerId)
-        {
-            // Create a new label to represent the layer visually
-            Label label = new Label
-            {
-                Text = $"Layer {layerId}",
-                Width = layerPanel.Width - 60, // Fit within the width of the parent Panel minus space for buttons
-                Height = 50, // Give some height for the label
-                ForeColor = Color.White,
-                TextAlign = ContentAlignment.MiddleCenter,
-                BackColor = Color.FromArgb(49, 54, 59),
-                Location = new Point(0, 0) // Place label at the top-left corner of the panel
-            };
-
-            // Create a panel to hold the label and buttons
-            Panel layerItemPanel = new Panel
-            {
-                Width = layerPanel.Width, // Fit within the width of the parent Panel
-                Height = 50, // Height includes some padding for spacing
-                BorderStyle = BorderStyle.FixedSingle,
-                Padding = new Padding(0, 0, 0, 0) // Remove any padding that could interfere
-            };
-
-            // Add the label to the layer item panel
-            layerItemPanel.Controls.Add(label);
-
-            // Create the "Up" button
-            Button upButton = new Button
-            {
-                Text = "Down",
-                Width = 50,
-                ForeColor = Color.White,
-                Height = layerItemPanel.Height / 2,
-                Location = new Point(layerPanel.Width - 60, 0) // Position at the top of the panel
-            };
-            upButton.Click += (sender, e) => MoveLayerUp(layerId);
-
-            // Create the "Down" button
-            Button downButton = new Button
-            {
-                Text = "Up",
-                Width = 50,
-                ForeColor = Color.White,
-                Height = layerItemPanel.Height / 2,
-                Location = new Point(layerPanel.Width - 60, layerItemPanel.Height / 2) // Position at the bottom of the panel
-            };
-            downButton.Click += (sender, e) => MoveLayerDown(layerId);
-
-            // Add a click event to select this layer when clicked
-            label.Click += (sender, e) => {
-                SelectLayer(layerId); // Update the selected layer label and variable
-            };
-
-            // Add the buttons to the layer item panel
-            layerItemPanel.Controls.Add(upButton);
-            layerItemPanel.Controls.Add(downButton);
-
-            // Add the new layer panel to the LayerPanel
-            layerPanel.Controls.Add(layerItemPanel);
-        }
+     
         // layerpanel UI SELECT CURRENT
         private void SelectLayer(int layerId)
         {
@@ -340,31 +291,6 @@ namespace Photoapp
             int x = Math.Max(0, Math.Min(canvasPanel.Width - 1, p.X));
             int y = Math.Max(0, Math.Min(canvasPanel.Height - 1, p.Y));
             return new Point(x, y);
-        }
-
-        private void ExportCanvas(string filePath, Bitmap inputBitmap)
-        {
-            // Create a bitmap with the same size as the canvasPanel
-            Bitmap bitmap = new Bitmap(canvasPanel.Width, canvasPanel.Height);
-
-            // Use a Graphics object to draw on the bitmap
-            using (Graphics g = Graphics.FromImage(bitmap))
-            {
-                // Draw the input bitmap onto the new bitmap (if provided)
-                if (inputBitmap != null)
-                {
-                    g.DrawImage(inputBitmap, new Rectangle(0, 0, canvasPanel.Width, canvasPanel.Height));
-                }
-
-                // Draw the canvasPanel content onto the bitmap
-                canvasPanel.DrawToBitmap(bitmap, new Rectangle(0, 0, bitmap.Width, bitmap.Height));
-            }
-
-            // Save the bitmap to the specified file path
-            bitmap.Save(filePath, System.Drawing.Imaging.ImageFormat.Png);
-
-            // Release resources
-            bitmap.Dispose();
         }
 
         // Canvas panel functions
@@ -613,6 +539,67 @@ namespace Photoapp
             //{
             //    ExportCanvas(saveFileDialog.FileName);
             //}
+        }
+        // layerpanel UI (Draw)
+        private void AddLayerToLayerPanel(int layerId)
+        {
+            // Create a new label to represent the layer visually
+            Label label = new Label
+            {
+                Text = $"Layer {layerId}",
+                Width = layerPanel.Width - 60, // Fit within the width of the parent Panel minus space for buttons
+                Height = 50, // Give some height for the label
+                ForeColor = Color.White,
+                TextAlign = ContentAlignment.MiddleCenter,
+                BackColor = Color.FromArgb(49, 54, 59),
+                Location = new Point(0, 0) // Place label at the top-left corner of the panel
+            };
+
+            // Create a panel to hold the label and buttons
+            Panel layerItemPanel = new Panel
+            {
+                Width = layerPanel.Width, // Fit within the width of the parent Panel
+                Height = 50, // Height includes some padding for spacing
+                BorderStyle = BorderStyle.FixedSingle,
+                Padding = new Padding(0, 0, 0, 0) // Remove any padding that could interfere
+            };
+
+            // Add the label to the layer item panel
+            layerItemPanel.Controls.Add(label);
+
+            // Create the "Up" button
+            Button upButton = new Button
+            {
+                Text = "Down",
+                Width = 50,
+                ForeColor = Color.White,
+                Height = layerItemPanel.Height / 2,
+                Location = new Point(layerPanel.Width - 60, 0) // Position at the top of the panel
+            };
+            upButton.Click += (sender, e) => MoveLayerUp(layerId);
+
+            // Create the "Down" button
+            Button downButton = new Button
+            {
+                Text = "Up",
+                Width = 50,
+                ForeColor = Color.White,
+                Height = layerItemPanel.Height / 2,
+                Location = new Point(layerPanel.Width - 60, layerItemPanel.Height / 2) // Position at the bottom of the panel
+            };
+            downButton.Click += (sender, e) => MoveLayerDown(layerId);
+
+            // Add a click event to select this layer when clicked
+            label.Click += (sender, e) => {
+                SelectLayer(layerId); // Update the selected layer label and variable
+            };
+
+            // Add the buttons to the layer item panel
+            layerItemPanel.Controls.Add(upButton);
+            layerItemPanel.Controls.Add(downButton);
+
+            // Add the new layer panel to the LayerPanel
+            layerPanel.Controls.Add(layerItemPanel);
         }
     }
 

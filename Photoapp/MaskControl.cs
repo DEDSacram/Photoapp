@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 
 namespace Photoapp
 {
@@ -54,7 +55,7 @@ namespace Photoapp
             return image;
         }
 
-        public Bitmap CalcreturnFull(Bitmap newBitmap)
+        public Bitmap CalcreturnFull(Bitmap newBitmap,Bitmap oldBitmap, bool remove)
         {
             if (newBitmap == null)
             {
@@ -81,39 +82,75 @@ namespace Photoapp
                 for (int x = 0; x < width; x++)
                 {
                     result[x, y] = invert(2, result[x, y], 0);
+                    
                 }
             }
 
-            for (int y = 1; y < height - 1; y++)
+
+            //changed from here one for removing meaning if result == 0 it will color blue if result else then it will be transparent
+            if (remove)
             {
-                for (int x = 1; x < width - 1; x++)
+                for (int y = 1; y < height - 1; y++)
                 {
-                    if (result[x, y] == 0)
+                    for (int x = 1; x < width - 1; x++)
                     {
-                        newBitmap.SetPixel(x - 1, y - 1, Color.Transparent);
+                        if (result[x, y] != 0)
+                        {
+                      
+                            oldBitmap.SetPixel(x - 1, y - 1, Color.Transparent);
+                        }
                     }
-                    else
+                }
+                return oldBitmap;
+            }
+            else
+            {
+                for (int y = 1; y < height - 1; y++)
+                {
+                    for (int x = 1; x < width - 1; x++)
                     {
-                        newBitmap.SetPixel(x - 1, y - 1, Color.Blue);
+                        if (result[x, y] == 0)
+                        {
+                            newBitmap.SetPixel(x - 1, y - 1, Color.Transparent);
+                        }
+                        else
+                        {
+                            newBitmap.SetPixel(x - 1, y - 1, Color.Blue);
+                        }
                     }
                 }
             }
+       
 
-            return newBitmap;
+            // Merge the processed bitmap with the old bitmap
+            using (Graphics g = Graphics.FromImage(oldBitmap))
+            {
+                g.CompositingMode = CompositingMode.SourceOver; // Ensure transparency blending
+                g.DrawImage(newBitmap, 0, 0); // Draw the processed bitmap onto the result bitmap
+            }
+
+
+            return oldBitmap;
         }
 
         public Bitmap MergeAndClearEdges(Bitmap newBitmap, Bitmap oldBitmap, Color fillColor)
         {
             if (newBitmap.Width != oldBitmap.Width || newBitmap.Height != oldBitmap.Height)
                 throw new ArgumentException("Bitmaps must be of the same dimensions");
+            // Apply the CalcreturnFull method to the new bitmap
+            Bitmap processedBitmap = CalcreturnFull(newBitmap,oldBitmap,false);
 
-            Bitmap result = new Bitmap(oldBitmap);
-            string filePath = "result_bitmap.png";
-            newBitmap.Save(filePath, System.Drawing.Imaging.ImageFormat.Png);
+            return processedBitmap;
+        }
+        public Bitmap MergeAndRemove(Bitmap newBitmap, Bitmap oldBitmap, Color fillColor)
+        {
+            if (newBitmap.Width != oldBitmap.Width || newBitmap.Height != oldBitmap.Height)
+                throw new ArgumentException("Bitmaps must be of the same dimensions");
+            // Apply the CalcreturnFull method to the new bitmap
+            Bitmap processedBitmap = CalcreturnFull(newBitmap,oldBitmap,true);
 
-            result = CalcreturnFull(newBitmap);
-
-            return result;
+ 
+            return processedBitmap;
         }
     }
 }

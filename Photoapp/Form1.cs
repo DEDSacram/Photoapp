@@ -166,7 +166,7 @@ namespace Photoapp
             LoadImageIntoLayer(@"C:\Users\rlly\Pictures\fox.png", layerId + 1);
             CreateVirtualCanvas();
             CreateTransparentLayer();
-
+            RedrawCanvas(new Rectangle(0, 0, canvasPanel.Width, canvasPanel.Height));
         }
 
         // layerpanel UI (refresh) direct form method
@@ -262,27 +262,36 @@ namespace Photoapp
         }
         private void clearUIBitmap()
         {
-            LastUILayer = new Bitmap(UILayer);
-
             if ((Control.ModifierKeys & Keys.Shift) == 0 && (Control.ModifierKeys & Keys.Control) == 0)
             {
-                using (Graphics g = Graphics.FromImage(UILayer))
+                // Dispose of UILayer and LastUILayer if they exist
+                if (UILayer != null)
                 {
-                    g.Clear(Color.Transparent);
-                }
-                using (Graphics g = Graphics.FromImage(LastUILayer))
-                {
-                    g.Clear(Color.Transparent);
+                    UILayer.Dispose();
+                    UILayer = null;
                 }
 
+                if (LastUILayer != null)
+                {
+                    LastUILayer.Dispose();
+                    LastUILayer = null;
+                }
+
+                // Create new Bitmap instances with the size of canvasPanel.ClientRectangle
+                UILayer = new Bitmap(canvasPanel.ClientRectangle.Width, canvasPanel.ClientRectangle.Height);
+                LastUILayer = new Bitmap(canvasPanel.ClientRectangle.Width, canvasPanel.ClientRectangle.Height);
             }
             else
             {
-                // Clear the UILayer bitmap to remove any previous selection feedback.
-                using (Graphics g = Graphics.FromImage(UILayer))
+                // Dispose of UILayer
+                if (UILayer != null)
                 {
-                    g.Clear(Color.Transparent);
+
+                    UILayer.Dispose();
+                    UILayer = null;
                 }
+                //Create a new UILayer
+                UILayer = new Bitmap(canvasPanel.ClientRectangle.Width, canvasPanel.ClientRectangle.Height);
             }
         }
 
@@ -294,11 +303,13 @@ namespace Photoapp
         }
 
         // Canvas panel functions
-        private void RedrawCanvas()
+        // Canvas panel functions
+        private void RedrawCanvas(Rectangle invalidRect)
         {
             buildCombinedBitmap();
-            canvasPanel.Invalidate();
+            canvasPanel.Invalidate(invalidRect);
         }
+
         private void canvasPanel_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
@@ -314,28 +325,28 @@ namespace Photoapp
                         break;
 
                     case Mode.rubber:
-                        // Prepare for erasing
                         break;
+
                     case Mode.freeSelect:
                         clearUIBitmap();
                         points.Clear();
-                        points.Add(lastPoint); // Start collecting points for the freehand selection
+                        points.Add(lastPoint);
                         break;
 
                     case Mode.rectangleSelect:
                         clearUIBitmap();
-                        selectionStartPoint = e.Location; // Starting point for the rectangle
+                        selectionStartPoint = e.Location;
                         break;
                 }
             }
         }
-        // regional edits would be great to avoid checking whole bitmap
+
         private void canvasPanel_MouseMove(object sender, MouseEventArgs e)
         {
-
             if (isDrawing)
             {
                 Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
+                Rectangle invalidRect = Rectangle.Empty;
 
                 switch (currentMode)
                 {
@@ -343,9 +354,11 @@ namespace Photoapp
                         using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
                         {
                             g.SmoothingMode = SmoothingMode.AntiAlias;
-                            g.DrawLine(Pens.Black, lastPoint, e.Location); // Draw directly on the layer's bitmap
+                            g.DrawLine(Pens.Black, lastPoint, e.Location);
                         }
                         points.Add(e.Location);
+                        invalidRect = GetBoundingRectangle(lastPoint, e.Location);
+                        invalidRect = Rectangle.Inflate(invalidRect, 5, 5); // Inflate for pen size
                         lastPoint = e.Location;
                         break;
 
@@ -357,11 +370,12 @@ namespace Photoapp
                             g.SmoothingMode = SmoothingMode.AntiAlias;
                             g.FillEllipse(transparentBrush, e.X - 10, e.Y - 10, 20, 20);
                         }
+                        invalidRect = new Rectangle(e.X - 15, e.Y - 15, 30, 30); // Inflate for rubber size
                         break;
+
                     case Mode.freeSelect:
                         Point clampedPoint = ClampPoint(e.Location);
 
-                        // Draw freehand selection on the UILayer
                         using (Graphics g = Graphics.FromImage(UILayer))
                         {
                             g.SmoothingMode = SmoothingMode.AntiAlias;
@@ -371,19 +385,40 @@ namespace Photoapp
                                 g.DrawLine(Pens.Red, points[points.Count - 2], points.Last());
                             }
 
-                            g.DrawLine(Pens.Red, points.Last(), clampedPoint); // Draw to clamped position
+                            g.DrawLine(Pens.Red, points.Last(), clampedPoint);
                         }
 
-                        points.Add(clampedPoint); // Add the clamped point to the path
+                        points.Add(clampedPoint);
+                        invalidRect = canvasPanel.ClientRectangle; // Invalidate the entire canvas
                         break;
-
+                    // unstable
                     case Mode.rectangleSelect:
-                        // do nth
+                        // Logic for rectangle selection drawing.
+                        selectionLastPoint = ClampPoint(e.Location);
+
+                        using (Graphics g = Graphics.FromImage(UILayer))
+                        {
+                            g.SmoothingMode = SmoothingMode.AntiAlias;
+
+                            int startX = Math.Min(selectionStartPoint.X, selectionLastPoint.X);
+                            int startY = Math.Min(selectionStartPoint.Y, selectionLastPoint.Y);
+                            int width = Math.Abs(selectionLastPoint.X - selectionStartPoint.X);
+                            int height = Math.Abs(selectionLastPoint.Y - selectionStartPoint.Y);
+
+                            g.DrawRectangle(Pens.Red, startX, startY, width, height);
+                        }
+
+                        invalidRect = canvasPanel.ClientRectangle; // Invalidate the entire canvas
                         break;
                 }
 
-                // Redraw the combined bitmap and refresh the canvas
-                RedrawCanvas();
+                RedrawCanvas(invalidRect);
+                //guide
+                if (Mode.rectangleSelect == currentMode)
+                {
+                    clearUIBitmap();
+                }
+                    
             }
         }
 
@@ -392,6 +427,7 @@ namespace Photoapp
             if (isDrawing)
             {
                 Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
+                Rectangle invalidRect = Rectangle.Empty;
 
                 switch (currentMode)
                 {
@@ -402,46 +438,56 @@ namespace Photoapp
                             g.DrawLine(Pens.Black, lastPoint, e.Location);
                         }
                         points.Add(e.Location);
+                        invalidRect = GetBoundingRectangle(lastPoint, e.Location);
+                        invalidRect = Rectangle.Inflate(invalidRect, 5, 5);
                         break;
 
                     case Mode.rubber:
-                        // Erasing is already applied directly to the layer's bitmap
+                        invalidRect = new Rectangle(e.X - 15, e.Y - 15, 30, 30);
                         break;
+
                     case Mode.freeSelect:
                         using (Graphics g = Graphics.FromImage(UILayer))
                         {
                             g.SmoothingMode = SmoothingMode.AntiAlias;
-
-                            // Draw the final line connecting the last point to the first point
                             g.DrawLine(Pens.Red, points.Last(), points.First());
-
                         }
-
+                        invalidRect = canvasPanel.ClientRectangle; // Invalidate the entire canvas
                         break;
+
                     case Mode.rectangleSelect:
-                        // Manually clamp mouse position to canvasPanel bounds
                         selectionLastPoint = ClampPoint(e.Location);
 
-                        // Draw rectangle selection on the UILayer
+                        //clearUIBitmap(); // fixes mask
+
                         using (Graphics g = Graphics.FromImage(UILayer))
                         {
                             g.SmoothingMode = SmoothingMode.AntiAlias;
 
-                            // Calculate top-left corner and positive width/height
                             int startX = Math.Min(selectionStartPoint.X, selectionLastPoint.X);
                             int startY = Math.Min(selectionStartPoint.Y, selectionLastPoint.Y);
                             int width = Math.Abs(selectionLastPoint.X - selectionStartPoint.X);
                             int height = Math.Abs(selectionLastPoint.Y - selectionStartPoint.Y);
 
-                            g.DrawRectangle(Pens.Red, startX, startY, width, height); // Draw the rectangle
+                            g.DrawRectangle(Pens.Red, startX, startY, width, height);
                         }
+                        invalidRect = canvasPanel.ClientRectangle; // Invalidate the entire canvas
                         break;
-
                 }
                 if (LastUILayer != null)
                 {
-
-                    UILayer = new Bitmap(MaskControl.MergeAndClearEdges(UILayer, LastUILayer, Color.Blue));
+                   
+                 
+                    if((Control.ModifierKeys & Keys.Control) != 0)
+                    {
+                        LastUILayer = new Bitmap(MaskControl.MergeAndRemove(UILayer, LastUILayer, Color.Blue));
+                    }
+                    else
+                    {
+                        LastUILayer = new Bitmap(MaskControl.MergeAndClearEdges(UILayer, LastUILayer, Color.Blue));
+                    }
+                 
+              
                 }
                 else
                 {
@@ -449,35 +495,47 @@ namespace Photoapp
 
                 }
 
+
                 lastPoint = e.Location;
                 isDrawing = false;
 
-                // Update the combined bitmap and refresh the canvas
-                RedrawCanvas();
+                RedrawCanvas(invalidRect);
             }
         }
+
+        private Rectangle GetBoundingRectangle(Point p1, Point p2)
+        {
+            int x = Math.Min(p1.X, p2.X);
+            int y = Math.Min(p1.Y, p2.Y);
+            int width = Math.Abs(p1.X - p2.X);
+            int height = Math.Abs(p1.Y - p2.Y);
+            return new Rectangle(x, y, width, height);
+        }
+
+
 
         private void buildCombinedBitmap()
         {
             using (Graphics g = Graphics.FromImage(combinedBitmap))
             {
-                // Ensure transparency blending
                 g.CompositingMode = CompositingMode.SourceOver;
-                g.Clear(Color.Transparent); // Clear with transparency to support layer blending
+                g.Clear(Color.Transparent);
 
-                // Draw all layers except the UI layer
                 foreach (var layer in layerManager.GetLayers())
                 {
                     if (layer.Bitmap != null)
                     {
-                        g.DrawImage(layer.Bitmap, 0, 0); // Draw each layer at (0, 0)
+                        g.DrawImage(layer.Bitmap, 0, 0);
                     }
                 }
+                if(LastUILayer != null)
+                {
+                    g.DrawImage(LastUILayer, 0, 0);
+                }
 
-                // Now draw the UI layer on top
                 if (UILayer != null)
                 {
-                    g.DrawImage(UILayer, 0, 0); // Draw the UI layer on top
+                    g.DrawImage(UILayer, 0, 0);
                 }
             }
         }

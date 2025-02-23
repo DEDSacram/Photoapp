@@ -31,15 +31,15 @@ namespace Photoapp
         // function Modes
         public enum Mode
         {
-            pencil, // Free drawing mode
-            pen,
-            rubber, // Erase mode (optional for future extension)
+            pencil, // done
+            pen, // done
+            rubber, // Done
             drag, // TODO
-            eyedropper,
-            zoom, // TODO
+            eyedropper, // done
+            zoom, // TODO FIX EVERYTHING
             font, // TODO
-            rectangleSelect,
-            freeSelect
+            rectangleSelect, // done
+            freeSelect // done
         }
 
         //zooming panning
@@ -320,11 +320,12 @@ namespace Photoapp
 
         private void canvasPanel_MouseDown(object sender, MouseEventArgs e)
         {
+            Point NormalizedPoint = NormalizeMousePosition(e.Location);
             if (e.Button == MouseButtons.Left)
             {
                 Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
                 isDrawing = true;
-                lastPoint = e.Location;
+                lastPoint = NormalizedPoint;
 
                 switch (currentMode)
                 {
@@ -344,12 +345,12 @@ namespace Photoapp
 
                     case Mode.rectangleSelect:
                         clearUIBitmap();
-                        selectionStartPoint = e.Location;
+                        selectionStartPoint = NormalizedPoint;
                         break;
                     case Mode.pen:
-                        points.Add(e.Location);
+                        points.Add(NormalizedPoint);
                         // If the last point is near the first point, close the shape
-                        if (points.Count > 2 && IsNearFirstPoint(e.Location))
+                        if (points.Count > 2 && IsNearFirstPoint(NormalizedPoint))
                         {
                             points.Remove(points[points.Count - 1]);
                             using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
@@ -409,8 +410,10 @@ namespace Photoapp
                         int green = pixelColor.G;
                         int blue = pixelColor.B;
 
+                        var pointo=NormalizeMousePosition(NormalizedPoint);
+
                         // Update the legend text to display the individual components
-                        legend.Text = $"A:{alpha};R:{red};G:{green};B:{blue}";
+                        legend.Text = $"A:{alpha};R:{red};G:{green};B:{blue};X:{e.X};Y:{e.Y};X:{pointo.X};Y:{pointo.Y}";
                         break;
                     case Mode.font:
 
@@ -429,23 +432,24 @@ namespace Photoapp
 
         private void canvasPanel_MouseMove(object sender, MouseEventArgs e)
         {
+            Point NormalizedPoint = NormalizeMousePosition(e.Location);
             if (isDrawing)
             {
                 Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
                 Rectangle invalidRect = Rectangle.Empty;
-
+            
                 switch (currentMode)
                 {
                     case Mode.pencil:
                         using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
                         {
                             g.SmoothingMode = SmoothingMode.AntiAlias;
-                            g.DrawLine(Pens.Black, lastPoint, e.Location);
+                            g.DrawLine(Pens.Black, lastPoint, NormalizedPoint);
                         }
-                        points.Add(e.Location);
-                        invalidRect = GetBoundingRectangle(lastPoint, e.Location);
+                        points.Add(NormalizedPoint);
+                        invalidRect = GetBoundingRectangle(lastPoint, NormalizedPoint);
                         invalidRect = Rectangle.Inflate(invalidRect, 5, 5); // Inflate for pen size
-                        lastPoint = e.Location;
+                        lastPoint = NormalizedPoint;
                         break;
 
                     case Mode.rubber:
@@ -460,7 +464,7 @@ namespace Photoapp
                         break;
 
                     case Mode.freeSelect:
-                        Point clampedPoint = ClampPoint(e.Location);
+                        Point clampedPoint = ClampPoint(NormalizedPoint);
 
                         using (Graphics g = Graphics.FromImage(UILayer))
                         {
@@ -480,7 +484,7 @@ namespace Photoapp
                     // unstable
                     case Mode.rectangleSelect:
                         // Logic for rectangle selection drawing.
-                        selectionLastPoint = ClampPoint(e.Location);
+                        selectionLastPoint = ClampPoint(NormalizedPoint);
 
                         using (Graphics g = Graphics.FromImage(UILayer))
                         {
@@ -510,6 +514,7 @@ namespace Photoapp
  
         private void canvasPanel_MouseUp(object sender, MouseEventArgs e)
         {
+            Point NormalizedPoint = NormalizeMousePosition(e.Location);
             if (isDrawing)
             {
                 Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
@@ -521,10 +526,10 @@ namespace Photoapp
                         using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
                         {
                             g.SmoothingMode = SmoothingMode.AntiAlias;
-                            g.DrawLine(Pens.Black, lastPoint, e.Location);
+                            g.DrawLine(Pens.Black, lastPoint, NormalizedPoint);
                         }
-                        points.Add(e.Location);
-                        invalidRect = GetBoundingRectangle(lastPoint, e.Location);
+                        points.Add(NormalizedPoint);
+                        invalidRect = GetBoundingRectangle(lastPoint, NormalizedPoint);
                         invalidRect = Rectangle.Inflate(invalidRect, 5, 5);
                         break;
 
@@ -542,7 +547,7 @@ namespace Photoapp
                         break;
 
                     case Mode.rectangleSelect:
-                        selectionLastPoint = ClampPoint(e.Location);
+                        selectionLastPoint = ClampPoint(NormalizedPoint);
 
                         //clearUIBitmap(); // fixes mask
 
@@ -575,44 +580,11 @@ namespace Photoapp
             }
 
 
-                lastPoint = e.Location;
+                lastPoint = NormalizedPoint;
                 isDrawing = false;
 
               
             }
-        //private void canvasPanel_MouseWheel(object sender, MouseEventArgs e)
-        //{
-        //    if (Control.ModifierKeys == Keys.Control) // Zoom when Control is held
-        //    {
-        //        // Zooming in (scroll up) or out (scroll down)
-        //        if (e.Delta > 0)
-        //        {
-        //            zoomFactor += zoomStep; // Zoom In
-        //        }
-        //        else if (e.Delta < 0)
-        //        {
-        //            zoomFactor -= zoomStep; // Zoom Out
-        //        }
-
-        //        // Ensure the zoom factor stays within reasonable limits
-        //        zoomFactor = Math.Max(0.1f, Math.Min(zoomFactor, 5.0f));
-
-        //        // Redraw the canvas with the updated zoom factor
-        //        RedrawCanvas(canvasPanel.ClientRectangle);
-        //    }
-        //    else if (Control.ModifierKeys == Keys.Shift) // Horizontal pan when Shift is held
-        //    {
-        //        // Adjust the pan offset in the horizontal direction
-        //        panOffset.X += e.Delta;
-        //        RedrawCanvas(canvasPanel.ClientRectangle); // Redraw with the updated offset
-        //    }
-        //    else // Default behavior: Vertical pan when no modifier keys are held
-        //    {
-        //        // Adjust the pan offset in the vertical direction
-        //        panOffset.Y += e.Delta;
-        //        RedrawCanvas(canvasPanel.ClientRectangle); // Redraw with the updated offset
-        //    }
-        //}
         private void canvasPanel_MouseWheel(object sender, MouseEventArgs e)
         {
             if (Control.ModifierKeys == Keys.Control) // Zoom when Control is held
@@ -663,7 +635,13 @@ namespace Photoapp
             int height = Math.Abs(p1.Y - p2.Y);
             return new Rectangle(x, y, width, height);
         }
-
+        private Point NormalizeMousePosition(Point mousePos)
+        {
+            // Adjust the mouse position based on the current zoom and pan
+            float normalizedX = (mousePos.X - panOffset.X) / zoomFactor;
+            float normalizedY = (mousePos.Y - panOffset.Y) / zoomFactor;
+            return new Point((int)normalizedX, (int)normalizedY);
+        }
 
 
         private void buildCombinedBitmap()

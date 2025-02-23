@@ -8,7 +8,7 @@ namespace Photoapp
 
     class MaskControl
     {
-        private byte[,] mapremembered;// move boundaries
+        public byte[,] MapRemembered { get; set; } // move boundaries
 
         public byte invert(byte max, byte value, byte min)
         {
@@ -57,16 +57,8 @@ namespace Photoapp
             return image;
         }
 
-        public Bitmap CalcreturnFull(Bitmap newBitmap,Bitmap oldBitmap, bool remove)
+        public void CalcreturnFull(Bitmap newBitmap, bool remove)
         {
-            if (newBitmap == null)
-            {
-                return null;
-            }
-            if(oldBitmap != null)
-            {
-                mapremembered = new byte[oldBitmap.Width, oldBitmap.Height];
-            }
 
             int width = newBitmap.Width + 2;
             int height = newBitmap.Height + 2;
@@ -106,16 +98,25 @@ namespace Photoapp
                     {
                         if (result[x, y] == 2)
                         {
-                      
-                             oldBitmap.SetPixel(x - 1, y - 1, Color.Transparent);
+                            MapRemembered[x - 1, y - 1] = 0;
+       
                         }
                         if(result[x, y] == 1)
                         {
-                            oldBitmap.SetPixel(x - 1, y - 1, Color.Red);
+                            if(MapRemembered[x - 1, y - 1] == 0)
+                            {
+                                MapRemembered[x - 1, y - 1] = 0;
+                            }
+                            else
+                            {
+                                MapRemembered[x - 1, y - 1] = 1;
+                            }
+                           
+               
                         }
                     }
                 }
-                return oldBitmap;
+        
             }
             else
             {
@@ -123,25 +124,27 @@ namespace Photoapp
                 {
                     for (int x = 1; x < width - 1; x++)
                     {
-                        if (result[x, y] == 0)
+                
+                        if (result[x, y] == 1)
                         {
-                            newBitmap.SetPixel(x - 1, y - 1, Color.Transparent);
-                        }
-                        else if (result[x, y] == 1)
-                        {
-                            if(oldBitmap.GetPixel(x - 1, y - 1).B == 255)
+
+                            if(MapRemembered[x - 1, y - 1] == 2)
                             {
-                                newBitmap.SetPixel(x - 1, y - 1, Color.Blue);
+                                MapRemembered[x - 1, y - 1] = 2;
                             }
                             else
                             {
-                                newBitmap.SetPixel(x - 1, y - 1, Color.Red);
+                                MapRemembered[x - 1, y - 1] = 1;
                             }
-                          
+                         
+
+                           
+                            
+                        
                         }
-                        else
+                        else if (result[x, y] == 2)
                         {
-                                newBitmap.SetPixel(x - 1, y - 1, Color.Blue);
+                            MapRemembered[x - 1, y - 1] = 2;
                         }
                     }
                 }
@@ -149,34 +152,16 @@ namespace Photoapp
        
 
             // Merge the processed bitmap with the old bitmap
-            using (Graphics g = Graphics.FromImage(oldBitmap))
-            {
-                g.CompositingMode = CompositingMode.SourceOver; // Ensure transparency blending
-                g.DrawImage(newBitmap, 0, 0); // Draw the processed bitmap onto the result bitmap
-            }
 
-
-            return oldBitmap;
         }
 
-        public Bitmap MergeAndClearEdges(Bitmap newBitmap, Bitmap oldBitmap, Color fillColor)
+        public void MergeAndClearEdges(Bitmap newBitmap, Color fillColor)
         {
-            if (newBitmap.Width != oldBitmap.Width || newBitmap.Height != oldBitmap.Height)
-                throw new ArgumentException("Bitmaps must be of the same dimensions");
-            // Apply the CalcreturnFull method to the new bitmap
-            Bitmap processedBitmap = CalcreturnFull(newBitmap,oldBitmap,false);
-
-            return processedBitmap;
+            CalcreturnFull(newBitmap,false);
         }
-        public Bitmap MergeAndRemove(Bitmap newBitmap, Bitmap oldBitmap, Color fillColor)
+        public void MergeAndRemove(Bitmap newBitmap, Color fillColor)
         {
-            if (newBitmap.Width != oldBitmap.Width || newBitmap.Height != oldBitmap.Height)
-                throw new ArgumentException("Bitmaps must be of the same dimensions");
-            // Apply the CalcreturnFull method to the new bitmap
-            Bitmap processedBitmap = CalcreturnFull(newBitmap,oldBitmap,true);
-
- 
-            return processedBitmap;
+            CalcreturnFull(newBitmap,true);
         }
     }
 }

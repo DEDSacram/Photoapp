@@ -11,6 +11,7 @@ using Button = System.Windows.Forms.Button;
 using PixelFormat = System.Drawing.Imaging.PixelFormat;
 using Control = System.Windows.Forms.Control;
 using System.Drawing.Drawing2D;
+using System.Windows.Media.Media3D;
 
 
 namespace Photoapp
@@ -67,7 +68,6 @@ namespace Photoapp
         // previous bitmap of UI layer save then draw new one compare if SHIFT OR CTRL WAS HELD DOWN
 
         private Bitmap UILayer;
-        private Bitmap LastUILayer;
 
         LayerManager layerManager = new LayerManager();
 
@@ -126,8 +126,10 @@ namespace Photoapp
             InitializeComponent();
 
             combinedBitmap = new Bitmap(canvasPanel.Width, canvasPanel.Height);
+            MaskControl.MapRemembered = new byte[canvasPanel.Width, canvasPanel.Height];
 
-        
+
+
 
             // border
             this.FormBorderStyle = FormBorderStyle.Sizable; // Allow resizin
@@ -270,16 +272,9 @@ namespace Photoapp
                     UILayer.Dispose();
                     UILayer = null;
                 }
-
-                if (LastUILayer != null)
-                {
-                    LastUILayer.Dispose();
-                    LastUILayer = null;
-                }
-
+                MaskControl.MapRemembered = new byte[canvasPanel.Width, canvasPanel.Height];
                 // Create new Bitmap instances with the size of canvasPanel.ClientRectangle
                 UILayer = new Bitmap(canvasPanel.ClientRectangle.Width, canvasPanel.ClientRectangle.Height);
-                LastUILayer = new Bitmap(canvasPanel.ClientRectangle.Width, canvasPanel.ClientRectangle.Height);
             }
             else
             {
@@ -474,34 +469,28 @@ namespace Photoapp
                         invalidRect = canvasPanel.ClientRectangle; // Invalidate the entire canvas
                         break;
                 }
-                if (LastUILayer != null)
-                {
                    
                  
                     if((Control.ModifierKeys & Keys.Control) != 0)
                     {
-                        LastUILayer = new Bitmap(MaskControl.MergeAndRemove(UILayer, LastUILayer, Color.Blue));
+                         MaskControl.MergeAndRemove(UILayer, Color.Blue);
                     }
                     else
                     {
-                        LastUILayer = new Bitmap(MaskControl.MergeAndClearEdges(UILayer, LastUILayer, Color.Blue));
+                       MaskControl.MergeAndClearEdges(UILayer, Color.Blue);
                     }
-                 
-              
-                }
-                else
-                {
-                    LastUILayer = new Bitmap(UILayer);
-
-                }
+                clearUIBitmap();
+                RedrawCanvas(invalidRect);
+            }
 
 
                 lastPoint = e.Location;
                 isDrawing = false;
 
-                RedrawCanvas(invalidRect);
+              
             }
-        }
+
+        
 
         private Rectangle GetBoundingRectangle(Point p1, Point p2)
         {
@@ -528,15 +517,47 @@ namespace Photoapp
                         g.DrawImage(layer.Bitmap, 0, 0);
                     }
                 }
-                if(LastUILayer != null)
+
+
+                Bitmap maskBitmap = new Bitmap(
+        MaskControl.MapRemembered.GetLength(0), // Width
+        MaskControl.MapRemembered.GetLength(1)  // Height
+    );
+
+                using (Graphics maskGraphics = Graphics.FromImage(maskBitmap))
                 {
-                    g.DrawImage(LastUILayer, 0, 0);
+                    maskGraphics.Clear(Color.Transparent); // Start with transparency
+
+                    for (int x = 0; x < MaskControl.MapRemembered.GetLength(0); x++) // Width
+                    {
+                        for (int y = 0; y < MaskControl.MapRemembered.GetLength(1); y++) // Height
+                        {
+                            if (MaskControl.MapRemembered[x, y] == 1)
+                            {
+                                // Set pixel to desired color (e.g., Red)
+                                maskBitmap.SetPixel(x, y, Color.Red);
+                            }
+                            // testing purposes
+                            //else if (MaskControl.MapRemembered[x, y] == 2)
+                            //{
+                            //    // Set pixel to desired color (e.g., Red)
+                            //    maskBitmap.SetPixel(x, y, Color.Blue);
+                            //}
+                        }
+                    }
+
                 }
+
+                // Draw maskBitmap onto combinedBitmap
+              
+
 
                 if (UILayer != null)
                 {
                     g.DrawImage(UILayer, 0, 0);
                 }
+                g.DrawImage(maskBitmap, 0, 0);
+                maskBitmap.Dispose(); // remove
             }
         }
 

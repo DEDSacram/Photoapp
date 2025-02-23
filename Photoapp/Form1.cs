@@ -42,6 +42,14 @@ namespace Photoapp
             freeSelect
         }
 
+        //zooming panning
+        private float zoomFactor = 1.0f;  // Default zoom factor
+        private float zoomStep = 0.1f;    // Zoom step size
+        private Point panOffset = new Point(0, 0);  // Offset for panning
+        //private Point panStart = Point.Empty; // Starting point of the pan
+        //private bool isPanning = false;    // Flag to indicate panning state
+
+
         private int selectedLayerId = 1; // Default to -1, indicating no layer is selected initially
 
         private bool isDrawing = false;
@@ -129,6 +137,9 @@ namespace Photoapp
 
             combinedBitmap = new Bitmap(canvasPanel.Width, canvasPanel.Height);
             MaskControl.MapRemembered = new byte[canvasPanel.Width, canvasPanel.Height];
+
+
+            canvasPanel.MouseWheel += new MouseEventHandler(canvasPanel_MouseWheel);
 
 
 
@@ -496,7 +507,7 @@ namespace Photoapp
                     
             }
         }
-
+ 
         private void canvasPanel_MouseUp(object sender, MouseEventArgs e)
         {
             if (isDrawing)
@@ -569,8 +580,80 @@ namespace Photoapp
 
               
             }
+        //private void canvasPanel_MouseWheel(object sender, MouseEventArgs e)
+        //{
+        //    if (Control.ModifierKeys == Keys.Control) // Zoom when Control is held
+        //    {
+        //        // Zooming in (scroll up) or out (scroll down)
+        //        if (e.Delta > 0)
+        //        {
+        //            zoomFactor += zoomStep; // Zoom In
+        //        }
+        //        else if (e.Delta < 0)
+        //        {
+        //            zoomFactor -= zoomStep; // Zoom Out
+        //        }
 
-        
+        //        // Ensure the zoom factor stays within reasonable limits
+        //        zoomFactor = Math.Max(0.1f, Math.Min(zoomFactor, 5.0f));
+
+        //        // Redraw the canvas with the updated zoom factor
+        //        RedrawCanvas(canvasPanel.ClientRectangle);
+        //    }
+        //    else if (Control.ModifierKeys == Keys.Shift) // Horizontal pan when Shift is held
+        //    {
+        //        // Adjust the pan offset in the horizontal direction
+        //        panOffset.X += e.Delta;
+        //        RedrawCanvas(canvasPanel.ClientRectangle); // Redraw with the updated offset
+        //    }
+        //    else // Default behavior: Vertical pan when no modifier keys are held
+        //    {
+        //        // Adjust the pan offset in the vertical direction
+        //        panOffset.Y += e.Delta;
+        //        RedrawCanvas(canvasPanel.ClientRectangle); // Redraw with the updated offset
+        //    }
+        //}
+        private void canvasPanel_MouseWheel(object sender, MouseEventArgs e)
+        {
+            if (Control.ModifierKeys == Keys.Control) // Zoom when Control is held
+            {
+                // Get mouse position relative to the canvas
+                Point mousePos = e.Location;
+
+                // Normalize mouse wheel movement
+                float zoomStep = 0.1f;
+                float zoomFactorChange = (e.Delta > 0) ? (1 + zoomStep) : (1 - zoomStep);
+
+                // Calculate new zoom factor, clamp it between limits
+                float newZoomFactor = zoomFactor * zoomFactorChange;
+                newZoomFactor = Math.Max(0.1f, Math.Min(newZoomFactor, 5.0f)); // Clamp between 0.1x and 5x
+
+                // Calculate scale difference
+                float scaleChange = newZoomFactor / zoomFactor;
+
+                // Adjust panOffset so that the point under the mouse stays in place
+                panOffset.X = (int)(mousePos.X - scaleChange * (mousePos.X - panOffset.X));
+                panOffset.Y = (int)(mousePos.Y - scaleChange * (mousePos.Y - panOffset.Y));
+
+                // Update zoom factor
+                zoomFactor = newZoomFactor;
+
+                // Redraw the canvas with updated zoom and pan
+                RedrawCanvas(canvasPanel.ClientRectangle);
+            }
+            else if (Control.ModifierKeys == Keys.Shift) // Horizontal pan when Shift is held
+            {
+                panOffset.X += e.Delta; // Adjust horizontal panning
+                RedrawCanvas(canvasPanel.ClientRectangle);
+            }
+            else // Vertical pan when no modifier keys are held
+            {
+                panOffset.Y += e.Delta; // Adjust vertical panning
+                RedrawCanvas(canvasPanel.ClientRectangle);
+            }
+        }
+
+
 
         private Rectangle GetBoundingRectangle(Point p1, Point p2)
         {
@@ -587,6 +670,11 @@ namespace Photoapp
         {
             using (Graphics g = Graphics.FromImage(combinedBitmap))
             {
+                // Apply scaling and panning
+                g.TranslateTransform(panOffset.X, panOffset.Y);
+                g.ScaleTransform(zoomFactor, zoomFactor);
+
+
                 g.CompositingMode = CompositingMode.SourceOver;
                 g.Clear(Color.Transparent);
 
@@ -618,11 +706,11 @@ namespace Photoapp
                                 maskBitmap.SetPixel(x, y, Color.Red); 
                             }
                          //   testing purposes
-                            else if (MaskControl.MapRemembered[x, y] == 2)
-                            {
-                                // Set pixel to desired color (e.g., Red)
-                                maskBitmap.SetPixel(x, y, Color.Blue);
-                            }
+                            //else if (MaskControl.MapRemembered[x, y] == 2)
+                            //{
+                            //    // Set pixel to desired color (e.g., Red)
+                            //    maskBitmap.SetPixel(x, y, Color.Blue);
+                            //}
                         }
                     }
 

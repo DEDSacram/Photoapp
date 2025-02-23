@@ -47,6 +47,8 @@ namespace Photoapp
         private bool isDrawing = false;
         private Point lastPoint;
         private Mode currentMode = Mode.pencil; // Start in drawing mode
+
+
         private List<Point> points = new List<Point>(); // Store points for freehand drawing
 
         private Layer draggedLayer; // Track the dragged layer
@@ -309,6 +311,7 @@ namespace Photoapp
         {
             if (e.Button == MouseButtons.Left)
             {
+                Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
                 isDrawing = true;
                 lastPoint = e.Location;
 
@@ -332,9 +335,70 @@ namespace Photoapp
                         clearUIBitmap();
                         selectionStartPoint = e.Location;
                         break;
+                    case Mode.pen:
+                        points.Add(e.Location);
+                        // If the last point is near the first point, close the shape
+                        if (points.Count > 2 && IsNearFirstPoint(e.Location))
+                        {
+                            points.Remove(points[points.Count - 1]);
+                            using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
+                            {
+                                //g.Clear(Color.White); // Clear the canvas first
+
+                                // Draw lines between each pair of points
+                                for (int i = 1; i < points.Count; i++)
+                                {
+                                    g.DrawLine(Pens.Black, points[i - 1], points[i]);
+                                }
+
+                                // Draw a line to close the shape (from the last point to the first point)
+                                g.DrawLine(Pens.Black, points[points.Count - 1], points[0]);
+
+                                // Optionally, draw a small dot for each point
+                                foreach (var point in points)
+                                {
+                                    g.FillEllipse(Brushes.Black, point.X - 2, point.Y - 2, 4, 4); // Draw a small dot at each point
+                                }
+                            }
+
+                            points.Clear(); // Optionally, clear the points list after closing the shape (or keep for next shape)
+                            break;
+                        }
+
+                        // Only draw the lines between points (not a polygon)
+                        if (points.Count > 1) // Only start drawing after the first point
+                        {
+                            using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
+                            {
+                                //g.Clear(Color.White); // Clear the canvas first
+
+                                // Draw lines between each pair of points
+                                for (int i = 1; i < points.Count; i++)
+                                {
+                                    g.DrawLine(Pens.Black, points[i - 1], points[i]);
+                                }
+
+                                // Optionally, draw a small dot for each point
+                                foreach (var point in points)
+                                {
+                                    g.FillEllipse(Brushes.Black, point.X - 2, point.Y - 2, 4, 4); // Draw a small dot at each point
+                                }
+                            }
+                        }
+
+         
+                        break;
                 }
             }
         }
+
+        private bool IsNearFirstPoint(Point currentPoint)
+        {
+            // Check if the current point is near the first point (within 5px)
+            var firstPoint = points[0];
+            return (currentPoint.X - firstPoint.X) * (currentPoint.X - firstPoint.X) + (currentPoint.Y - firstPoint.Y) * (currentPoint.Y - firstPoint.Y) < 25;
+        }
+
 
         private void canvasPanel_MouseMove(object sender, MouseEventArgs e)
         {
@@ -535,7 +599,7 @@ namespace Photoapp
                             if (MaskControl.MapRemembered[x, y] == 1)
                             {
                                 // Set pixel to desired color (e.g., Red)
-                                maskBitmap.SetPixel(x, y, Color.Red);
+                                maskBitmap.SetPixel(x, y, Color.Red); 
                             }
                             // testing purposes
                             //else if (MaskControl.MapRemembered[x, y] == 2)
@@ -586,7 +650,7 @@ namespace Photoapp
         }
         private void rubberButton_MouseClick(object sender, MouseEventArgs e)
         {
-            currentMode = Mode.rubber;
+            currentMode = Mode.rubber; // done
         }
         private void eyeButton_MouseClick(object sender, MouseEventArgs e)
         {

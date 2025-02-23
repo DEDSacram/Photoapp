@@ -56,6 +56,7 @@ namespace Photoapp
             this.importImageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.canvasPanel = new System.Windows.Forms.DoubleBufferedPanel();
             this.selectedLayer = new System.Windows.Forms.Label();
+            this.legend = new System.Windows.Forms.Label();
             this.buttonPanel.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -94,7 +95,7 @@ namespace Photoapp
             this.buttonPanel.Controls.Add(this.pencilButton);
             this.buttonPanel.Location = new System.Drawing.Point(16, 27);
             this.buttonPanel.Name = "buttonPanel";
-            this.buttonPanel.Size = new System.Drawing.Size(129, 123);
+            this.buttonPanel.Size = new System.Drawing.Size(129, 92);
             this.buttonPanel.TabIndex = 4;
             // 
             // selectFreeButton
@@ -280,12 +281,24 @@ namespace Photoapp
             this.selectedLayer.TabIndex = 6;
             this.selectedLayer.Text = "label1";
             // 
+            // legend
+            // 
+            this.legend.AutoSize = true;
+            this.legend.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.legend.ForeColor = System.Drawing.Color.White;
+            this.legend.Location = new System.Drawing.Point(17, 122);
+            this.legend.Name = "legend";
+            this.legend.Size = new System.Drawing.Size(41, 13);
+            this.legend.TabIndex = 7;
+            this.legend.Text = "label1";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(54)))), ((int)(((byte)(59)))));
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.legend);
             this.Controls.Add(this.selectedLayer);
             this.Controls.Add(this.buttonPanel);
             this.Controls.Add(this.labelLayers);
@@ -320,8 +333,9 @@ namespace Photoapp
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importImageToolStripMenuItem;
-        private System.Windows.Forms.Panel canvasPanel;
         private System.Windows.Forms.Label selectedLayer;
+        private DoubleBufferedPanel canvasPanel;
+        private Label legend;
     }
 }
 

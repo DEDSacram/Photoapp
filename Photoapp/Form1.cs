@@ -34,10 +34,10 @@ namespace Photoapp
             pencil, // Free drawing mode
             pen,
             rubber, // Erase mode (optional for future extension)
-            drag,
+            drag, // TODO
             eyedropper,
-            zoom,
-            font,
+            zoom, // TODO
+            font, // TODO
             rectangleSelect,
             freeSelect
         }
@@ -388,6 +388,22 @@ namespace Photoapp
 
          
                         break;
+                    case Mode.eyedropper:
+                        // Get the color of the pixel at the given position
+                        Color pixelColor = selectedLayer.Bitmap.GetPixel(e.X, e.Y);
+
+                        // Extract the individual ARGB components
+                        int alpha = pixelColor.A;
+                        int red = pixelColor.R;
+                        int green = pixelColor.G;
+                        int blue = pixelColor.B;
+
+                        // Update the legend text to display the individual components
+                        legend.Text = $"A:{alpha};R:{red};G:{green};B:{blue}";
+                        break;
+                    case Mode.font:
+
+                    break;
                 }
             }
         }
@@ -601,12 +617,12 @@ namespace Photoapp
                                 // Set pixel to desired color (e.g., Red)
                                 maskBitmap.SetPixel(x, y, Color.Red); 
                             }
-                            // testing purposes
-                            //else if (MaskControl.MapRemembered[x, y] == 2)
-                            //{
-                            //    // Set pixel to desired color (e.g., Red)
-                            //    maskBitmap.SetPixel(x, y, Color.Blue);
-                            //}
+                         //   testing purposes
+                            else if (MaskControl.MapRemembered[x, y] == 2)
+                            {
+                                // Set pixel to desired color (e.g., Red)
+                                maskBitmap.SetPixel(x, y, Color.Blue);
+                            }
                         }
                     }
 

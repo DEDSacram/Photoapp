@@ -8,6 +8,8 @@ namespace Photoapp
 
     class MaskControl
     {
+        private byte[,] mapremembered;// move boundaries
+
         public byte invert(byte max, byte value, byte min)
         {
             return (byte)(max - value + min);
@@ -61,9 +63,15 @@ namespace Photoapp
             {
                 return null;
             }
+            if(oldBitmap != null)
+            {
+                mapremembered = new byte[oldBitmap.Width, oldBitmap.Height];
+            }
 
             int width = newBitmap.Width + 2;
             int height = newBitmap.Height + 2;
+
+         
 
             byte[,] imageColors = new byte[width, height];
             for (int y = 1; y < height - 1; y++)
@@ -86,6 +94,8 @@ namespace Photoapp
                 }
             }
 
+            // form here on
+
 
             //changed from here one for removing meaning if result == 0 it will color blue if result else then it will be transparent
             if (remove)
@@ -94,10 +104,14 @@ namespace Photoapp
                 {
                     for (int x = 1; x < width - 1; x++)
                     {
-                        if (result[x, y] != 0)
+                        if (result[x, y] == 2)
                         {
                       
-                            oldBitmap.SetPixel(x - 1, y - 1, Color.Transparent);
+                             oldBitmap.SetPixel(x - 1, y - 1, Color.Transparent);
+                        }
+                        if(result[x, y] == 1)
+                        {
+                            oldBitmap.SetPixel(x - 1, y - 1, Color.Red);
                         }
                     }
                 }
@@ -113,9 +127,21 @@ namespace Photoapp
                         {
                             newBitmap.SetPixel(x - 1, y - 1, Color.Transparent);
                         }
+                        else if (result[x, y] == 1)
+                        {
+                            if(oldBitmap.GetPixel(x - 1, y - 1).B == 255)
+                            {
+                                newBitmap.SetPixel(x - 1, y - 1, Color.Blue);
+                            }
+                            else
+                            {
+                                newBitmap.SetPixel(x - 1, y - 1, Color.Red);
+                            }
+                          
+                        }
                         else
                         {
-                            newBitmap.SetPixel(x - 1, y - 1, Color.Blue);
+                                newBitmap.SetPixel(x - 1, y - 1, Color.Blue);
                         }
                     }
                 }

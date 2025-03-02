@@ -452,15 +452,27 @@ namespace Photoapp
                         lastPoint = NormalizedPoint;
                         break;
 
+                        //case Mode.rubber:
+                        //using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
+                        //using (SolidBrush transparentBrush = new SolidBrush(Color.Transparent))
+                        //{
+                        //    g.CompositingMode = CompositingMode.SourceCopy;
+                        //    g.SmoothingMode = SmoothingMode.AntiAlias;
+                        //    g.FillEllipse(transparentBrush, NormalizedPoint.X - 10, NormalizedPoint.Y - 10, 20, 20);
+                        //}
+                    //    invalidRect = new Rectangle(NormalizedPoint.X - 15, NormalizedPoint.Y - 15, 30, 30); // Inflate for rubber size
+                    //    break;
                     case Mode.rubber:
                         using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
                         using (SolidBrush transparentBrush = new SolidBrush(Color.Transparent))
                         {
                             g.CompositingMode = CompositingMode.SourceCopy;
                             g.SmoothingMode = SmoothingMode.AntiAlias;
-                            g.FillEllipse(transparentBrush, e.X - 10, e.Y - 10, 20, 20);
+                            g.FillEllipse(transparentBrush, NormalizedPoint.X - 10, NormalizedPoint.Y - 10, 20, 20);
                         }
-                        invalidRect = new Rectangle(e.X - 15, e.Y - 15, 30, 30); // Inflate for rubber size
+                        invalidRect = GetBoundingRectangle(lastPoint, NormalizedPoint);
+                        invalidRect = Rectangle.Inflate(invalidRect, 20, 20); // Inflate for pen size
+                        lastPoint = NormalizedPoint;
                         break;
 
                     case Mode.freeSelect:
@@ -530,12 +542,12 @@ namespace Photoapp
                         }
                         points.Add(NormalizedPoint);
                         invalidRect = GetBoundingRectangle(lastPoint, NormalizedPoint);
-                        invalidRect = Rectangle.Inflate(invalidRect, 5, 5);
+                        invalidRect = Rectangle.Inflate(invalidRect, 10, 10);
                         break;
 
-                    case Mode.rubber:
-                        invalidRect = new Rectangle(e.X - 15, e.Y - 15, 30, 30);
-                        break;
+                    //case Mode.rubber:
+                    //    invalidRect = new Rectangle(e.X - 15, e.Y - 15, 30, 30);
+                    //    break;
 
                     case Mode.freeSelect:
                         using (Graphics g = Graphics.FromImage(UILayer))
@@ -609,7 +621,7 @@ namespace Photoapp
 
                 // Update zoom factor
                 zoomFactor = newZoomFactor;
-
+              
                 // Redraw the canvas with updated zoom and pan
                 RedrawCanvas(canvasPanel.ClientRectangle);
             }
@@ -629,11 +641,23 @@ namespace Photoapp
 
         private Rectangle GetBoundingRectangle(Point p1, Point p2)
         {
+            //int x = Math.Min(p1.X, p2.X);
+            //int y = Math.Min(p1.Y, p2.Y);
+            //int width = Math.Abs(p1.X - p2.X);
+            //int height = Math.Abs(p1.Y - p2.Y);
+            //return new Rectangle(x, y, width, height);
             int x = Math.Min(p1.X, p2.X);
             int y = Math.Min(p1.Y, p2.Y);
             int width = Math.Abs(p1.X - p2.X);
             int height = Math.Abs(p1.Y - p2.Y);
-            return new Rectangle(x, y, width, height);
+
+            // Scale and translate based on zoom and pan
+            int adjustedX = (int)(x * zoomFactor + panOffset.X);
+            int adjustedY = (int)(y * zoomFactor + panOffset.Y);
+            int adjustedWidth = (int)(width * zoomFactor);
+            int adjustedHeight = (int)(height * zoomFactor);
+
+            return new Rectangle(adjustedX, adjustedY, adjustedWidth, adjustedHeight);
         }
         private Point NormalizeMousePosition(Point mousePos)
         {

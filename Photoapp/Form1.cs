@@ -277,17 +277,35 @@ namespace Photoapp
         }
         private void clearUIBitmap()
         {
+          
             if ((Control.ModifierKeys & Keys.Shift) == 0 && (Control.ModifierKeys & Keys.Control) == 0)
             {
-                // Dispose of UILayer and LastUILayer if they exist
-                if (UILayer != null)
+                if (currentMode == Mode.rectangleSelect || currentMode == Mode.freeSelect)
                 {
-                    UILayer.Dispose();
-                    UILayer = null;
+
+                    // Dispose of UILayer and LastUILayer if they exist
+                    if (UILayer != null)
+                    {
+                        UILayer.Dispose();
+                        UILayer = null;
+                    }
+                    MaskControl.MapRemembered = new byte[canvasPanel.Width, canvasPanel.Height];
+                    // Create new Bitmap instances with the size of canvasPanel.ClientRectangle
+                    UILayer = new Bitmap(canvasPanel.ClientRectangle.Width, canvasPanel.ClientRectangle.Height);
                 }
-                MaskControl.MapRemembered = new byte[canvasPanel.Width, canvasPanel.Height];
-                // Create new Bitmap instances with the size of canvasPanel.ClientRectangle
-                UILayer = new Bitmap(canvasPanel.ClientRectangle.Width, canvasPanel.ClientRectangle.Height);
+                else
+                {
+                    // Dispose of UILayer
+                    if (UILayer != null)
+                    {
+
+                        UILayer.Dispose();
+                        UILayer = null;
+                    }
+                    //Create a new UILayer
+                    UILayer = new Bitmap(canvasPanel.ClientRectangle.Width, canvasPanel.ClientRectangle.Height);
+                }
+
             }
             else
             {
@@ -451,8 +469,7 @@ namespace Photoapp
                         invalidRect = Rectangle.Inflate(invalidRect, 5, 5); // Inflate for pen size
                         lastPoint = NormalizedPoint;
                         break;
-
-                        //case Mode.rubber:
+                    case Mode.rubber:
                         //using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
                         //using (SolidBrush transparentBrush = new SolidBrush(Color.Transparent))
                         //{
@@ -460,19 +477,18 @@ namespace Photoapp
                         //    g.SmoothingMode = SmoothingMode.AntiAlias;
                         //    g.FillEllipse(transparentBrush, NormalizedPoint.X - 10, NormalizedPoint.Y - 10, 20, 20);
                         //}
-                    //    invalidRect = new Rectangle(NormalizedPoint.X - 15, NormalizedPoint.Y - 15, 30, 30); // Inflate for rubber size
-                    //    break;
-                    case Mode.rubber:
-                        using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
-                        using (SolidBrush transparentBrush = new SolidBrush(Color.Transparent))
+                        //invalidRect = GetBoundingRectangle(lastPoint, NormalizedPoint);
+                        //invalidRect = Rectangle.Inflate(invalidRect, 20, 20); // Inflate for pen size
+                        //lastPoint = NormalizedPoint;
+                        using (Graphics g = Graphics.FromImage(UILayer))
+                        using (SolidBrush maskBrush = new SolidBrush(Color.FromArgb(128, Color.Gray))) // Semi-transparent preview
                         {
-                            g.CompositingMode = CompositingMode.SourceCopy;
                             g.SmoothingMode = SmoothingMode.AntiAlias;
-                            g.FillEllipse(transparentBrush, NormalizedPoint.X - 10, NormalizedPoint.Y - 10, 20, 20);
+                            g.FillEllipse(maskBrush, NormalizedPoint.X - 10, NormalizedPoint.Y - 10, 20, 20);
                         }
-                        invalidRect = GetBoundingRectangle(lastPoint, NormalizedPoint);
-                        invalidRect = Rectangle.Inflate(invalidRect, 20, 20); // Inflate for pen size
-                        lastPoint = NormalizedPoint;
+
+
+
                         break;
 
                     case Mode.freeSelect:
@@ -548,7 +564,33 @@ namespace Photoapp
                     //case Mode.rubber:
                     //    invalidRect = new Rectangle(e.X - 15, e.Y - 15, 30, 30);
                     //    break;
+                    case Mode.rubber:
+                        // Get the selected layer
 
+
+                        // Loop through the MaskControl.MapRemembered and apply from the UILayer
+                        // Loop through the MaskControl.MapRemembered and apply from selectedLayer to UILayer
+                        for (int x = 0; x < MaskControl.MapRemembered.GetLength(0); x++) // Loop through the width
+                        {
+                            for (int y = 0; y < MaskControl.MapRemembered.GetLength(1); y++) // Loop through the height
+                            {
+                                // Check if the mask for this pixel is marked (e.g., 2 indicates rubber area)
+                                if (MaskControl.MapRemembered[x, y] == 2)
+                                {
+                              
+                                    // Copy the pixel from selectedLayer to the UILayer
+                                    Color selectedLayerColor = UILayer.GetPixel(x, y);
+                              
+                                    if (selectedLayerColor.A != 0)  // Check for transparency (alpha = 0)
+                                    {
+                                        // Copy the pixel from selectedLayer to the UILayer
+                                  
+                                        selectedLayer.Bitmap.SetPixel(x, y, Color.Transparent); // Apply to the UI layer
+                                    }
+                                }
+                            }
+                        }
+                        break;
                     case Mode.freeSelect:
                         using (Graphics g = Graphics.FromImage(UILayer))
                         {
@@ -577,16 +619,20 @@ namespace Photoapp
                         invalidRect = canvasPanel.ClientRectangle; // Invalidate the entire canvas
                         break;
                 }
-                   
-                 
-                    if((Control.ModifierKeys & Keys.Control) != 0)
+
+
+                if (currentMode == Mode.rectangleSelect || currentMode == Mode.freeSelect)
+                {
+                    if ((Control.ModifierKeys & Keys.Control) != 0)
                     {
-                         MaskControl.MergeAndRemove(UILayer, Color.Blue);
+                        MaskControl.MergeAndRemove(UILayer, Color.Blue);
                     }
                     else
                     {
-                       MaskControl.MergeAndClearEdges(UILayer, Color.Blue);
+                        MaskControl.MergeAndClearEdges(UILayer, Color.Blue);
                     }
+                }
+            
                 clearUIBitmap();
                 RedrawCanvas(invalidRect);
             }

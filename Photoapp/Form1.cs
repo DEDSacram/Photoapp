@@ -53,6 +53,7 @@ namespace Photoapp
         private int selectedLayerId = 1; // Default to -1, indicating no layer is selected initially
 
         private bool isDrawing = false;
+        private bool selectionactive = false;
         private Point lastPoint;
         private Mode currentMode = Mode.pencil; // Start in drawing mode
 
@@ -280,8 +281,10 @@ namespace Photoapp
           
             if ((Control.ModifierKeys & Keys.Shift) == 0 && (Control.ModifierKeys & Keys.Control) == 0)
             {
+              
                 if (currentMode == Mode.rectangleSelect || currentMode == Mode.freeSelect)
                 {
+                    selectionactive = false;
 
                     // Dispose of UILayer and LastUILayer if they exist
                     if (UILayer != null)
@@ -309,6 +312,7 @@ namespace Photoapp
             }
             else
             {
+                selectionactive = true;
                 // Dispose of UILayer
                 if (UILayer != null)
                 {
@@ -470,26 +474,33 @@ namespace Photoapp
                         lastPoint = NormalizedPoint;
                         break;
                     case Mode.rubber:
-                        //using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
-                        //using (SolidBrush transparentBrush = new SolidBrush(Color.Transparent))
-                        //{
-                        //    g.CompositingMode = CompositingMode.SourceCopy;
-                        //    g.SmoothingMode = SmoothingMode.AntiAlias;
-                        //    g.FillEllipse(transparentBrush, NormalizedPoint.X - 10, NormalizedPoint.Y - 10, 20, 20);
-                        //}
-                        //invalidRect = GetBoundingRectangle(lastPoint, NormalizedPoint);
-                        //invalidRect = Rectangle.Inflate(invalidRect, 20, 20); // Inflate for pen size
-                        //lastPoint = NormalizedPoint;
-                        using (Graphics g = Graphics.FromImage(UILayer))
-                        using (SolidBrush maskBrush = new SolidBrush(Color.FromArgb(128, Color.Gray))) // Semi-transparent preview
+                        if (selectionactive)
                         {
-                            g.SmoothingMode = SmoothingMode.AntiAlias;
-                            g.FillEllipse(maskBrush, NormalizedPoint.X - 10, NormalizedPoint.Y - 10, 20, 20);
+                            using (Graphics g = Graphics.FromImage(UILayer))
+                            using (SolidBrush maskBrush = new SolidBrush(Color.FromArgb(128, Color.Gray))) // Semi-transparent preview
+                            {
+                                g.SmoothingMode = SmoothingMode.AntiAlias;
+                                g.FillEllipse(maskBrush, NormalizedPoint.X - 10, NormalizedPoint.Y - 10, 20, 20);
+                            }
+                        }
+                        else
+                        {
+                            using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
+                            using (SolidBrush transparentBrush = new SolidBrush(Color.Transparent))
+                            {
+                                g.CompositingMode = CompositingMode.SourceCopy;
+                                g.SmoothingMode = SmoothingMode.AntiAlias;
+                                g.FillEllipse(transparentBrush, NormalizedPoint.X - 10, NormalizedPoint.Y - 10, 20, 20);
+                            }
+                            invalidRect = GetBoundingRectangle(lastPoint, NormalizedPoint);
+                            invalidRect = Rectangle.Inflate(invalidRect, 20, 20); // Inflate for pen size
+                            lastPoint = NormalizedPoint;
                         }
 
 
 
-                        break;
+
+                            break;
 
                     case Mode.freeSelect:
                         Point clampedPoint = ClampPoint(NormalizedPoint);
@@ -559,6 +570,7 @@ namespace Photoapp
                         points.Add(NormalizedPoint);
                         invalidRect = GetBoundingRectangle(lastPoint, NormalizedPoint);
                         invalidRect = Rectangle.Inflate(invalidRect, 10, 10);
+                        points.Clear();
                         break;
 
                     //case Mode.rubber:
@@ -570,26 +582,30 @@ namespace Photoapp
 
                         // Loop through the MaskControl.MapRemembered and apply from the UILayer
                         // Loop through the MaskControl.MapRemembered and apply from selectedLayer to UILayer
-                        for (int x = 0; x < MaskControl.MapRemembered.GetLength(0); x++) // Loop through the width
+                        if (selectionactive)
                         {
-                            for (int y = 0; y < MaskControl.MapRemembered.GetLength(1); y++) // Loop through the height
+                            for (int x = 0; x < MaskControl.MapRemembered.GetLength(0); x++) // Loop through the width
                             {
-                                // Check if the mask for this pixel is marked (e.g., 2 indicates rubber area)
-                                if (MaskControl.MapRemembered[x, y] == 2)
+                                for (int y = 0; y < MaskControl.MapRemembered.GetLength(1); y++) // Loop through the height
                                 {
-                              
-                                    // Copy the pixel from selectedLayer to the UILayer
-                                    Color selectedLayerColor = UILayer.GetPixel(x, y);
-                              
-                                    if (selectedLayerColor.A != 0)  // Check for transparency (alpha = 0)
+                                    // Check if the mask for this pixel is marked (e.g., 2 indicates rubber area)
+                                    if (MaskControl.MapRemembered[x, y] == 2)
                                     {
+
                                         // Copy the pixel from selectedLayer to the UILayer
-                                  
-                                        selectedLayer.Bitmap.SetPixel(x, y, Color.Transparent); // Apply to the UI layer
+                                        Color selectedLayerColor = UILayer.GetPixel(x, y);
+
+                                        if (selectedLayerColor.A != 0)  // Check for transparency (alpha = 0)
+                                        {
+                                            // Copy the pixel from selectedLayer to the UILayer
+
+                                            selectedLayer.Bitmap.SetPixel(x, y, Color.Transparent); // Apply to the UI layer
+                                        }
                                     }
                                 }
                             }
                         }
+            
                         break;
                     case Mode.freeSelect:
                         using (Graphics g = Graphics.FromImage(UILayer))

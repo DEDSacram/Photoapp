@@ -165,8 +165,6 @@ namespace Photoapp
             // Decompress should return an int[] array with one difference per byte.
             int[] diff = Decompress(entry.ZippedBitmap);
 
-
-
             byte[] diffForDisplay = new byte[diff.Length];
             for (int i = 0; i < diff.Length; i++)
             {
@@ -175,13 +173,9 @@ namespace Photoapp
                 if (shifted > 255) shifted = 255;
                 diffForDisplay[i] = (byte)shifted;
             }
-
-            Bitmap diffBmp = CreateBitmapFromBytes(diffForDisplay, layer.Bitmap.Width, layer.Bitmap.Height, PixelFormat.Format32bppArgb);
-            string diffOutputPath = @"C:\Users\rlly\Desktop\paint\signed_differenceeasdasdee.png";
-            diffBmp.Save(diffOutputPath, ImageFormat.Png);
-
-
-
+            //Bitmap diffBmp = CreateBitmapFromBytes(diffForDisplay, layer.Bitmap.Width, layer.Bitmap.Height, PixelFormat.Format32bppArgb);
+            //string diffOutputPath = @"C:\Users\rlly\Desktop\paint\signed_differenceeasdasdee.png";
+            //diffBmp.Save(diffOutputPath, ImageFormat.Png);
             byte[] currentImage = GetBytesFromBitmap(layer.Bitmap);
 
             byte[] reconstructedData = new byte[diff.Length];
@@ -193,25 +187,10 @@ namespace Photoapp
                 reconstructedData[i] = (byte)value;
             }
             layer.Bitmap = CreateBitmapFromBytes(reconstructedData, layer.Bitmap.Width, layer.Bitmap.Height, PixelFormat.Format32bppArgb);
-            Bitmap reconstructedBmp = CreateBitmapFromBytes(reconstructedData, layer.Bitmap.Width, layer.Bitmap.Height, PixelFormat.Format32bppArgb);
-            string reconOutputPath = @"C:\Users\rlly\Desktop\paint\reconstructednew.png";
-            reconstructedBmp.Save(reconOutputPath, ImageFormat.Png);
-            reconstructedBmp.Dispose();
-
-
-           
-
-
-
-            //// Rebuild the bitmap from the modified byte array.
-            //Bitmap restoredBitmap = CreateBitmapFromBytes(currentImage, layer.Bitmap.Width, layer.Bitmap.Height, PixelFormat.Format32bppArgb);
-
-            //// Save the restored bitmap back into the layer.
-            //layer.Bitmap = restoredBitmap;
-            //string reconOutputPath = @"C:\Users\rlly\Desktop\paint\reconstructed222.png";
-            //restoredBitmap.Save(reconOutputPath, ImageFormat.Png);
-            ////string reconstructedPath = "C:\\Users\\rlly\\source\\repos\\ConsoleApp2\\ConsoleApp2\\reconstructed.png";
-
+            //Bitmap reconstructedBmp = CreateBitmapFromBytes(reconstructedData, layer.Bitmap.Width, layer.Bitmap.Height, PixelFormat.Format32bppArgb);
+            //string reconOutputPath = @"C:\Users\rlly\Desktop\paint\reconstructednew.png";
+            //reconstructedBmp.Save(reconOutputPath, ImageFormat.Png);
+            //reconstructedBmp.Dispose();
         }
 
         // Helper: Extract raw bytes from a Bitmap using LockBits.

@@ -737,7 +737,10 @@ namespace Photoapp
                         MaskControl.MergeAndClearEdges(UILayer, Color.Blue);
                     }
                 }
-                Savetomanager(selectedLayer.Bitmap);
+                else
+                {
+                    Savetomanager(selectedLayer.Bitmap);
+                }
                 clearUIBitmap();
                 RedrawCanvas(invalidRect);
             }
@@ -769,53 +772,6 @@ namespace Photoapp
 
             }
         }
-        static Bitmap CreateBitmapFromBytes(byte[] bytes, int width, int height, PixelFormat format)
-        {
-            Bitmap bmp = new Bitmap(width, height, format);
-            Rectangle rect = new Rectangle(0, 0, width, height);
-            BitmapData bmpData = bmp.LockBits(rect, ImageLockMode.WriteOnly, format);
-            int byteCount = bmpData.Stride * height;
-            Marshal.Copy(bytes, 0, bmpData.Scan0, byteCount);
-            bmp.UnlockBits(bmpData);
-            return bmp;
-        }
-        private byte[] Compress(byte[] data)
-        {
-            using (MemoryStream output = new MemoryStream())
-            {
-                using (GZipStream gzip = new GZipStream(output, CompressionLevel.Optimal))
-                {
-                    gzip.Write(data, 0, data.Length);
-                }
-                return output.ToArray();
-            }
-        }
-
-        // Decompression method (for when you need to restore the diff)
-        private int[] Decompress(byte[] compressedData)
-        {
-            using (MemoryStream input = new MemoryStream(compressedData))
-            using (MemoryStream output = new MemoryStream())
-            {
-                using (GZipStream gzip = new GZipStream(input, CompressionMode.Decompress))
-                {
-                    gzip.CopyTo(output);
-                }
-                byte[] decompressedBytes = output.ToArray();
-
-                // Convert byte[] back to int[]
-                int[] result = new int[decompressedBytes.Length / sizeof(int)];
-                Buffer.BlockCopy(decompressedBytes, 0, result, 0, decompressedBytes.Length);
-                return result;
-            }
-        }
-
-
-
-
-
- 
-
         private void Savetomanager(Bitmap Modified)
         {
             string diffOutputPath = @"C:\Users\rlly\Desktop\paint\current.png";
@@ -831,72 +787,7 @@ namespace Photoapp
             {
                 signedDiff[i] = dataOriginal[i] - dataModified[i];
             }
-
-
-
             layerManager.SaveToUndoStack(selectedLayerId, signedDiff);
-
-            //tested
-
-            //byte[] diffForDisplay = new byte[dataOriginal.Length];
-            //for (int i = 0; i < signedDiff.Length; i++)
-            //{
-            //    int shifted = signedDiff[i] + 128;
-            //    if (shifted < 0) shifted = 0;
-            //    if (shifted > 255) shifted = 255;
-            //    diffForDisplay[i] = (byte)shifted;
-            //}
-
-            //Bitmap diffBmp = CreateBitmapFromBytes(diffForDisplay, Modified.Width, Modified.Height, PixelFormat.Format32bppArgb);
-            //diffOutputPath = @"C:\Users\rlly\Desktop\paint\signed_differenceeee.png";
-            //diffBmp.Save(diffOutputPath, ImageFormat.Png);
-            //diffBmp.Dispose();
-            //// Convert int[] to byte[]
-            //// no times 4 because we are using byte[] not int[]
-            //byte[] diffBytes = new byte[signedDiff.Length * 4];
-            //Buffer.BlockCopy(signedDiff, 0, diffBytes, 0, diffBytes.Length);
-
-
-
-            //// Compress the byte array
-            //byte[] compressedData = Compress(diffBytes);
-
-
-            //int[] diff = Decompress(compressedData);
-            //Console.WriteLine(signedDiff.Length);
-            //Console.WriteLine(diff.Length);
-            //Console.WriteLine(Modified.Width * Modified.Height);
-
-
-            ////Bitmap restoredBitmap = RestoreOriginalBitmap(Modified, diff);
-            ////string restoredImagePath = @"C:\Users\rlly\Desktop\paint\restoredImage.png";
-            ////restoredBitmap.Save(restoredImagePath, ImageFormat.Png);
-
-            //byte[] reconstructedData = new byte[dataModified.Length];
-            //for (int i = 0; i < dataModified.Length; i++)
-            //{
-            //    int value = dataModified[i] + diff[i];
-            //    if (value < 0) value = 0;
-            //    if (value > 255) value = 255;
-            //    reconstructedData[i] = (byte)value;
-            //}
-            //Bitmap reconstructedBmp = CreateBitmapFromBytes(reconstructedData, Modified.Width, Modified.Height, PixelFormat.Format32bppArgb);
-            //string reconOutputPath = @"C:\Users\rlly\Desktop\paint\reconstructed.png";
-            //reconstructedBmp.Save(reconOutputPath, ImageFormat.Png);
-            //reconstructedBmp.Dispose();
-
-
-            // --- (Optional) Create a "viewable" signed difference image ---
-            // The signed differences range from -255 to +255. To display them as an image,
-            // we offset each value by 128, so that -255 maps near 0 and +255 maps near 255.
-            //byte[] diffForDisplay = new byte[dataOriginal.Length];
-            //for (int i = 0; i < signedDiff.Length; i++)
-            //{
-            //    int shifted = signedDiff[i] + 128;
-            //    if (shifted < 0) shifted = 0;
-            //    if (shifted > 255) shifted = 255;
-            //    diffForDisplay[i] = (byte)shifted;
-            //}
         }
      
         private void canvasPanel_MouseWheel(object sender, MouseEventArgs e)
@@ -943,11 +834,6 @@ namespace Photoapp
 
         private Rectangle GetBoundingRectangle(Point p1, Point p2)
         {
-            //int x = Math.Min(p1.X, p2.X);
-            //int y = Math.Min(p1.Y, p2.Y);
-            //int width = Math.Abs(p1.X - p2.X);
-            //int height = Math.Abs(p1.Y - p2.Y);
-            //return new Rectangle(x, y, width, height);
             int x = Math.Min(p1.X, p2.X);
             int y = Math.Min(p1.Y, p2.Y);
             int width = Math.Abs(p1.X - p2.X);
@@ -1021,9 +907,6 @@ namespace Photoapp
                 }
 
                 // Draw maskBitmap onto combinedBitmap
-              
-
-
                 if (UILayer != null)
                 {
                     g.DrawImage(UILayer, 0, 0);

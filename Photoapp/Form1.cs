@@ -463,15 +463,39 @@ namespace Photoapp
                 switch (currentMode)
                 {
                     case Mode.pencil:
-                        using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
+                        //using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
+                        //{
+                        //    g.SmoothingMode = SmoothingMode.AntiAlias;
+                        //    g.DrawLine(Pens.Black, lastPoint, NormalizedPoint);
+                        //}
+                        //points.Add(NormalizedPoint);
+                        //invalidRect = GetBoundingRectangle(lastPoint, NormalizedPoint);
+                        //invalidRect = Rectangle.Inflate(invalidRect, 5, 5); // Inflate for pen size
+                        //lastPoint = NormalizedPoint;
+                        if (selectionactive)  // If selection is active, draw on the UI layer
                         {
-                            g.SmoothingMode = SmoothingMode.AntiAlias;
-                            g.DrawLine(Pens.Black, lastPoint, NormalizedPoint);
+                            using (Graphics g = Graphics.FromImage(UILayer))
+                            {
+                                g.SmoothingMode = SmoothingMode.AntiAlias;
+                                g.DrawLine(Pens.Red, lastPoint, NormalizedPoint);
+                            }
+                            points.Add(NormalizedPoint);
+                       //     invalidRect = GetBoundingRectangle(lastPoint, NormalizedPoint);
+                        //    invalidRect = Rectangle.Inflate(invalidRect, 5, 5); // Inflate for pen size
+                            lastPoint = NormalizedPoint;
                         }
-                        points.Add(NormalizedPoint);
-                        invalidRect = GetBoundingRectangle(lastPoint, NormalizedPoint);
-                        invalidRect = Rectangle.Inflate(invalidRect, 5, 5); // Inflate for pen size
-                        lastPoint = NormalizedPoint;
+                        else  // If no selection, draw directly on the selected bitmap layer
+                        {
+                            using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
+                            {
+                                g.SmoothingMode = SmoothingMode.AntiAlias;
+                                g.DrawLine(Pens.Black, lastPoint, NormalizedPoint);
+                            }
+                            points.Add(NormalizedPoint);
+                            invalidRect = GetBoundingRectangle(lastPoint, NormalizedPoint);
+                            invalidRect = Rectangle.Inflate(invalidRect, 5, 5); // Inflate for pen size
+                            lastPoint = NormalizedPoint;
+                        }
                         break;
                     case Mode.rubber:
                         if (selectionactive)
@@ -562,15 +586,56 @@ namespace Photoapp
                 switch (currentMode)
                 {
                     case Mode.pencil:
-                        using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
+                        //using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
+                        //{
+                        //    g.SmoothingMode = SmoothingMode.AntiAlias;
+                        //    g.DrawLine(Pens.Black, lastPoint, NormalizedPoint);
+                        //}
+                        //points.Add(NormalizedPoint);
+                        //invalidRect = GetBoundingRectangle(lastPoint, NormalizedPoint);
+                        //invalidRect = Rectangle.Inflate(invalidRect, 10, 10);
+                        //points.Clear();
+                        if (selectionactive)
                         {
-                            g.SmoothingMode = SmoothingMode.AntiAlias;
-                            g.DrawLine(Pens.Black, lastPoint, NormalizedPoint);
+                            for (int x = 0; x < MaskControl.MapRemembered.GetLength(0); x++) // Loop through the width
+                            {
+                                for (int y = 0; y < MaskControl.MapRemembered.GetLength(1); y++) // Loop through the height
+                                {
+                                    // Check if the mask for this pixel is marked (e.g., 2 indicates rubber area)
+                                    if (MaskControl.MapRemembered[x, y] == 2)
+                                    {
+
+                                        // Copy the pixel from selectedLayer to the UILayer
+                                        Color selectedLayerColor = UILayer.GetPixel(x, y);
+
+                                        if (selectedLayerColor.A != 0)  // Check for transparency (alpha = 0)
+                                        {
+                                            // Copy the pixel from selectedLayer to the UILayer
+
+                                            selectedLayer.Bitmap.SetPixel(x, y, Color.Black); // Apply to the UI layer
+                                        }
+                                    }
+                                }
+                            }
                         }
+                        else // If no selection is active, draw directly on the selected bitmap layer
+                        {
+                            using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
+                            {
+                                g.SmoothingMode = SmoothingMode.AntiAlias;
+                                g.DrawLine(Pens.Black, lastPoint, NormalizedPoint);  // Direct pencil drawing on the bitmap
+                            }
+                        }
+
+                        // Add the new point to the drawing path
                         points.Add(NormalizedPoint);
+
+                        // Calculate the bounding rectangle for the pencil stroke
                         invalidRect = GetBoundingRectangle(lastPoint, NormalizedPoint);
-                        invalidRect = Rectangle.Inflate(invalidRect, 10, 10);
-                        points.Clear();
+                        invalidRect = Rectangle.Inflate(invalidRect, 5, 5);  // Inflate for pen size
+
+                        lastPoint = NormalizedPoint;  // Update last point
+
                         break;
 
                     //case Mode.rubber:

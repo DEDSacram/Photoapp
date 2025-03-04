@@ -5,6 +5,7 @@ using System.Drawing;
 using System.IO.Compression;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace Photoapp
 {
@@ -56,7 +57,7 @@ namespace Photoapp
     public class LayerManager
     {
         private List<Layer> layers;
-        private Stack<UndoEntry> undoStack;
+        public Stack<UndoEntry> undoStack;
         private int nextLayerId;
 
         public LayerManager()
@@ -70,6 +71,16 @@ namespace Photoapp
         {
             return nextLayerId++;
         }
+        private Layer GetLayerById(int layerId)
+        {
+            foreach (Layer layer in layers)
+            {
+                if (layer.LayerId == layerId)
+                    return layer;
+            }
+            return null;
+        }
+
         public List<Layer> GetLayers()
         {
             return layers;
@@ -121,7 +132,145 @@ namespace Photoapp
             }
         }
 
-        private void SaveUndoState(Layer layer)
+        public void SaveToUndoStack(int layerId, int[] diff)
+        {
+            // Convert int[] to byte[]
+            byte[] diffBytes = new byte[diff.Length * 4];
+            Buffer.BlockCopy(diff, 0, diffBytes, 0, diffBytes.Length);
+
+
+
+            // Compress the byte array
+            byte[] compressedData = Compress(diffBytes);
+
+            // Save the compressed data in an UndoEntry
+            UndoEntry entry = new UndoEntry(layerId, compressedData);
+            undoStack.Push(entry);
+        }
+        public void RestoreFromUndoStack()
+        {
+            if (undoStack.Count == 0)
+                return; // No undo available.
+
+            // Get the last undo entry from the stack.
+
+            UndoEntry entry = undoStack.Pop();
+
+            // Retrieve the layer from the private list 'layers' by its ID.
+            Layer layer = GetLayerById(entry.LayerId);
+            if (layer == null)
+                return; // Layer not found, nothing to restore.
+
+            // Decompress the stored zipped difference data.
+            // Decompress should return an int[] array with one difference per byte.
+            int[] diff = Decompress(entry.ZippedBitmap);
+
+
+
+            byte[] diffForDisplay = new byte[diff.Length];
+            for (int i = 0; i < diff.Length; i++)
+            {
+                int shifted = diff[i] + 128;
+                if (shifted < 0) shifted = 0;
+                if (shifted > 255) shifted = 255;
+                diffForDisplay[i] = (byte)shifted;
+            }
+
+            Bitmap diffBmp = CreateBitmapFromBytes(diffForDisplay, layer.Bitmap.Width, layer.Bitmap.Height, PixelFormat.Format32bppArgb);
+            string diffOutputPath = @"C:\Users\rlly\Desktop\paint\signed_differenceeasdasdee.png";
+            diffBmp.Save(diffOutputPath, ImageFormat.Png);
+
+
+
+            byte[] currentImage = GetBytesFromBitmap(layer.Bitmap);
+
+            byte[] reconstructedData = new byte[diff.Length];
+            for (int i = 0; i < currentImage.Length; i++)
+            {
+                int value = currentImage[i] + diff[i];
+                if (value < 0) value = 0;
+                if (value > 255) value = 255;
+                reconstructedData[i] = (byte)value;
+            }
+            layer.Bitmap = CreateBitmapFromBytes(reconstructedData, layer.Bitmap.Width, layer.Bitmap.Height, PixelFormat.Format32bppArgb);
+            Bitmap reconstructedBmp = CreateBitmapFromBytes(reconstructedData, layer.Bitmap.Width, layer.Bitmap.Height, PixelFormat.Format32bppArgb);
+            string reconOutputPath = @"C:\Users\rlly\Desktop\paint\reconstructednew.png";
+            reconstructedBmp.Save(reconOutputPath, ImageFormat.Png);
+            reconstructedBmp.Dispose();
+
+
+           
+
+
+
+            //// Rebuild the bitmap from the modified byte array.
+            //Bitmap restoredBitmap = CreateBitmapFromBytes(currentImage, layer.Bitmap.Width, layer.Bitmap.Height, PixelFormat.Format32bppArgb);
+
+            //// Save the restored bitmap back into the layer.
+            //layer.Bitmap = restoredBitmap;
+            //string reconOutputPath = @"C:\Users\rlly\Desktop\paint\reconstructed222.png";
+            //restoredBitmap.Save(reconOutputPath, ImageFormat.Png);
+            ////string reconstructedPath = "C:\\Users\\rlly\\source\\repos\\ConsoleApp2\\ConsoleApp2\\reconstructed.png";
+
+        }
+
+        // Helper: Extract raw bytes from a Bitmap using LockBits.
+        private byte[] GetBytesFromBitmap(Bitmap bmp)
+        {
+            Rectangle rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
+            BitmapData bmpData = bmp.LockBits(rect, ImageLockMode.ReadOnly, bmp.PixelFormat);
+            int byteCount = bmpData.Stride * bmp.Height;
+            byte[] bytes = new byte[byteCount];
+            Marshal.Copy(bmpData.Scan0, bytes, 0, byteCount);
+            bmp.UnlockBits(bmpData);
+            return bytes;
+        }
+
+        // Helper: Create a Bitmap from raw byte data.
+        private Bitmap CreateBitmapFromBytes(byte[] bytes, int width, int height, PixelFormat format)
+        {
+            Bitmap bmp = new Bitmap(width, height, format);
+            Rectangle rect = new Rectangle(0, 0, width, height);
+            BitmapData bmpData = bmp.LockBits(rect, ImageLockMode.WriteOnly, format);
+            int byteCount = bmpData.Stride * height;
+            Marshal.Copy(bytes, 0, bmpData.Scan0, byteCount);
+            bmp.UnlockBits(bmpData);
+            return bmp;
+        }
+
+
+        private byte[] Compress(byte[] data)
+        {
+            using (MemoryStream output = new MemoryStream())
+            {
+                using (GZipStream gzip = new GZipStream(output, CompressionLevel.Optimal))
+                {
+                    gzip.Write(data, 0, data.Length);
+                }
+                return output.ToArray();
+            }
+        }
+
+        // Decompression method (for when you need to restore the diff)
+        private int[] Decompress(byte[] compressedData)
+        {
+            using (MemoryStream input = new MemoryStream(compressedData))
+            using (MemoryStream output = new MemoryStream())
+            {
+                using (GZipStream gzip = new GZipStream(input, CompressionMode.Decompress))
+                {
+                    gzip.CopyTo(output);
+                }
+                byte[] decompressedBytes = output.ToArray();
+
+                // Convert byte[] back to int[]
+                int[] result = new int[decompressedBytes.Length / sizeof(int)];
+                Buffer.BlockCopy(decompressedBytes, 0, result, 0, decompressedBytes.Length);
+                return result;
+            }
+        }
+
+        public void SaveUndoState(Layer layer)
         {
             using (var ms = new MemoryStream())
             {

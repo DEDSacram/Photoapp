@@ -12,6 +12,9 @@ using PixelFormat = System.Drawing.Imaging.PixelFormat;
 using Control = System.Windows.Forms.Control;
 using System.Drawing.Drawing2D;
 using System.Windows.Media.Media3D;
+using System.Runtime.InteropServices;
+using System.IO.Compression;
+using System.IO;
 
 
 namespace Photoapp
@@ -80,6 +83,12 @@ namespace Photoapp
 
         private Bitmap UILayer;
 
+
+
+        // Bitmap before to make a difference
+        byte[] dataOriginal;
+
+
         LayerManager layerManager = new LayerManager();
 
         MaskControl MaskControl = new MaskControl();
@@ -135,7 +144,7 @@ namespace Photoapp
         {
 
             InitializeComponent();
-
+             this.KeyPreview = true;  // This allows the form to receive key events
             combinedBitmap = new Bitmap(canvasPanel.Width, canvasPanel.Height);
             MaskControl.MapRemembered = new byte[canvasPanel.Width, canvasPanel.Height];
 
@@ -339,13 +348,28 @@ namespace Photoapp
             buildCombinedBitmap();
             canvasPanel.Invalidate(invalidRect);
         }
+        static byte[] GetBytesFromBitmap(Bitmap bmp)
+        {
+            Rectangle rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
+            BitmapData bmpData = bmp.LockBits(rect, ImageLockMode.ReadOnly, bmp.PixelFormat);
+            int byteCount = bmpData.Stride * bmp.Height;
+            byte[] bytes = new byte[byteCount];
+            Marshal.Copy(bmpData.Scan0, bytes, 0, byteCount);
+            bmp.UnlockBits(bmpData);
+            return bytes;
 
+        }
         private void canvasPanel_MouseDown(object sender, MouseEventArgs e)
         {
+   
+
+
             Point NormalizedPoint = NormalizeMousePosition(e.Location);
             if (e.Button == MouseButtons.Left)
             {
                 Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
+                // save bitmap of Layer before changing
+                dataOriginal = GetBytesFromBitmap(selectedLayer.Bitmap);
                 isDrawing = true;
                 lastPoint = NormalizedPoint;
 
@@ -713,7 +737,7 @@ namespace Photoapp
                         MaskControl.MergeAndClearEdges(UILayer, Color.Blue);
                     }
                 }
-            
+                Savetomanager(selectedLayer.Bitmap);
                 clearUIBitmap();
                 RedrawCanvas(invalidRect);
             }
@@ -721,9 +745,160 @@ namespace Photoapp
 
                 lastPoint = NormalizedPoint;
                 isDrawing = false;
+            // save selected layer bitmap to undo
+         
 
-              
+
+        }
+        private void Form1_KeyDown(object sender, KeyEventArgs e)
+        {
+
+            // Check if the Ctrl key, Shift key, and Z key are pressed
+            if (e.Control && e.Shift && e.KeyCode == Keys.Z)
+            {
+                // Implement redo functionality here
+                // Example: Call a redo method or logic
+
             }
+            // Optionally, you can also handle Ctrl + Z for undo
+            else if (e.Control && e.KeyCode == Keys.Z)
+            {
+                //Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
+                layerManager.RestoreFromUndoStack();
+                RedrawCanvas(canvasPanel.ClientRectangle);
+
+            }
+        }
+        static Bitmap CreateBitmapFromBytes(byte[] bytes, int width, int height, PixelFormat format)
+        {
+            Bitmap bmp = new Bitmap(width, height, format);
+            Rectangle rect = new Rectangle(0, 0, width, height);
+            BitmapData bmpData = bmp.LockBits(rect, ImageLockMode.WriteOnly, format);
+            int byteCount = bmpData.Stride * height;
+            Marshal.Copy(bytes, 0, bmpData.Scan0, byteCount);
+            bmp.UnlockBits(bmpData);
+            return bmp;
+        }
+        private byte[] Compress(byte[] data)
+        {
+            using (MemoryStream output = new MemoryStream())
+            {
+                using (GZipStream gzip = new GZipStream(output, CompressionLevel.Optimal))
+                {
+                    gzip.Write(data, 0, data.Length);
+                }
+                return output.ToArray();
+            }
+        }
+
+        // Decompression method (for when you need to restore the diff)
+        private int[] Decompress(byte[] compressedData)
+        {
+            using (MemoryStream input = new MemoryStream(compressedData))
+            using (MemoryStream output = new MemoryStream())
+            {
+                using (GZipStream gzip = new GZipStream(input, CompressionMode.Decompress))
+                {
+                    gzip.CopyTo(output);
+                }
+                byte[] decompressedBytes = output.ToArray();
+
+                // Convert byte[] back to int[]
+                int[] result = new int[decompressedBytes.Length / sizeof(int)];
+                Buffer.BlockCopy(decompressedBytes, 0, result, 0, decompressedBytes.Length);
+                return result;
+            }
+        }
+
+
+
+
+
+ 
+
+        private void Savetomanager(Bitmap Modified)
+        {
+            string diffOutputPath = @"C:\Users\rlly\Desktop\paint\current.png";
+            Modified.Save(diffOutputPath, ImageFormat.Png);
+            byte[] dataModified = GetBytesFromBitmap(Modified);
+            // Create an array to hold the signed difference.
+            // Since a difference can be negative, we use an int array.
+            int[] signedDiff = new int[dataOriginal.Length];
+
+            // Compute the signed difference for each channel.
+            // (For each channel: diff = original - modified)
+            for (int i = 0; i < dataOriginal.Length; i++)
+            {
+                signedDiff[i] = dataOriginal[i] - dataModified[i];
+            }
+
+
+
+            layerManager.SaveToUndoStack(selectedLayerId, signedDiff);
+
+            //tested
+
+            //byte[] diffForDisplay = new byte[dataOriginal.Length];
+            //for (int i = 0; i < signedDiff.Length; i++)
+            //{
+            //    int shifted = signedDiff[i] + 128;
+            //    if (shifted < 0) shifted = 0;
+            //    if (shifted > 255) shifted = 255;
+            //    diffForDisplay[i] = (byte)shifted;
+            //}
+
+            //Bitmap diffBmp = CreateBitmapFromBytes(diffForDisplay, Modified.Width, Modified.Height, PixelFormat.Format32bppArgb);
+            //diffOutputPath = @"C:\Users\rlly\Desktop\paint\signed_differenceeee.png";
+            //diffBmp.Save(diffOutputPath, ImageFormat.Png);
+            //diffBmp.Dispose();
+            //// Convert int[] to byte[]
+            //// no times 4 because we are using byte[] not int[]
+            //byte[] diffBytes = new byte[signedDiff.Length * 4];
+            //Buffer.BlockCopy(signedDiff, 0, diffBytes, 0, diffBytes.Length);
+
+
+
+            //// Compress the byte array
+            //byte[] compressedData = Compress(diffBytes);
+
+
+            //int[] diff = Decompress(compressedData);
+            //Console.WriteLine(signedDiff.Length);
+            //Console.WriteLine(diff.Length);
+            //Console.WriteLine(Modified.Width * Modified.Height);
+
+
+            ////Bitmap restoredBitmap = RestoreOriginalBitmap(Modified, diff);
+            ////string restoredImagePath = @"C:\Users\rlly\Desktop\paint\restoredImage.png";
+            ////restoredBitmap.Save(restoredImagePath, ImageFormat.Png);
+
+            //byte[] reconstructedData = new byte[dataModified.Length];
+            //for (int i = 0; i < dataModified.Length; i++)
+            //{
+            //    int value = dataModified[i] + diff[i];
+            //    if (value < 0) value = 0;
+            //    if (value > 255) value = 255;
+            //    reconstructedData[i] = (byte)value;
+            //}
+            //Bitmap reconstructedBmp = CreateBitmapFromBytes(reconstructedData, Modified.Width, Modified.Height, PixelFormat.Format32bppArgb);
+            //string reconOutputPath = @"C:\Users\rlly\Desktop\paint\reconstructed.png";
+            //reconstructedBmp.Save(reconOutputPath, ImageFormat.Png);
+            //reconstructedBmp.Dispose();
+
+
+            // --- (Optional) Create a "viewable" signed difference image ---
+            // The signed differences range from -255 to +255. To display them as an image,
+            // we offset each value by 128, so that -255 maps near 0 and +255 maps near 255.
+            //byte[] diffForDisplay = new byte[dataOriginal.Length];
+            //for (int i = 0; i < signedDiff.Length; i++)
+            //{
+            //    int shifted = signedDiff[i] + 128;
+            //    if (shifted < 0) shifted = 0;
+            //    if (shifted > 255) shifted = 255;
+            //    diffForDisplay[i] = (byte)shifted;
+            //}
+        }
+     
         private void canvasPanel_MouseWheel(object sender, MouseEventArgs e)
         {
             if (Control.ModifierKeys == Keys.Control) // Zoom when Control is held
@@ -977,6 +1152,8 @@ namespace Photoapp
             // Add the new layer panel to the LayerPanel
             layerPanel.Controls.Add(layerItemPanel);
         }
+
+
     }
 
 }

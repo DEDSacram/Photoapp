@@ -321,7 +321,11 @@ namespace Photoapp
             }
             else
             {
-                selectionactive = true;
+                if (currentMode == Mode.rectangleSelect || currentMode == Mode.freeSelect)
+                {
+                    selectionactive = true;
+                }
+              
                 // Dispose of UILayer
                 if (UILayer != null)
                 {
@@ -461,7 +465,7 @@ namespace Photoapp
                         break;
                     case Mode.eyedropper:
                         // Get the color of the pixel at the given position
-                        Color pixelColor = selectedLayer.Bitmap.GetPixel(e.X, e.Y);
+                        Color pixelColor = selectedLayer.Bitmap.GetPixel(NormalizedPoint.X, NormalizedPoint.Y);
 
                         // Extract the individual ARGB components
                         int alpha = pixelColor.A;
@@ -842,7 +846,7 @@ namespace Photoapp
 
                 // Calculate new zoom factor, clamp it between limits
                 float newZoomFactor = zoomFactor * zoomFactorChange;
-                newZoomFactor = Math.Max(0.1f, Math.Min(newZoomFactor, 5.0f)); // Clamp between 0.1x and 5x
+                newZoomFactor = Math.Max(0.1f, Math.Min(newZoomFactor, 100.0f)); // Clamp between 0.1x and 5x
 
                 // Calculate scale difference
                 float scaleChange = newZoomFactor / zoomFactor;

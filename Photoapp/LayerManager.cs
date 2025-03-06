@@ -28,11 +28,18 @@ namespace Photoapp
             set;
         } // Added to track the order of layers
 
+        public Point Offset
+        {
+            get;
+            set;
+        }
+
         public Layer(int layerId, Bitmap bitmap)
         {
             LayerId = layerId;
             Bitmap = bitmap;
             Order = 0; // Default order value
+            Offset = new Point(0, 0);
         }
     }
     public class UndoEntry
@@ -47,11 +54,17 @@ namespace Photoapp
             get;
             private set;
         }
+        public bool IsTransform
+        {
+            get;
+            private set;
+        }
 
         public UndoEntry(int layerId, byte[] zippedBitmap)
         {
             LayerId = layerId;
             ZippedBitmap = zippedBitmap;
+            IsTransform = false;
         }
     }
     public class LayerManager
@@ -267,6 +280,60 @@ namespace Photoapp
                 }
             }
         }
+
+
+        public static Bitmap ResizeBitmap(Bitmap originalBitmap, int newWidth, int newHeight)
+        {
+            // Create a new Bitmap with the desired size
+            Bitmap resizedBitmap = new Bitmap(newWidth, newHeight);
+
+            // Create a Graphics object to draw on the new Bitmap
+            using (Graphics graphics = Graphics.FromImage(resizedBitmap))
+            {
+                // Set high-quality settings for resizing
+                graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+                graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+                // Draw the original image into the resized bitmap
+                graphics.DrawImage(originalBitmap, new Rectangle(0, 0, newWidth, newHeight));
+            }
+
+            return resizedBitmap;
+        }
+        public static Bitmap RotateImage(Bitmap originalBitmap, float angle)
+        {
+            // Calculate the new size of the image after rotation
+            float radians = angle * (float)Math.PI / 180f;
+            float cos = Math.Abs((float)Math.Cos(radians));
+            float sin = Math.Abs((float)Math.Sin(radians));
+
+            // Calculate new dimensions of the rotated image
+            int newWidth = (int)(originalBitmap.Width * cos + originalBitmap.Height * sin);
+            int newHeight = (int)(originalBitmap.Width * sin + originalBitmap.Height * cos);
+
+            // Create a new bitmap with enough space to avoid clipping, with transparent background
+            Bitmap rotatedBitmap = new Bitmap(newWidth, newHeight);
+            rotatedBitmap.SetResolution(originalBitmap.HorizontalResolution, originalBitmap.VerticalResolution);
+
+            // Set the background to be transparent
+            using (Graphics g = Graphics.FromImage(rotatedBitmap))
+            {
+                // Set the background to transparent
+                g.Clear(Color.Transparent);
+
+                // Apply the transformation
+                g.TranslateTransform(newWidth / 2, newHeight / 2);  // Translate to the center of the new bitmap
+                g.RotateTransform(angle);                           // Rotate by the specified angle
+                g.TranslateTransform(-originalBitmap.Width / 2, -originalBitmap.Height / 2);  // Translate back to the original position
+
+                // Draw the original image onto the transformed canvas
+                g.DrawImage(originalBitmap, new Point(0, 0));
+            }
+
+            return rotatedBitmap;
+        }
+
 
         // Undo the last action for a specific layer
         public void Undo(int layerId)

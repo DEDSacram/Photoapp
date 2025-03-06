@@ -446,6 +446,9 @@ namespace Photoapp
 
          
                         break;
+                    case Mode.drag:
+                        isDragging = true;
+                        break;
                     case Mode.eyedropper:
                         // Get the color of the pixel at the given position
                         Color pixelColor = selectedLayer.Bitmap.GetPixel(e.X, e.Y);
@@ -478,6 +481,7 @@ namespace Photoapp
 
         private void canvasPanel_MouseMove(object sender, MouseEventArgs e)
         {
+
             Point NormalizedPoint = NormalizeMousePosition(e.Location);
             if (isDrawing)
             {
@@ -544,12 +548,15 @@ namespace Photoapp
                             invalidRect = Rectangle.Inflate(invalidRect, 20, 20); // Inflate for pen size
                             lastPoint = NormalizedPoint;
                         }
-
-
-
-
-                            break;
-
+                        break;
+                    case Mode.drag:
+                        if (isDragging)
+                        {
+                            // Calculate the new location of the dragged panel
+                            Point newLocation = new Point(NormalizedPoint.X, NormalizedPoint.Y);
+                            selectedLayer.Offset = newLocation;
+                        }
+                        break;
                     case Mode.freeSelect:
                         Point clampedPoint = ClampPoint(NormalizedPoint);
 
@@ -632,11 +639,23 @@ namespace Photoapp
                                         // Copy the pixel from selectedLayer to the UILayer
                                         Color selectedLayerColor = UILayer.GetPixel(x, y);
 
+                                        // only apply to a existing bitmap
                                         if (selectedLayerColor.A != 0)  // Check for transparency (alpha = 0)
                                         {
-                                            // Copy the pixel from selectedLayer to the UILayer
+                                            
 
-                                            selectedLayer.Bitmap.SetPixel(x, y, Color.Black); // Apply to the UI layer
+                                            Point newcord = NormalizeMousePositionLayer(new Point(x, y),selectedLayer.Offset);
+
+                                            //selectedLayer.Bitmap.SetPixel(x, y, Color.Black); // Apply to the UI layer
+                                            if (newcord.X > 0 && newcord.Y > 0)
+                                            {
+                                                if(newcord.X < selectedLayer.Bitmap.Width && newcord.Y < selectedLayer.Bitmap.Height)
+                                                {
+                                                    selectedLayer.Bitmap.SetPixel(newcord.X, newcord.Y, Color.Black); // Apply to the UI layer
+                                                }
+                                               
+                                            }
+                                         
                                         }
                                     }
                                 }
@@ -855,11 +874,22 @@ namespace Photoapp
             return new Point((int)normalizedX, (int)normalizedY);
         }
 
+        private Point NormalizeMousePositionLayer(Point mousePos,Point layer)
+        {
+            // Adjust the mouse position based on the current zoom and pan
+            // Zoom is accounted for by the Normalize mouse position point
+            float normalizedX = (mousePos.X - layer.X);
+            float normalizedY = (mousePos.Y - layer.Y);
+            return new Point((int)normalizedX, (int)normalizedY);
+        }
+
+
 
         private void buildCombinedBitmap()
         {
             using (Graphics g = Graphics.FromImage(combinedBitmap))
             {
+                //g.TranslateTransform(500, -500);
                 // Apply scaling and panning
                 g.TranslateTransform(panOffset.X, panOffset.Y);
                 g.ScaleTransform(zoomFactor, zoomFactor);
@@ -872,8 +902,9 @@ namespace Photoapp
                 {
                     if (layer.Bitmap != null)
                     {
-                        g.DrawImage(layer.Bitmap, 0, 0);
+                        g.DrawImage(layer.Bitmap, layer.Offset.X, layer.Offset.Y);
                     }
+
                 }
 
 
@@ -892,6 +923,7 @@ namespace Photoapp
                         {
                             if (MaskControl.MapRemembered[x, y] == 1)
                             {
+                             
                                 // Set pixel to desired color (e.g., Red)
                                 maskBitmap.SetPixel(x, y, Color.Red); 
                             }

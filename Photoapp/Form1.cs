@@ -377,8 +377,15 @@ namespace Photoapp
                 switch (currentMode)
                 {
                     case Mode.pencil:
+                        if (selectionactive)
+                        {
+                            NormalizedPoint = NormalizeMousePosition(e.Location);
+                            lastPoint = NormalizedPoint;
+                        }
+                      
                         points.Clear();
-                        points.Add(lastPoint);
+                        points.Add(NormalizedPoint);
+                     
                         break;
 
                     case Mode.rubber:
@@ -498,6 +505,7 @@ namespace Photoapp
 
                         if (selectionactive)  // If selection is active, draw on the UI layer
                         {
+                            NormalizedPoint = NormalizeMousePosition(e.Location);
                             using (Graphics g = Graphics.FromImage(UILayer))
                             {
                                 g.SmoothingMode = SmoothingMode.AntiAlias;
@@ -525,6 +533,7 @@ namespace Photoapp
                     case Mode.rubber:
                         if (selectionactive)
                         {
+                            NormalizedPoint = NormalizeMousePosition(e.Location);
                             using (Graphics g = Graphics.FromImage(UILayer))
                             using (SolidBrush maskBrush = new SolidBrush(Color.FromArgb(128, Color.Gray))) // Semi-transparent preview
                             {
@@ -556,7 +565,6 @@ namespace Photoapp
                         }
                         break;
                     case Mode.freeSelect:
-                        //Point clampedPoint = ClampPoint(NormalizedPoint);
                         NormalizedPoint = NormalizeMousePosition(e.Location);
                         Point clampedPoint = ClampPoint(NormalizedPoint);
 
@@ -708,8 +716,17 @@ namespace Photoapp
                                         if (selectedLayerColor.A != 0)  // Check for transparency (alpha = 0)
                                         {
                                             // Copy the pixel from selectedLayer to the UILayer
+                                            Point newcord = NormalizeMousePositionLayer(new Point(x, y), selectedLayer.Offset);
 
-                                            selectedLayer.Bitmap.SetPixel(x, y, Color.Transparent); // Apply to the UI layer
+                                            //selectedLayer.Bitmap.SetPixel(x, y, Color.Black); // Apply to the UI layer
+                                            if (newcord.X > 0 && newcord.Y > 0)
+                                            {
+                                                if (newcord.X < selectedLayer.Bitmap.Width && newcord.Y < selectedLayer.Bitmap.Height)
+                                                {
+                                                    selectedLayer.Bitmap.SetPixel(newcord.X, newcord.Y, Color.Transparent); // Apply to the UI layer
+                                                }
+
+                                            }
                                         }
                                     }
                                 }

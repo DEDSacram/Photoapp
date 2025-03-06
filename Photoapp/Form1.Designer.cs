@@ -305,7 +305,6 @@ namespace Photoapp
             this.Controls.Add(this.layerPanel);
             this.Controls.Add(this.menuStrip1);
             this.Controls.Add(this.canvasPanel);
-            this.DoubleBuffered = true;
             this.Name = "Form1";
             this.Text = "Form1";
             this.Load += new System.EventHandler(this.Form1_Load);

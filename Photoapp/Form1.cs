@@ -512,7 +512,8 @@ namespace Photoapp
                             NormalizedPoint = NormalizeMousePosition(e.Location);
                             using (Graphics g = Graphics.FromImage(UILayer))
                             {
-                                g.SmoothingMode = SmoothingMode.AntiAlias;
+                                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.None;
+                                //g.SmoothingMode = SmoothingMode.AntiAlias;
                                 g.DrawLine(Pens.Red, lastPoint, NormalizedPoint);
                             }
                             points.Add(NormalizedPoint);
@@ -524,7 +525,8 @@ namespace Photoapp
                         {
                             using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
                             {
-                                g.SmoothingMode = SmoothingMode.AntiAlias;
+                                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.None;
+                                //g.SmoothingMode = SmoothingMode.AntiAlias;
                                 g.DrawLine(Pens.Black, lastPoint, NormalizedPoint);
                             }
                             points.Add(NormalizedPoint);
@@ -918,7 +920,7 @@ namespace Photoapp
                 g.TranslateTransform(panOffset.X, panOffset.Y);
                 g.ScaleTransform(zoomFactor, zoomFactor);
 
-
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.None;
                 g.CompositingMode = CompositingMode.SourceOver;
                 g.Clear(Color.Transparent);
 

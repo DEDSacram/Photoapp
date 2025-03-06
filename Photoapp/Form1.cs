@@ -365,6 +365,7 @@ namespace Photoapp
 
 
             Point NormalizedPoint = NormalizeMousePosition(e.Location);
+            NormalizedPoint = NormalizeMousePositionLayer(NormalizedPoint, layerManager.GetLayer(selectedLayerId).Offset);
             if (e.Button == MouseButtons.Left)
             {
                 Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
@@ -384,12 +385,14 @@ namespace Photoapp
                         break;
 
                     case Mode.freeSelect:
+                        NormalizedPoint = NormalizeMousePosition(e.Location);
                         clearUIBitmap();
                         points.Clear();
-                        points.Add(lastPoint);
+                        points.Add(NormalizedPoint);
                         break;
 
                     case Mode.rectangleSelect:
+                        NormalizedPoint = NormalizeMousePosition(e.Location);
                         clearUIBitmap();
                         selectionStartPoint = NormalizedPoint;
                         break;
@@ -483,6 +486,7 @@ namespace Photoapp
         {
 
             Point NormalizedPoint = NormalizeMousePosition(e.Location);
+            NormalizedPoint = NormalizeMousePositionLayer(NormalizedPoint, layerManager.GetLayer(selectedLayerId).Offset);
             if (isDrawing)
             {
                 Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
@@ -491,15 +495,7 @@ namespace Photoapp
                 switch (currentMode)
                 {
                     case Mode.pencil:
-                        //using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
-                        //{
-                        //    g.SmoothingMode = SmoothingMode.AntiAlias;
-                        //    g.DrawLine(Pens.Black, lastPoint, NormalizedPoint);
-                        //}
-                        //points.Add(NormalizedPoint);
-                        //invalidRect = GetBoundingRectangle(lastPoint, NormalizedPoint);
-                        //invalidRect = Rectangle.Inflate(invalidRect, 5, 5); // Inflate for pen size
-                        //lastPoint = NormalizedPoint;
+
                         if (selectionactive)  // If selection is active, draw on the UI layer
                         {
                             using (Graphics g = Graphics.FromImage(UILayer))
@@ -508,8 +504,8 @@ namespace Photoapp
                                 g.DrawLine(Pens.Red, lastPoint, NormalizedPoint);
                             }
                             points.Add(NormalizedPoint);
-                       //     invalidRect = GetBoundingRectangle(lastPoint, NormalizedPoint);
-                        //    invalidRect = Rectangle.Inflate(invalidRect, 5, 5); // Inflate for pen size
+                            invalidRect = GetBoundingRectangle(lastPoint, NormalizedPoint);
+                            invalidRect = Rectangle.Inflate(invalidRect, 5, 5); // Inflate for pen size
                             lastPoint = NormalizedPoint;
                         }
                         else  // If no selection, draw directly on the selected bitmap layer
@@ -520,8 +516,9 @@ namespace Photoapp
                                 g.DrawLine(Pens.Black, lastPoint, NormalizedPoint);
                             }
                             points.Add(NormalizedPoint);
-                            invalidRect = GetBoundingRectangle(lastPoint, NormalizedPoint);
-                            invalidRect = Rectangle.Inflate(invalidRect, 5, 5); // Inflate for pen size
+                            invalidRect = canvasPanel.ClientRectangle; // Invalidate the entire canvas
+                            //invalidRect = GetBoundingRectangle(lastPoint, NormalizedPoint); // redo
+                            //invalidRect = Rectangle.Inflate(invalidRect, 5, 5); // Inflate for pen size
                             lastPoint = NormalizedPoint;
                         }
                         break;
@@ -552,12 +549,15 @@ namespace Photoapp
                     case Mode.drag:
                         if (isDragging)
                         {
+                            NormalizedPoint = NormalizeMousePosition(e.Location);
                             // Calculate the new location of the dragged panel
                             Point newLocation = new Point(NormalizedPoint.X, NormalizedPoint.Y);
                             selectedLayer.Offset = newLocation;
                         }
                         break;
                     case Mode.freeSelect:
+                        //Point clampedPoint = ClampPoint(NormalizedPoint);
+                        NormalizedPoint = NormalizeMousePosition(e.Location);
                         Point clampedPoint = ClampPoint(NormalizedPoint);
 
                         using (Graphics g = Graphics.FromImage(UILayer))
@@ -578,6 +578,7 @@ namespace Photoapp
                     // unstable
                     case Mode.rectangleSelect:
                         // Logic for rectangle selection drawing.
+                        NormalizedPoint = NormalizeMousePosition(e.Location);
                         selectionLastPoint = ClampPoint(NormalizedPoint);
 
                         using (Graphics g = Graphics.FromImage(UILayer))
@@ -609,6 +610,7 @@ namespace Photoapp
         private void canvasPanel_MouseUp(object sender, MouseEventArgs e)
         {
             Point NormalizedPoint = NormalizeMousePosition(e.Location);
+            NormalizedPoint = NormalizeMousePositionLayer(NormalizedPoint, layerManager.GetLayer(selectedLayerId).Offset);
             if (isDrawing)
             {
                 Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
@@ -725,6 +727,7 @@ namespace Photoapp
                         break;
 
                     case Mode.rectangleSelect:
+                        NormalizedPoint = NormalizeMousePosition(e.Location);
                         selectionLastPoint = ClampPoint(NormalizedPoint);
 
                         //clearUIBitmap(); // fixes mask

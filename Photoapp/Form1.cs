@@ -70,6 +70,8 @@ namespace Photoapp
         private bool isRotating = false; // Track if a drag operation is ongoing
         private bool isScaling = false; // Track if a drag operation is ongoing
 
+        private Point previous = Point.Empty; // Track the previous mouse position for panning
+
 
         private Panel draggedPanel = null; // Track the dragged panel (the layer being dragged)
         private Point mouseOffset; // Track the offset between the mouse pos
@@ -372,12 +374,13 @@ namespace Photoapp
         {
    
 
-
+            
             Point NormalizedPoint = NormalizeMousePosition(e.Location);
             NormalizedPoint = NormalizeMousePositionLayer(NormalizedPoint, layerManager.GetLayer(selectedLayerId).Offset);
             if (e.Button == MouseButtons.Left)
             {
                 Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
+                previous = new Point(selectedLayer.Bitmap.Width, selectedLayer.Bitmap.Height);
                 // save bitmap of Layer before changing
                 dataOriginal = GetBytesFromBitmap(selectedLayer.Bitmap);
                 isDrawing = true;
@@ -464,10 +467,7 @@ namespace Photoapp
                         }
 
          
-                        break;
-                    //case Mode.drag:
-                    //    isDragging = true;
-                        break;
+                        break;           
                     case Mode.eyedropper:
                         // Get the color of the pixel at the given position
                         Color pixelColor = selectedLayer.Bitmap.GetPixel(NormalizedPoint.X, NormalizedPoint.Y);
@@ -849,7 +849,20 @@ namespace Photoapp
                 }
                 else
                 {
-                   // Savetomanager(selectedLayer.Bitmap); currently stop for rotate transforms
+
+
+                    if(currentMode == Mode.drag && (isRotating || isScaling))
+                    {
+                        // Save the modified layer bitmap to the undo stack
+                 
+                        Savetomanager(selectedLayer.Bitmap,true);
+                    }
+                    else
+                    {
+                        // Save the modified layer bitmap to the undo stack
+                        Savetomanager(selectedLayer.Bitmap,false);
+                    }
+                    // Savetomanager(selectedLayer.Bitmap); currently stop for rotate transforms
                 }
                 clearUIBitmap();
                 RedrawCanvas(invalidRect);
@@ -908,14 +921,27 @@ namespace Photoapp
 
             }
         }
-        private void Savetomanager(Bitmap Modified)
+        private void Savetomanager(Bitmap Modified, bool ovveride)
         {
-            string diffOutputPath = @"C:\Users\rlly\Desktop\paint\current.png";
-            Modified.Save(diffOutputPath, ImageFormat.Png);
+            //string diffOutputPath = @"C:\Users\rlly\Desktop\paint\current.png";
+            //Modified.Save(diffOutputPath, ImageFormat.Png);
+          
+            int[] signedDiff = new int[dataOriginal.Length];
+            if (ovveride)
+            {
+                for (int i = 0; i < dataOriginal.Length; i++)
+                {
+                    signedDiff[i] = dataOriginal[i];
+                }
+                layerManager.SaveToUndoStack(selectedLayerId, signedDiff, ovveride,previous);
+                return;
+            }
+
             byte[] dataModified = GetBytesFromBitmap(Modified);
+
             // Create an array to hold the signed difference.
             // Since a difference can be negative, we use an int array.
-            int[] signedDiff = new int[dataOriginal.Length];
+            //int[] signedDiff = new int[dataOriginal.Length];
 
             // Compute the signed difference for each channel.
             // (For each channel: diff = original - modified)
@@ -923,7 +949,7 @@ namespace Photoapp
             {
                 signedDiff[i] = dataOriginal[i] - dataModified[i];
             }
-            layerManager.SaveToUndoStack(selectedLayerId, signedDiff);
+            layerManager.SaveToUndoStack(selectedLayerId, signedDiff, ovveride,previous);
         }
      
         private void canvasPanel_MouseWheel(object sender, MouseEventArgs e)

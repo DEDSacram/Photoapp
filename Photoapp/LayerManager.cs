@@ -62,11 +62,28 @@ namespace Photoapp
             private set;
         }
 
+        public bool overrideBitmap
+        {
+            get;
+            set;
+        }
+        public int width
+        {
+            get;
+            set;
+        }
+        public int height
+        {
+            get;
+            set;
+        }
+
         public UndoEntry(int layerId, byte[] zippedBitmap)
         {
             LayerId = layerId;
             ZippedBitmap = zippedBitmap;
             IsTransform = false;
+            overrideBitmap = false;
         }
     }
     public class LayerManager
@@ -147,19 +164,25 @@ namespace Photoapp
             }
         }
 
-        public void SaveToUndoStack(int layerId, int[] diff)
+        public void SaveToUndoStack(int layerId, int[] diff, bool ovveride, Point Previoussize)
         {
+
             // Convert int[] to byte[]
             byte[] diffBytes = new byte[diff.Length * 4];
             Buffer.BlockCopy(diff, 0, diffBytes, 0, diffBytes.Length);
 
-
+            Layer layer = GetLayerById(layerId);
 
             // Compress the byte array
             byte[] compressedData = Compress(diffBytes);
 
             // Save the compressed data in an UndoEntry
             UndoEntry entry = new UndoEntry(layerId, compressedData);
+            entry.overrideBitmap = ovveride;
+            entry.width = Previoussize.X;
+            entry.height = Previoussize.Y; // cant do it here this is already with the new coords
+
+
             undoStack.Push(entry);
         }
         public void RestoreFromUndoStack()
@@ -171,6 +194,8 @@ namespace Photoapp
 
             UndoEntry entry = undoStack.Pop();
 
+            // restore full or differential
+
             // Retrieve the layer from the private list 'layers' by its ID.
             Layer layer = GetLayerById(entry.LayerId);
             if (layer == null)
@@ -179,6 +204,30 @@ namespace Photoapp
             // Decompress the stored zipped difference data.
             // Decompress should return an int[] array with one difference per byte.
             int[] diff = Decompress(entry.ZippedBitmap);
+
+            if(entry.overrideBitmap)
+            {
+                byte[] ovveridecopy = new byte[diff.Length];
+                for (int i = 0; i < diff.Length; i++)
+                {
+                    ovveridecopy[i] = (byte)diff[i];
+                }
+                try
+                {
+
+               
+                layer.Bitmap = CreateBitmapFromBytes(ovveridecopy,entry.width,entry.height, PixelFormat.Format32bppArgb);
+                }
+                catch
+                {
+                    Console.WriteLine(diff.Length);
+                    Console.WriteLine(ovveridecopy.Length);
+                    Console.WriteLine(layer.Bitmap.Width);
+                    Console.WriteLine(entry.width);
+                }
+         
+                return;
+            }
 
             byte[] diffForDisplay = new byte[diff.Length];
             for (int i = 0; i < diff.Length; i++)

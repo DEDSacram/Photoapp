@@ -58,7 +58,7 @@ namespace Photoapp
         private bool isDrawing = false;
         private bool selectionactive = false;
         private Point lastPoint;
-        private Mode currentMode = Mode.pencil; // Start in drawing mode
+        private Mode currentMode = Mode.font; // Start in drawing mode
 
 
         private List<Point> points = new List<Point>(); // Store points for freehand drawing
@@ -465,8 +465,8 @@ namespace Photoapp
 
          
                         break;
-                    case Mode.drag:
-                        isDragging = true;
+                    //case Mode.drag:
+                    //    isDragging = true;
                         break;
                     case Mode.eyedropper:
                         // Get the color of the pixel at the given position
@@ -490,6 +490,12 @@ namespace Photoapp
             }
         }
 
+       private void ResetModes() {
+            isDragging = false;
+            isRotating = false;
+            isScaling = false;
+        }
+
         private bool IsNearFirstPoint(Point currentPoint)
         {
             // Check if the current point is near the first point (within 5px)
@@ -497,7 +503,21 @@ namespace Photoapp
             return (currentPoint.X - firstPoint.X) * (currentPoint.X - firstPoint.X) + (currentPoint.Y - firstPoint.Y) * (currentPoint.Y - firstPoint.Y) < 25;
         }
 
+        float lastAngle = -1; // Store the last applied rotation angle
+        static double GetAngleBetweenPoints(Point lastPoint, Point normalizedPoint)
+        {
+            // Calculate differences in X and Y
+            double dx = lastPoint.X - normalizedPoint.X;
+            double dy = lastPoint.Y - normalizedPoint.Y;
 
+            // Calculate the angle in radians
+            double angleRadians = Math.Atan2(dy, dx);
+
+            // Convert the angle to degrees
+            double angleDegrees = angleRadians * (180.0 / Math.PI);
+
+            return angleDegrees;
+        }
         private void canvasPanel_MouseMove(object sender, MouseEventArgs e)
         {
 
@@ -507,7 +527,12 @@ namespace Photoapp
             {
                 Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
                 Rectangle invalidRect = Rectangle.Empty;
-            
+                // start point
+
+
+
+
+
                 switch (currentMode)
                 {
                     case Mode.pencil:
@@ -567,22 +592,38 @@ namespace Photoapp
                         }
                         break;
                     case Mode.drag:
-                        if (isDragging)
-                        {
-                            
-                            NormalizedPoint = NormalizeMousePosition(e.Location);
-                            // Calculate the new location of the dragged panel
-                            Point newLocation = new Point(NormalizedPoint.X, NormalizedPoint.Y);
-                            selectedLayer.Offset = newLocation;
+                      
                             if (isRotating)
                             {
-                                selectedLayer.Bitmap = LayerManager.RotateImage(selectedLayer.Bitmap, 180);
+                                int middleX = selectedLayer.Bitmap.Width / 2;
+                                int middleY = selectedLayer.Bitmap.Height / 2;
+                                double startangle = GetAngleBetweenPoints(lastPoint, new Point(middleX, middleY));
+                                double adjustedandlge = GetAngleBetweenPoints(NormalizedPoint, new Point(middleX, middleY));
+                                double moveby = adjustedandlge - startangle;
+                      
+                                if (Math.Abs(moveby - lastAngle) > 0.1f) // A small tolerance to account for floating point precision
+                                {
+                                    selectedLayer.Bitmap = LayerManager.RotateImage(selectedLayer.Bitmap, (float)moveby);
+                                    lastAngle = (float)moveby; // Update the last applied angle
+                                    lastPoint = NormalizedPoint;
+                                }
+                                break;
                             }
                             if (isScaling)
                             {
                                 //selectedLayer.Bitmap = LayerManager.RotateImage(selectedLayer.Bitmap, 10);
+                                break;
                             }
-                        }
+                
+
+                            if (isDragging)
+                            {
+                            NormalizedPoint = NormalizeMousePosition(e.Location);
+                            // Calculate the new location of the dragged panel
+                            Point newLocation = new Point(NormalizedPoint.X, NormalizedPoint.Y);
+                            selectedLayer.Offset = newLocation;
+                        
+                            }
                         break;
                     case Mode.freeSelect:
                         NormalizedPoint = NormalizeMousePosition(e.Location);
@@ -638,13 +679,19 @@ namespace Photoapp
         private void canvasPanel_MouseUp(object sender, MouseEventArgs e)
         {
 
+
+
+
             Point NormalizedPoint = NormalizeMousePosition(e.Location);
             NormalizedPoint = NormalizeMousePositionLayer(NormalizedPoint, layerManager.GetLayer(selectedLayerId).Offset);
             if (isDrawing)
             {
                 Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
                 Rectangle invalidRect = Rectangle.Empty;
-                selectedLayer.Bitmap = LayerManager.RotateImage(selectedLayer.Bitmap, 120);
+
+                
+
+                //selectedLayer.Bitmap = LayerManager.RotateImage(selectedLayer.Bitmap, 120);
 
                 switch (currentMode)
                 {
@@ -785,9 +832,6 @@ namespace Photoapp
                         invalidRect = canvasPanel.ClientRectangle; // Invalidate the entire canvas
                         break;
                     case Mode.drag:
-                        isDragging = false;
-                        isRotating = false;
-                        isScaling = false;
                         break;
                 }
 
@@ -838,26 +882,30 @@ namespace Photoapp
 
             }
 
-            if(currentMode == Mode.drag)
+            if (currentMode == Mode.drag)
             {
-                if (isDragging) { 
+                if (e.KeyCode == Keys.T)
+                {
+                    isDragging = true;
+                    isRotating = false;
+                    isScaling = false;
                 }
                 // Rot
                 if (e.KeyCode == Keys.R)
                 {
                     isRotating = true;
-                    //isDragging = false;
-                    //Console.WriteLine("dragging off");
+                    isDragging = false;
+                    isScaling = false;
 
                 }
                 // ScaleTransform
-                if (e.KeyCode == Keys.X)
+                if (e.KeyCode == Keys.S)
                 {
                     isScaling = true;
-                    //isDragging = false;
-                    //Console.WriteLine("dragging off");
-
+                    isRotating = false;
+                    isDragging = false;
                 }
+
             }
         }
         private void Savetomanager(Bitmap Modified)
@@ -1032,38 +1080,47 @@ namespace Photoapp
         private void pencilButton_MouseClick(object sender, MouseEventArgs e)
         {
             currentMode = Mode.pencil;
+            ResetModes();
         }
         private void penButton_MouseClick(object sender, MouseEventArgs e)
         {
             currentMode = Mode.pen;
+            ResetModes();
         }
         private void dragButton_MouseClick(object sender, MouseEventArgs e)
         {
             currentMode = Mode.drag;
+            ResetModes();
         }
         private void rubberButton_MouseClick(object sender, MouseEventArgs e)
         {
             currentMode = Mode.rubber; // done
+            ResetModes();
         }
         private void eyeButton_MouseClick(object sender, MouseEventArgs e)
         {
             currentMode = Mode.eyedropper;
+            ResetModes();
         }
         private void zoomButton_MouseClick(object sender, MouseEventArgs e)
         {
             currentMode = Mode.zoom;
+            ResetModes();
         }
         private void fontButton_MouseClick(object sender, MouseEventArgs e)
         {
             currentMode = Mode.font;
+            ResetModes();
         }
         private void selectBoxButton_MouseClick(object sender, MouseEventArgs e)
         {
             currentMode = Mode.rectangleSelect;
+            ResetModes();
         }
         private void selectFreeButton_MouseClick(object sender, MouseEventArgs e)
         {
             currentMode = Mode.freeSelect;
+            ResetModes();
             // Show a SaveFileDialog to select where to save the image
             //SaveFileDialog saveFileDialog = new SaveFileDialog
             //{

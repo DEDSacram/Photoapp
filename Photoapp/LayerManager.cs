@@ -333,24 +333,56 @@ namespace Photoapp
         }
 
 
-        public static Bitmap ResizeBitmap(Bitmap originalBitmap, int newWidth, int newHeight)
+        public void ResizeBitmap(int layerid, int newWidth, int newHeight, byte side)
         {
+            Layer layer = GetLayer(layerid);
+            Bitmap originalBitmap = layer.Bitmap;
+
             // Create a new Bitmap with the desired size
+            if (newWidth <= 1 || newHeight <= 1)
+            {
+                layer.Bitmap = originalBitmap;
+                return;
+            }
+
+          
             Bitmap resizedBitmap = new Bitmap(newWidth, newHeight);
 
             // Create a Graphics object to draw on the new Bitmap
             using (Graphics graphics = Graphics.FromImage(resizedBitmap))
             {
                 // Set high-quality settings for resizing
-                graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
-                graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
-                // Draw the original image into the resized bitmap
+                //graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                //graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+                //graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+
+                switch (side)
+                {
+                    case 0: // Top
+                        //graphics.DrawImage(originalBitmap, new Rectangle(0, newHeight - originalBitmap.Height, originalBitmap.Width, originalBitmap.Height));
+                        layer.Offset = new Point(layer.Offset.X, layer.Offset.Y - (newHeight - originalBitmap.Height));
+                        break;
+                    case 1: // Right
+                        //graphics.DrawImage(originalBitmap, new Rectangle(0, 0, originalBitmap.Width, originalBitmap.Height));
+                    
+                        break;
+                    case 2: // Bottom
+                        //graphics.DrawImage(originalBitmap, new Rectangle(0, 0, originalBitmap.Width, originalBitmap.Height));
+                        break;
+                    case 3: // Left
+                        //graphics.DrawImage(originalBitmap, new Rectangle(newWidth - originalBitmap.Width, 0, originalBitmap.Width, originalBitmap.Height));
+                        layer.Offset = new Point(layer.Offset.X - (newWidth - originalBitmap.Width), layer.Offset.Y);
+                        break;
+                }
+
+
+
                 graphics.DrawImage(originalBitmap, new Rectangle(0, 0, newWidth, newHeight));
             }
-
-            return resizedBitmap;
+            layer.Bitmap = resizedBitmap;
+            //return resizedBitmap;
         }
 
         //public static Bitmap RotateImage(Bitmap b, float angle)

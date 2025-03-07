@@ -65,7 +65,12 @@ namespace Photoapp
 
         private Layer draggedLayer; // Track the dragged layer
         private int draggedLayerId; // Track the ID of the dragged layer
+
         private bool isDragging = false; // Track if a drag operation is ongoing
+        private bool isRotating = false; // Track if a drag operation is ongoing
+        private bool isScaling = false; // Track if a drag operation is ongoing
+
+
         private Panel draggedPanel = null; // Track the dragged panel (the layer being dragged)
         private Point mouseOffset; // Track the offset between the mouse pos
 
@@ -564,10 +569,19 @@ namespace Photoapp
                     case Mode.drag:
                         if (isDragging)
                         {
+                            
                             NormalizedPoint = NormalizeMousePosition(e.Location);
                             // Calculate the new location of the dragged panel
                             Point newLocation = new Point(NormalizedPoint.X, NormalizedPoint.Y);
                             selectedLayer.Offset = newLocation;
+                            if (isRotating)
+                            {
+                                selectedLayer.Bitmap = LayerManager.RotateImage(selectedLayer.Bitmap, 180);
+                            }
+                            if (isScaling)
+                            {
+                                //selectedLayer.Bitmap = LayerManager.RotateImage(selectedLayer.Bitmap, 10);
+                            }
                         }
                         break;
                     case Mode.freeSelect:
@@ -623,12 +637,14 @@ namespace Photoapp
  
         private void canvasPanel_MouseUp(object sender, MouseEventArgs e)
         {
+
             Point NormalizedPoint = NormalizeMousePosition(e.Location);
             NormalizedPoint = NormalizeMousePositionLayer(NormalizedPoint, layerManager.GetLayer(selectedLayerId).Offset);
             if (isDrawing)
             {
                 Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
                 Rectangle invalidRect = Rectangle.Empty;
+                selectedLayer.Bitmap = LayerManager.RotateImage(selectedLayer.Bitmap, 120);
 
                 switch (currentMode)
                 {
@@ -768,6 +784,11 @@ namespace Photoapp
                         }
                         invalidRect = canvasPanel.ClientRectangle; // Invalidate the entire canvas
                         break;
+                    case Mode.drag:
+                        isDragging = false;
+                        isRotating = false;
+                        isScaling = false;
+                        break;
                 }
 
 
@@ -784,7 +805,7 @@ namespace Photoapp
                 }
                 else
                 {
-                    Savetomanager(selectedLayer.Bitmap);
+                   // Savetomanager(selectedLayer.Bitmap); currently stop for rotate transforms
                 }
                 clearUIBitmap();
                 RedrawCanvas(invalidRect);
@@ -815,6 +836,28 @@ namespace Photoapp
                 layerManager.RestoreFromUndoStack();
                 RedrawCanvas(canvasPanel.ClientRectangle);
 
+            }
+
+            if(currentMode == Mode.drag)
+            {
+                if (isDragging) { 
+                }
+                // Rot
+                if (e.KeyCode == Keys.R)
+                {
+                    isRotating = true;
+                    //isDragging = false;
+                    //Console.WriteLine("dragging off");
+
+                }
+                // ScaleTransform
+                if (e.KeyCode == Keys.X)
+                {
+                    isScaling = true;
+                    //isDragging = false;
+                    //Console.WriteLine("dragging off");
+
+                }
             }
         }
         private void Savetomanager(Bitmap Modified)
@@ -919,6 +962,7 @@ namespace Photoapp
                 // Apply scaling and panning
                 g.TranslateTransform(panOffset.X, panOffset.Y);
                 g.ScaleTransform(zoomFactor, zoomFactor);
+                //g.RotateTransform(20);
 
                 g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.None;
                 g.CompositingMode = CompositingMode.SourceOver;

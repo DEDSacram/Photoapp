@@ -6,6 +6,8 @@ using System.IO.Compression;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Drawing.Drawing2D;
+using System.Windows.Media.Media3D;
 
 namespace Photoapp
 {
@@ -301,38 +303,162 @@ namespace Photoapp
 
             return resizedBitmap;
         }
-        public static Bitmap RotateImage(Bitmap originalBitmap, float angle)
+
+        //public static Bitmap RotateImage(Bitmap b, float angle)
+        //{
+        //    //Create a new empty bitmap to hold rotated image.
+        //    Bitmap returnBitmap = new Bitmap(b.Width, b.Height);
+        //    //Make a graphics object from the empty bitmap.
+        //    Graphics g = Graphics.FromImage(returnBitmap);
+        //    //move rotation point to center of image.
+        //    g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+        //g.TranslateTransform((float) b.Width / 2, (float) b.Height / 2);
+        ////Rotate.        
+        //g.RotateTransform(angle);
+        //    //Move image back.
+        //    g.TranslateTransform(-(float) b.Width / 2, -(float) b.Height / 2);
+        //    //Draw passed in image onto graphics object.
+        //    g.DrawImage(b, new Point(0, 0));
+        //    return returnBitmap;
+
+        //}
+
+
+        public static Bitmap RotateImage(Bitmap b, float angle)
         {
-            // Calculate the new size of the image after rotation
-            float radians = angle * (float)Math.PI / 180f;
-            float cos = Math.Abs((float)Math.Cos(radians));
-            float sin = Math.Abs((float)Math.Sin(radians));
+            // Original image dimensions
+            int width = b.Width;
+            int height = b.Height;
 
-            // Calculate new dimensions of the rotated image
-            int newWidth = (int)(originalBitmap.Width * cos + originalBitmap.Height * sin);
-            int newHeight = (int)(originalBitmap.Width * sin + originalBitmap.Height * cos);
+            Rectangle bounds = GetBoundingBox(b);
+            Rectangle newbounds = GetBoundingBoxForRotation(b, angle);
 
-            // Create a new bitmap with enough space to avoid clipping, with transparent background
-            Bitmap rotatedBitmap = new Bitmap(newWidth, newHeight);
-            rotatedBitmap.SetResolution(originalBitmap.HorizontalResolution, originalBitmap.VerticalResolution);
+            // Diagonal length of the image (bounding box)
+            int diagonal = (int)Math.Ceiling(Math.Sqrt(width * width + height * height));
 
-            // Set the background to be transparent
-            using (Graphics g = Graphics.FromImage(rotatedBitmap))
+            // Create a new empty bitmap with a square size based on the diagonal
+            Bitmap returnBitmap = new Bitmap(diagonal, diagonal);
+
+            // Create a Graphics object to draw the rotated image
+            Graphics g = Graphics.FromImage(returnBitmap);
+            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+
+            g.TranslateTransform((float)diagonal / 2, (float)diagonal / 2);
+            //Rotate.        
+            g.RotateTransform(angle);
+            //Move image back.
+            g.TranslateTransform(-(float)diagonal / 2, -(float)diagonal / 2);
+
+            // Draw the original image into the new bitmap, which is now centered
+            g.DrawImage(b, new Point((diagonal - width) / 2, (diagonal - height) / 2));
+
+            returnBitmap = new Bitmap(CropImage(returnBitmap));
+            //returnBitmap.Save("C:\\Users\\rlly\\Videos\\bimige.png", ImageFormat.Png);
+
+            // crop image so it isnt full diagonal
+            return CropImage(returnBitmap);
+        }
+
+        public static Bitmap CropImage(Bitmap originalImage)
+        {
+            // Get the bounding box of non-transparent pixels in the rotated image
+            Rectangle boundingBox = GetBoundingBox(originalImage);
+
+            // Create a new bitmap based on the bounding box size
+            Bitmap croppedBitmap = new Bitmap(boundingBox.Width, boundingBox.Height);
+
+            // Create a graphics object to draw the cropped part of the original image into the new bitmap
+            using (Graphics g = Graphics.FromImage(croppedBitmap))
             {
-                // Set the background to transparent
-                g.Clear(Color.Transparent);
-
-                // Apply the transformation
-                g.TranslateTransform(newWidth / 2, newHeight / 2);  // Translate to the center of the new bitmap
-                g.RotateTransform(angle);                           // Rotate by the specified angle
-                g.TranslateTransform(-originalBitmap.Width / 2, -originalBitmap.Height / 2);  // Translate back to the original position
-
-                // Draw the original image onto the transformed canvas
-                g.DrawImage(originalBitmap, new Point(0, 0));
+                // Define the area to copy (from the bounding box)
+                g.DrawImage(originalImage, new Rectangle(0, 0, boundingBox.Width, boundingBox.Height),
+                                boundingBox, GraphicsUnit.Pixel);
             }
 
-            return rotatedBitmap;
+            return croppedBitmap;
         }
+        //float diagonal = (float)Math.Sqrt(width * width + height * height);
+        public static Rectangle GetBoundingBoxForRotation(Bitmap image, float angle)
+        {
+            // Get the original bounding box of non-transparent pixels
+            Rectangle originalBoundingBox = GetBoundingBox(image);
+
+            // Get the center of the original bounding box
+            float centerX = originalBoundingBox.Left + originalBoundingBox.Width / 2.0f;
+            float centerY = originalBoundingBox.Top + originalBoundingBox.Height / 2.0f;
+
+            // Define the four corners of the original bounding box
+            PointF[] corners = new PointF[]
+            {
+        new PointF(originalBoundingBox.Left, originalBoundingBox.Top), // Top-left corner
+        new PointF(originalBoundingBox.Right, originalBoundingBox.Top), // Top-right corner
+        new PointF(originalBoundingBox.Left, originalBoundingBox.Bottom), // Bottom-left corner
+        new PointF(originalBoundingBox.Right, originalBoundingBox.Bottom) // Bottom-right corner
+            };
+
+            // Create a rotation matrix around the center of the image
+            Matrix rotationMatrix = new Matrix();
+            rotationMatrix.RotateAt(angle, new PointF(centerX, centerY));
+
+            // Apply the rotation matrix to all four corners
+            rotationMatrix.TransformPoints(corners);
+
+            // Find the new bounding box for the rotated image
+            float minX = corners.Min(c => c.X);
+            float minY = corners.Min(c => c.Y);
+            float maxX = corners.Max(c => c.X);
+            float maxY = corners.Max(c => c.Y);
+
+            // Return the rotated bounding box
+            return new Rectangle(
+                (int)Math.Floor(minX),
+                (int)Math.Floor(minY),
+                (int)Math.Ceiling(maxX - minX),
+                (int)Math.Ceiling(maxY - minY)
+            );
+        }
+
+        //// This method computes the bounding box of non-transparent pixels
+        public static Rectangle GetBoundingBox(Bitmap image)
+        {
+            int minX = image.Width;
+            int maxX = 0;
+            int minY = image.Height;
+            int maxY = 0;
+
+            // Loop through each pixel of the image
+            for (int y = 0; y < image.Height; y++)
+            {
+                for (int x = 0; x < image.Width; x++)
+                {
+                    // Get the pixel color at the current position
+                    Color pixelColor = image.GetPixel(x, y);
+
+                    // Check if the alpha component is greater than 0 (valid pixel)
+                    if (pixelColor.A > 0)
+                    {
+                        // Update the min and max bounds for the bounding box
+                        if (x < minX) minX = x;
+                        if (x > maxX) maxX = x;
+                        if (y < minY) minY = y;
+                        if (y > maxY) maxY = y;
+                    }
+                }
+            }
+
+            // If no valid pixels are found, return an empty rectangle
+            if (minX > maxX || minY > maxY)
+                return Rectangle.Empty;
+
+            // Return the bounding box as a Rectangle
+            return new Rectangle(minX, minY, maxX - minX + 1, maxY - minY + 1);
+        }
+
+
+
+
+
+
 
 
         // Undo the last action for a specific layer

@@ -629,6 +629,14 @@ namespace Photoapp
                             int x = centerx - NormalizedPoint.X; // Example x-coordinate
                             int y = centery - NormalizedPoint.Y; // Example y-coordinate 
 
+                            //using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
+                            //{
+                            //    using (SolidBrush maskBrush = new SolidBrush(Color.FromArgb(128, Color.Red))) // Semi-transparent preview
+                            //    {
+                            //        g.SmoothingMode = SmoothingMode.AntiAlias;
+                            //        g.FillEllipse(maskBrush, selectedLayer.Offset.X, selectedLayer.Offset.Y - 10, 5, 5);
+                            //    }
+                            //}
 
 
                             // 0: top, 1: right, 2: bottom, 3: left
@@ -667,35 +675,8 @@ namespace Photoapp
                                     side = 1;
                                 }
                             }
-                            //int marginx = selectedLayer.Bitmap.Width - 60; // Define a margin value basically makes a small rectangle so the bottom left right and top are detected for a longer time
-                            //int marginy = selectedLayer.Bitmap.Height - 60; // Define a margin value basically makes a small rectangle so the bottom left right and top are detected for a longer time
-                            ////// Handle corners with margin
-                            //if (x > 0 && y > 0)
-                            //{
-                            //    closestSide = "Top-Left";
-                            //    side = 4; // Top-Left
-                            //}
-                            //else if (x < -marginx && y > marginy)
-                            //{
-                            //    closestSide = "Top-Right";
-                            //    side = 5; // Top-Right
-                            //}
-                            //else if (x > marginx && y < -marginy)
-                            //{
-                            //    closestSide = "Bottom-Left";
-                            //    side = 6; // Bottom-Left
-                            //}
-                            //else if (x < -marginx && y < -marginy)
-                            //{
-                            //    side = 7; // Bottom-Right
-                            //    closestSide = "Bottom-Right";
-                            //}
+                            Console.WriteLine("Make smaller by: {0}", rescalexby);
 
-
-                            Console.WriteLine("Closest: {0}", closestSide);
-                            //Console.WriteLine("Make smaller by: {0}", rescalexby);
-                            //Console.WriteLine("Make smaller by: {0}", rescaleyby);
-                      
 
                             //ResizeBitmap(Bitmap originalBitmap, int newWidth, int newHeight)
                             int newWidth = selectedLayer.Bitmap.Width - rescalexby;
@@ -785,7 +766,14 @@ namespace Photoapp
                 Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
                 Rectangle invalidRect = Rectangle.Empty;
 
-                
+                using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
+                {
+                    using (SolidBrush maskBrush = new SolidBrush(Color.FromArgb(20, Color.Red))) // Semi-transparent preview
+                    {
+                        g.SmoothingMode = SmoothingMode.AntiAlias;
+                        g.FillEllipse(maskBrush, selectedLayer.Offset.X-250, selectedLayer.Offset.Y - 250, 500, 500);
+                    }
+                }
 
                 //selectedLayer.Bitmap = LayerManager.RotateImage(selectedLayer.Bitmap, 120);
 

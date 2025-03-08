@@ -515,7 +515,6 @@ public void ResizeBitmap(int layerid, int newWidth, int newHeight, byte side)
                         if (originalBitmap.Height > newHeight)
                         {
                             // make smaller
-                            Console.WriteLine("originalBitmap.Height > newHeight");
                             graphics.DrawImage(originalBitmap, new Rectangle(0, 0, resizedBitmap.Width, resizedBitmap.Height));
                         }
                         else
@@ -545,6 +544,7 @@ public void ResizeBitmap(int layerid, int newWidth, int newHeight, byte side)
                         }
                         //layer.Offset = new Point(layer.Offset.X - (newWidth - originalBitmap.Width), layer.Offset.Y);
                         break;
+                     
                 }
               
             }

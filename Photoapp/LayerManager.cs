@@ -182,7 +182,6 @@ namespace Photoapp
             entry.width = Previoussize.X;
             entry.height = Previoussize.Y; // cant do it here this is already with the new coords
 
-
             undoStack.Push(entry);
         }
         public void RestoreFromUndoStack()
@@ -205,7 +204,7 @@ namespace Photoapp
             // Decompress should return an int[] array with one difference per byte.
             int[] diff = Decompress(entry.ZippedBitmap);
 
-            if(entry.overrideBitmap)
+            if (entry.overrideBitmap)
             {
                 byte[] ovveridecopy = new byte[diff.Length];
                 for (int i = 0; i < diff.Length; i++)
@@ -215,8 +214,7 @@ namespace Photoapp
                 try
                 {
 
-               
-                layer.Bitmap = CreateBitmapFromBytes(ovveridecopy,entry.width,entry.height, PixelFormat.Format32bppArgb);
+                    layer.Bitmap = CreateBitmapFromBytes(ovveridecopy, entry.width, entry.height, PixelFormat.Format32bppArgb);
                 }
                 catch
                 {
@@ -225,7 +223,7 @@ namespace Photoapp
                     Console.WriteLine(layer.Bitmap.Width);
                     Console.WriteLine(entry.width);
                 }
-         
+
                 return;
             }
 
@@ -237,9 +235,6 @@ namespace Photoapp
                 if (shifted > 255) shifted = 255;
                 diffForDisplay[i] = (byte)shifted;
             }
-            //Bitmap diffBmp = CreateBitmapFromBytes(diffForDisplay, layer.Bitmap.Width, layer.Bitmap.Height, PixelFormat.Format32bppArgb);
-            //string diffOutputPath = @"C:\Users\rlly\Desktop\paint\signed_differenceeasdasdee.png";
-            //diffBmp.Save(diffOutputPath, ImageFormat.Png);
             byte[] currentImage = GetBytesFromBitmap(layer.Bitmap);
 
             byte[] reconstructedData = new byte[diff.Length];
@@ -251,10 +246,6 @@ namespace Photoapp
                 reconstructedData[i] = (byte)value;
             }
             layer.Bitmap = CreateBitmapFromBytes(reconstructedData, layer.Bitmap.Width, layer.Bitmap.Height, PixelFormat.Format32bppArgb);
-            //Bitmap reconstructedBmp = CreateBitmapFromBytes(reconstructedData, layer.Bitmap.Width, layer.Bitmap.Height, PixelFormat.Format32bppArgb);
-            //string reconOutputPath = @"C:\Users\rlly\Desktop\paint\reconstructednew.png";
-            //reconstructedBmp.Save(reconOutputPath, ImageFormat.Png);
-            //reconstructedBmp.Dispose();
         }
 
         // Helper: Extract raw bytes from a Bitmap using LockBits.
@@ -280,7 +271,6 @@ namespace Photoapp
             bmp.UnlockBits(bmpData);
             return bmp;
         }
-
 
         private byte[] Compress(byte[] data)
         {
@@ -332,6 +322,70 @@ namespace Photoapp
             }
         }
 
+        //public void ResizeBitmap(int layerid, int newWidth, int newHeight, byte side)
+        //{
+        //    Layer layer = GetLayer(layerid);
+        //    Bitmap originalBitmap = layer.Bitmap;
+
+        //    // Create a new Bitmap with the desired size
+        //    if (newWidth <= 1 || newHeight <= 1)
+        //    {
+        //        layer.Bitmap = originalBitmap;
+        //        return;
+        //    }
+
+        //    Bitmap resizedBitmap ;
+        //         switch (side)
+        //        {
+        //            case 0: // Top
+        //                //layer.Offset = new Point(layer.Offset.X, layer.Offset.Y - (newHeight - originalBitmap.Height));
+        //            resizedBitmap = new Bitmap(originalBitmap.Width, newHeight);
+        //            break;
+        //            case 1: // Right
+        //            resizedBitmap = new Bitmap(newWidth, originalBitmap.Height);
+        //            break;
+        //            case 2: // Bottom
+        //            resizedBitmap = new Bitmap(originalBitmap.Width, newHeight);
+        //            break;
+        //            case 3: // Left
+        //            resizedBitmap = new Bitmap(newWidth, originalBitmap.Height);
+        //            //layer.Offset = new Point(layer.Offset.X - (newWidth - originalBitmap.Width), layer.Offset.Y);
+        //                break;
+        //        default:
+        //            return;
+        //            break;
+        //        }
+
+        //    // Create a Graphics object to draw on the new Bitmap
+        //    using (Graphics graphics = Graphics.FromImage(resizedBitmap))
+        //    {
+        //        // Set high-quality settings for resizing
+
+        //        //graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+        //        //graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+        //        //graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+        //        switch (side)
+        //        {
+        //            case 0: // Top
+        //                //layer.Offset = new Point(layer.Offset.X, layer.Offset.Y - (newHeight - originalBitmap.Height));
+        //                graphics.DrawImage(originalBitmap, new Rectangle(0, 0, originalBitmap.Width, newHeight));
+        //                break;
+        //            case 1:  // Bottom
+        //                graphics.DrawImage(originalBitmap, new Rectangle(0, 0, originalBitmap.Width, newHeight));
+        //                break;
+        //            case 2: // Right
+        //                graphics.DrawImage(originalBitmap, new Rectangle(0, 0, newWidth, originalBitmap.Height));
+        //                break;
+        //            case 3: // Left
+        //                graphics.DrawImage(originalBitmap, new Rectangle(0, 0, newWidth, originalBitmap.Height));
+        //                //layer.Offset = new Point(layer.Offset.X - (newWidth - originalBitmap.Width), layer.Offset.Y);
+        //                break;
+        //        }
+
+        //    }
+        //    layer.Bitmap = resizedBitmap;
+        //}
 
         public void ResizeBitmap(int layerid, int newWidth, int newHeight, byte side)
         {
@@ -345,9 +399,8 @@ namespace Photoapp
                 return;
             }
 
-          
             Bitmap resizedBitmap = new Bitmap(newWidth, newHeight);
-
+       
             // Create a Graphics object to draw on the new Bitmap
             using (Graphics graphics = Graphics.FromImage(resizedBitmap))
             {
@@ -357,53 +410,23 @@ namespace Photoapp
                 //graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
                 //graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
-
                 switch (side)
                 {
                     case 0: // Top
-                        //graphics.DrawImage(originalBitmap, new Rectangle(0, newHeight - originalBitmap.Height, originalBitmap.Width, originalBitmap.Height));
                         layer.Offset = new Point(layer.Offset.X, layer.Offset.Y - (newHeight - originalBitmap.Height));
                         break;
-                    case 1: // Right
-                        //graphics.DrawImage(originalBitmap, new Rectangle(0, 0, originalBitmap.Width, originalBitmap.Height));
-                    
+                    case 1: // Bottom
                         break;
-                    case 2: // Bottom
-                        //graphics.DrawImage(originalBitmap, new Rectangle(0, 0, originalBitmap.Width, originalBitmap.Height));
+                    case 2: // Right
                         break;
                     case 3: // Left
-                        //graphics.DrawImage(originalBitmap, new Rectangle(newWidth - originalBitmap.Width, 0, originalBitmap.Width, originalBitmap.Height));
                         layer.Offset = new Point(layer.Offset.X - (newWidth - originalBitmap.Width), layer.Offset.Y);
                         break;
                 }
-
-
-
                 graphics.DrawImage(originalBitmap, new Rectangle(0, 0, newWidth, newHeight));
             }
             layer.Bitmap = resizedBitmap;
-            //return resizedBitmap;
         }
-
-        //public static Bitmap RotateImage(Bitmap b, float angle)
-        //{
-        //    //Create a new empty bitmap to hold rotated image.
-        //    Bitmap returnBitmap = new Bitmap(b.Width, b.Height);
-        //    //Make a graphics object from the empty bitmap.
-        //    Graphics g = Graphics.FromImage(returnBitmap);
-        //    //move rotation point to center of image.
-        //    g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-        //g.TranslateTransform((float) b.Width / 2, (float) b.Height / 2);
-        ////Rotate.        
-        //g.RotateTransform(angle);
-        //    //Move image back.
-        //    g.TranslateTransform(-(float) b.Width / 2, -(float) b.Height / 2);
-        //    //Draw passed in image onto graphics object.
-        //    g.DrawImage(b, new Point(0, 0));
-        //    return returnBitmap;
-
-        //}
-
 
         public static Bitmap RotateImage(Bitmap b, float angle)
         {
@@ -453,7 +476,7 @@ namespace Photoapp
             {
                 // Define the area to copy (from the bounding box)
                 g.DrawImage(originalImage, new Rectangle(0, 0, boundingBox.Width, boundingBox.Height),
-                                boundingBox, GraphicsUnit.Pixel);
+                  boundingBox, GraphicsUnit.Pixel);
             }
 
             return croppedBitmap;
@@ -469,13 +492,12 @@ namespace Photoapp
             float centerY = originalBoundingBox.Top + originalBoundingBox.Height / 2.0f;
 
             // Define the four corners of the original bounding box
-            PointF[] corners = new PointF[]
-            {
+            PointF[] corners = new PointF[] {
         new PointF(originalBoundingBox.Left, originalBoundingBox.Top), // Top-left corner
-        new PointF(originalBoundingBox.Right, originalBoundingBox.Top), // Top-right corner
-        new PointF(originalBoundingBox.Left, originalBoundingBox.Bottom), // Bottom-left corner
-        new PointF(originalBoundingBox.Right, originalBoundingBox.Bottom) // Bottom-right corner
-            };
+          new PointF(originalBoundingBox.Right, originalBoundingBox.Top), // Top-right corner
+          new PointF(originalBoundingBox.Left, originalBoundingBox.Bottom), // Bottom-left corner
+          new PointF(originalBoundingBox.Right, originalBoundingBox.Bottom) // Bottom-right corner
+      };
 
             // Create a rotation matrix around the center of the image
             Matrix rotationMatrix = new Matrix();
@@ -492,10 +514,10 @@ namespace Photoapp
 
             // Return the rotated bounding box
             return new Rectangle(
-                (int)Math.Floor(minX),
-                (int)Math.Floor(minY),
-                (int)Math.Ceiling(maxX - minX),
-                (int)Math.Ceiling(maxY - minY)
+              (int)Math.Floor(minX),
+              (int)Math.Floor(minY),
+              (int)Math.Ceiling(maxX - minX),
+              (int)Math.Ceiling(maxY - minY)
             );
         }
 
@@ -534,13 +556,6 @@ namespace Photoapp
             // Return the bounding box as a Rectangle
             return new Rectangle(minX, minY, maxX - minX + 1, maxY - minY + 1);
         }
-
-
-
-
-
-
-
 
         // Undo the last action for a specific layer
         public void Undo(int layerId)

@@ -667,24 +667,25 @@ namespace Photoapp
                                     side = 1;
                                 }
                             }
-                            //int margin = 100; // Define a margin value basically makes a small rectangle so the bottom left right and top are detected for a longer time
+                            //int marginx = selectedLayer.Bitmap.Width - 20; // Define a margin value basically makes a small rectangle so the bottom left right and top are detected for a longer time
+                            //int marginy = selectedLayer.Bitmap.Height - 20; // Define a margin value basically makes a small rectangle so the bottom left right and top are detected for a longer time
                             ////// Handle corners with margin
-                            //if (x > margin && y > margin)
+                            //if (x > marginx && y > marginy)
                             //{
                             //    closestSide = "Top-Left";
                             //    side = 4; // Top-Left
                             //}
-                            //else if (x < -margin && y > margin)
+                            //else if (x < -marginx && y > marginy)
                             //{
                             //    closestSide = "Top-Right";
                             //    side = 5; // Top-Right
                             //}
-                            //else if (x > margin && y < -margin)
+                            //else if (x > marginx && y < -marginy)
                             //{
                             //    closestSide = "Bottom-Left";
                             //    side = 6; // Bottom-Left
                             //}
-                            //else if (x < -margin && y < -margin)
+                            //else if (x < -marginx && y < -marginy)
                             //{
                             //    side = 7; // Bottom-Right
                             //    closestSide = "Bottom-Right";

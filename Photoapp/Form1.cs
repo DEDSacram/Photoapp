@@ -667,10 +667,10 @@ namespace Photoapp
                                     side = 1;
                                 }
                             }
-                            //int marginx = selectedLayer.Bitmap.Width - 20; // Define a margin value basically makes a small rectangle so the bottom left right and top are detected for a longer time
-                            //int marginy = selectedLayer.Bitmap.Height - 20; // Define a margin value basically makes a small rectangle so the bottom left right and top are detected for a longer time
+                            //int marginx = selectedLayer.Bitmap.Width - 60; // Define a margin value basically makes a small rectangle so the bottom left right and top are detected for a longer time
+                            //int marginy = selectedLayer.Bitmap.Height - 60; // Define a margin value basically makes a small rectangle so the bottom left right and top are detected for a longer time
                             ////// Handle corners with margin
-                            //if (x > marginx && y > marginy)
+                            //if (x > 0 && y > 0)
                             //{
                             //    closestSide = "Top-Left";
                             //    side = 4; // Top-Left
@@ -693,12 +693,18 @@ namespace Photoapp
 
 
                             Console.WriteLine("Closest: {0}", closestSide);
-                            Console.WriteLine("Make smaller by: {0}", rescalexby);
-                            Console.WriteLine("Make smaller by: {0}", rescaleyby);
+                            //Console.WriteLine("Make smaller by: {0}", rescalexby);
+                            //Console.WriteLine("Make smaller by: {0}", rescaleyby);
+                      
+
                             //ResizeBitmap(Bitmap originalBitmap, int newWidth, int newHeight)
                             int newWidth = selectedLayer.Bitmap.Width - rescalexby;
                             int newHeight = selectedLayer.Bitmap.Height - rescaleyby;
-
+                            
+                            if(selectedLayer.Bitmap.Height < newHeight)
+                            {
+                                Console.WriteLine("Make smaller by: {0}", newHeight);
+                            }
                             // 
                             startingpoint = NormalizedPoint;
 

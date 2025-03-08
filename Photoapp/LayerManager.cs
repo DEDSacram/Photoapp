@@ -334,60 +334,92 @@ namespace Photoapp
         //        return;
         //    }
 
-        //    Bitmap resizedBitmap ;
-        //         switch (side)
-        //        {
-        //            case 0: // Top
-        //                //layer.Offset = new Point(layer.Offset.X, layer.Offset.Y - (newHeight - originalBitmap.Height));
-        //            resizedBitmap = new Bitmap(originalBitmap.Width, newHeight);
-        //            break;
-        //            case 1: // Right
-        //            resizedBitmap = new Bitmap(newWidth, originalBitmap.Height);
-        //            break;
-        //            case 2: // Bottom
-        //            resizedBitmap = new Bitmap(originalBitmap.Width, newHeight);
-        //            break;
-        //            case 3: // Left
-        //            resizedBitmap = new Bitmap(newWidth, originalBitmap.Height);
-        //            //layer.Offset = new Point(layer.Offset.X - (newWidth - originalBitmap.Width), layer.Offset.Y);
-        //                break;
-        //        default:
-        //            return;
-        //            break;
-        //        }
+//        Bitmap resizedBitmap;
+//            switch (side)
+//            {
+//                case 0: // Top
+//                        //layer.Offset = new Point(layer.Offset.X, layer.Offset.Y - (newHeight - originalBitmap.Height));
+//                    if(originalBitmap.Height > newHeight)
+//                    {
+//                        resizedBitmap = new Bitmap(originalBitmap.Width, newHeight);
+//    }
+//                    else
+//                    {
+//                        resizedBitmap = new Bitmap(originalBitmap.Width, originalBitmap.Height);
+//}
 
-        //    // Create a Graphics object to draw on the new Bitmap
-        //    using (Graphics graphics = Graphics.FromImage(resizedBitmap))
-        //    {
-        //        // Set high-quality settings for resizing
+//break;
+//                case 1:// Bottom
+//    if (originalBitmap.Height > newHeight)
+//    {
+//        resizedBitmap = new Bitmap(originalBitmap.Width, newHeight);
+//    }
+//    else
+//    {
+//        resizedBitmap = new Bitmap(originalBitmap.Width, originalBitmap.Height);
+//    }
 
-        //        //graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-        //        //graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
-        //        //graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+//    break;
+//case 2: // Right
+//    if (originalBitmap.Width > newWidth)
+//    {
+//        resizedBitmap = new Bitmap(newWidth, originalBitmap.Height);
+//    }
+//    else
+//    {
+//        resizedBitmap = new Bitmap(originalBitmap.Width, originalBitmap.Height);
+//    }
+//    resizedBitmap = new Bitmap(newWidth, originalBitmap.Height);
+//    break;
+//case 3: // Left
+//    if (originalBitmap.Width > newWidth)
+//    {
+//        resizedBitmap = new Bitmap(newWidth, originalBitmap.Height);
+//    }
+//    else
+//    {
+//        resizedBitmap = new Bitmap(originalBitmap.Width, originalBitmap.Height);
+//    }
+//    break;
+//default:
+//    return;
+//    break;
+//}
 
-        //        switch (side)
-        //        {
-        //            case 0: // Top
-        //                //layer.Offset = new Point(layer.Offset.X, layer.Offset.Y - (newHeight - originalBitmap.Height));
-        //                graphics.DrawImage(originalBitmap, new Rectangle(0, 0, originalBitmap.Width, newHeight));
-        //                break;
-        //            case 1:  // Bottom
-        //                graphics.DrawImage(originalBitmap, new Rectangle(0, 0, originalBitmap.Width, newHeight));
-        //                break;
-        //            case 2: // Right
-        //                graphics.DrawImage(originalBitmap, new Rectangle(0, 0, newWidth, originalBitmap.Height));
-        //                break;
-        //            case 3: // Left
-        //                graphics.DrawImage(originalBitmap, new Rectangle(0, 0, newWidth, originalBitmap.Height));
-        //                //layer.Offset = new Point(layer.Offset.X - (newWidth - originalBitmap.Width), layer.Offset.Y);
-        //                break;
-        //        }
+//    // Create a Graphics object to draw on the new Bitmap
+//    using (Graphics graphics = Graphics.FromImage(resizedBitmap))
+//    {
+//        // Set high-quality settings for resizing
 
-        //    }
-        //    layer.Bitmap = resizedBitmap;
-        //}
+//        //graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+//        //graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+//        //graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
-        public void ResizeBitmap(int layerid, int newWidth, int newHeight, byte side)
+//        switch (side)
+//        {
+//            case 0: // Top
+//                    //layer.Offset = new Point(layer.Offset.X, layer.Offset.Y - (newHeight - originalBitmap.Height));
+//                graphics.DrawImage(originalBitmap, new Rectangle(0, newHeight - originalBitmap.Height, resizedBitmap.Width, resizedBitmap.Height));
+//                //layer.Offset = new Point(layer.Offset.X, layer.Offset.Y - (newHeight - originalBitmap.Height));
+//                //layer.Offset = new Point(layer.Offset.X, layer.Offset.Y - (newHeight - originalBitmap.Height));
+//                break;
+//            case 1:  // Bottom
+//                graphics.DrawImage(originalBitmap, new Rectangle(0, 0, resizedBitmap.Width, resizedBitmap.Height));
+//                break;
+//            case 2: // Right
+//                graphics.DrawImage(originalBitmap, new Rectangle(0, 0, resizedBitmap.Width, resizedBitmap.Height));
+//                break;
+//            case 3: // Left
+//                graphics.DrawImage(originalBitmap, new Rectangle(newWidth - originalBitmap.Width, 0, resizedBitmap.Width, resizedBitmap.Height));
+//                //layer.Offset = new Point(layer.Offset.X - (newWidth - originalBitmap.Width), layer.Offset.Y);
+//                break;
+//        }
+
+//    }
+//    layer.Bitmap = resizedBitmap;
+//}
+
+public void ResizeBitmap(int layerid, int newWidth, int newHeight, byte side)
         {
             Layer layer = GetLayer(layerid);
             Bitmap originalBitmap = layer.Bitmap;
@@ -399,8 +431,60 @@ namespace Photoapp
                 return;
             }
 
-            Bitmap resizedBitmap = new Bitmap(newWidth, newHeight);
-       
+            //Bitmap resizedBitmap = new Bitmap(newWidth, newHeight);
+
+            Bitmap resizedBitmap;
+            switch (side)
+            {
+                case 0: // Top
+                        //layer.Offset = new Point(layer.Offset.X, layer.Offset.Y - (newHeight - originalBitmap.Height));
+                    if (originalBitmap.Height > newHeight)
+                    {
+                        resizedBitmap = new Bitmap(originalBitmap.Width, newHeight);
+                    }
+                    else
+                    {
+                        resizedBitmap = new Bitmap(originalBitmap.Width, originalBitmap.Height + Math.Abs(originalBitmap.Height - newHeight));
+                    }
+
+                    break;
+                case 1:// Bottom
+                    if (originalBitmap.Height > newHeight)
+                    {
+                        resizedBitmap = new Bitmap(originalBitmap.Width, newHeight);
+                    }
+                    else
+                    {
+                        //resizedBitmap = new Bitmap(originalBitmap.Width, originalBitmap.Height);
+                        resizedBitmap = new Bitmap(originalBitmap.Width, originalBitmap.Height + Math.Abs(originalBitmap.Height - newHeight));
+                    }
+
+                    break;
+                case 2: // Right
+                    if (originalBitmap.Width > newWidth)
+                    {
+                        resizedBitmap = new Bitmap(newWidth, originalBitmap.Height);
+                    }
+                    else
+                    {
+                        resizedBitmap = new Bitmap(originalBitmap.Width, originalBitmap.Height);
+                    }
+                    resizedBitmap = new Bitmap(newWidth, originalBitmap.Height);
+                    break;
+                case 3: // Left
+                    if (originalBitmap.Width > newWidth)
+                    {
+                        resizedBitmap = new Bitmap(newWidth, originalBitmap.Height);
+                    }
+                    else
+                    {
+                        resizedBitmap = new Bitmap(originalBitmap.Width + Math.Abs(originalBitmap.Width - newWidth), originalBitmap.Height);
+                    }
+                    break;
+                default:
+                    return;
+                    break;
+            }
             // Create a Graphics object to draw on the new Bitmap
             using (Graphics graphics = Graphics.FromImage(resizedBitmap))
             {
@@ -413,17 +497,56 @@ namespace Photoapp
                 switch (side)
                 {
                     case 0: // Top
-                        layer.Offset = new Point(layer.Offset.X, layer.Offset.Y - (newHeight - originalBitmap.Height));
+                        if (originalBitmap.Height > newHeight)
+                        {
+                            // make smaller
+                            graphics.DrawImage(originalBitmap, new Rectangle(0, 0, resizedBitmap.Width, resizedBitmap.Height));
+                            layer.Offset = new Point(layer.Offset.X, layer.Offset.Y - (newHeight - originalBitmap.Height));
+                        }
+                        else
+                        {
+                            // make bigger
+                            graphics.DrawImage(originalBitmap, new Rectangle(0, 0, resizedBitmap.Width, originalBitmap.Height + Math.Abs(originalBitmap.Height - newHeight)));
+                            layer.Offset = new Point(layer.Offset.X, layer.Offset.Y + (originalBitmap.Height - newHeight));
+                        }
+                 
                         break;
                     case 1: // Bottom
+                        if (originalBitmap.Height > newHeight)
+                        {
+                            // make smaller
+                            Console.WriteLine("originalBitmap.Height > newHeight");
+                            graphics.DrawImage(originalBitmap, new Rectangle(0, 0, resizedBitmap.Width, resizedBitmap.Height));
+                        }
+                        else
+                        {
+                            // make bigger
+                            graphics.DrawImage(originalBitmap, new Rectangle(0, 0, resizedBitmap.Width, originalBitmap.Height+ Math.Abs(originalBitmap.Height-newHeight)));
+                        }
+                     
                         break;
                     case 2: // Right
+                            // make doesnt care
+                        graphics.DrawImage(originalBitmap, new Rectangle(0, 0, resizedBitmap.Width, resizedBitmap.Height));
                         break;
                     case 3: // Left
-                        layer.Offset = new Point(layer.Offset.X - (newWidth - originalBitmap.Width), layer.Offset.Y);
+                        if (originalBitmap.Width > newWidth)
+                        {
+                            //resizedBitmap = new Bitmap(newWidth, originalBitmap.Height);
+                            // make smaller
+                            graphics.DrawImage(originalBitmap, new Rectangle(0, 0, resizedBitmap.Width, resizedBitmap.Height));
+                            layer.Offset = new Point(layer.Offset.X - (newWidth - originalBitmap.Width), layer.Offset.Y);
+                        }
+                        else
+                        {
+                            // make bigger
+                            graphics.DrawImage(originalBitmap, new Rectangle(0, 0, originalBitmap.Width + Math.Abs(originalBitmap.Width - newWidth), resizedBitmap.Height));
+                            layer.Offset = new Point(layer.Offset.X + (originalBitmap.Width - newWidth), layer.Offset.Y);
+                        }
+                        //layer.Offset = new Point(layer.Offset.X - (newWidth - originalBitmap.Width), layer.Offset.Y);
                         break;
                 }
-                graphics.DrawImage(originalBitmap, new Rectangle(0, 0, newWidth, newHeight));
+              
             }
             layer.Bitmap = resizedBitmap;
         }

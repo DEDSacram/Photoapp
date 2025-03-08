@@ -771,7 +771,7 @@ namespace Photoapp
                     using (SolidBrush maskBrush = new SolidBrush(Color.FromArgb(20, Color.Red))) // Semi-transparent preview
                     {
                         g.SmoothingMode = SmoothingMode.AntiAlias;
-                        g.FillEllipse(maskBrush, selectedLayer.Offset.X-250, selectedLayer.Offset.Y - 250, 500, 500);
+                        g.FillEllipse(maskBrush, NormalizedPoint.X-250, NormalizedPoint.Y - 250, 500, 500);
                     }
                 }
 

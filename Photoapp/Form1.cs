@@ -72,6 +72,8 @@ namespace Photoapp
 
         private Point startingpoint = Point.Empty; // Just normalized
 
+        private Point previousOffset = Point.Empty;
+
         // only redraw when needed
         //private Timer redrawTimer;
         //private bool needsRedraw = false;
@@ -373,12 +375,16 @@ namespace Photoapp
             
             Point NormalizedPoint = NormalizeMousePosition(e.Location);
             startingpoint = NormalizedPoint;
+       
             NormalizedPoint = NormalizeMousePositionLayer(NormalizedPoint, layerManager.GetLayer(selectedLayerId).Offset);
             if (e.Button == MouseButtons.Left)
             {
                 Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
                 previous = new Point(selectedLayer.Bitmap.Width, selectedLayer.Bitmap.Height);
                 // save bitmap of Layer before changing
+
+                previousOffset = selectedLayer.Offset;
+
                 dataOriginal = GetBytesFromBitmap(selectedLayer.Bitmap);
                 isDrawing = true;
                 lastPoint = NormalizedPoint;
@@ -467,7 +473,10 @@ namespace Photoapp
                         break;
                     case Mode.eyedropper:
                         // Get the color of the pixel at the given position
-                     
+                        try
+                        {
+
+                      
                         Color pixelColor = selectedLayer.Bitmap.GetPixel(NormalizedPoint.X, NormalizedPoint.Y);
 
                         // Extract the individual ARGB components
@@ -476,10 +485,13 @@ namespace Photoapp
                         int green = pixelColor.G;
                         int blue = pixelColor.B;
 
-                        var pointo=NormalizeMousePosition(NormalizedPoint);
-
                         // Update the legend text to display the individual components
-                        legend.Text = $"A:{alpha};R:{red};G:{green};B:{blue};X:{e.X};Y:{e.Y};X:{pointo.X};Y:{pointo.Y}";
+                        legend.Text = $"A:{alpha};R:{red};G:{green};B:{blue};X:{e.X};Y:{e.Y};";
+                        }
+                        catch
+                        {
+
+                        }
                         break;
                     case Mode.font:
 
@@ -496,7 +508,7 @@ namespace Photoapp
             isRotating = false;
             isScaling = false;
         }
-
+        private Point CurrentTopLeftEdge = new Point(0,0);
         private bool IsNearFirstPoint(Point currentPoint)
         {
             // Check if the current point is near the first point (within 5px)
@@ -621,25 +633,30 @@ namespace Photoapp
                             }
                             if (isScaling)
                             {
-                            // has bugs but shouldnt ever be realised because every time this gets rescaled and recalculated each resize (mouse move)
                             NormalizedPoint = NormalizeMousePosition(e.Location);
-                            int centerx = selectedLayer.Bitmap.Height / 2 + selectedLayer.Offset.X;
-                            int centery = selectedLayer.Bitmap.Width / 2 + selectedLayer.Offset.Y;
+            
+
+                            // DI SE ZABIT ONREJI PROSIM NEPROHAZUJ SIRKU VYSKU OSY
+                                           //   BEZ KONTEXTU                            // normalizovana
+                            int centerx = selectedLayer.Bitmap.Width / 2 + selectedLayer.Offset.X;
+                            int centery = selectedLayer.Bitmap.Height / 2 + selectedLayer.Offset.Y;
+
+                 
 
                             int x = centerx - NormalizedPoint.X; // Example x-coordinate
                             int y = centery - NormalizedPoint.Y; // Example y-coordinate 
 
-                            //using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
-                            //{
-                            //    using (SolidBrush maskBrush = new SolidBrush(Color.FromArgb(128, Color.Red))) // Semi-transparent preview
-                            //    {
-                            //        g.SmoothingMode = SmoothingMode.AntiAlias;
-                            //        g.FillEllipse(maskBrush, selectedLayer.Offset.X, selectedLayer.Offset.Y - 10, 5, 5);
-                            //    }
-                            //}
+                            using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
+                            {
+                                using (SolidBrush maskBrush = new SolidBrush(Color.FromArgb(128, Color.Red))) // Semi-transparent preview
+                                {
+                                    g.SmoothingMode = SmoothingMode.AntiAlias;
+                                    g.FillEllipse(maskBrush, selectedLayer.Bitmap.Width / 2 -1, selectedLayer.Bitmap.Height / 2 - 1, 2, 2);
+                                }
+                            }
 
 
-                            // 0: top, 1: right, 2: bottom, 3: left
+
                             byte side = 0;
                             int rescalexby = startingpoint.X - NormalizedPoint.X;
                             int rescaleyby = startingpoint.Y - NormalizedPoint.Y;
@@ -675,26 +692,24 @@ namespace Photoapp
                                     side = 1;
                                 }
                             }
-                            Console.WriteLine("Make smaller by: {0}", rescalexby);
+                            //Console.WriteLine("Make smaller by: {0}", rescalexby);
 
 
                             //ResizeBitmap(Bitmap originalBitmap, int newWidth, int newHeight)
                             int newWidth = selectedLayer.Bitmap.Width - rescalexby;
                             int newHeight = selectedLayer.Bitmap.Height - rescaleyby;
                             
-                            if(selectedLayer.Bitmap.Height < newHeight)
-                            {
-                                Console.WriteLine("Make smaller by: {0}", newHeight);
-                            }
-                            // 
+                       
+                        
                             startingpoint = NormalizedPoint;
-
+                            Console.WriteLine("Closest side: {0}", closestSide);
                             layerManager.ResizeBitmap(selectedLayerId, newWidth, newHeight, side);
 
                             break;
                             }
                             if (isDragging)
                             {
+                          
                             NormalizedPoint = NormalizeMousePosition(e.Location);
                             // Calculate the new location of the dragged panel
                             Point newLocation = new Point(NormalizedPoint.X, NormalizedPoint.Y);
@@ -766,14 +781,28 @@ namespace Photoapp
                 Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
                 Rectangle invalidRect = Rectangle.Empty;
 
-                using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
-                {
-                    using (SolidBrush maskBrush = new SolidBrush(Color.FromArgb(20, Color.Red))) // Semi-transparent preview
-                    {
-                        g.SmoothingMode = SmoothingMode.AntiAlias;
-                        g.FillEllipse(maskBrush, NormalizedPoint.X-250, NormalizedPoint.Y - 250, 500, 500);
-                    }
-                }
+                // always finds 0
+                //using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
+                //{
+                //    using (SolidBrush maskBrush = new SolidBrush(Color.FromArgb(20, Color.Red))) // Semi-transparent preview
+                //    {
+                //        g.SmoothingMode = SmoothingMode.AntiAlias;
+                //        //Point offsets = NormalizeMousePositionLayer(previousOffset, selectedLayer.Offset);
+                //        ////g.FillEllipse(maskBrush, offsets.X-50, offsets.Y -50, 100, 100);
+                //        //CurrentTopLeftEdge.X += offsets.X;
+                //        //CurrentTopLeftEdge.Y += offsets.Y;
+                //        //Console.WriteLine("MOVED X: {0}; Y : {1}", offsets.X, offsets.Y);
+                //        //Console.WriteLine("CurrentActual X: {0}; Y : {1}", CurrentTopLeftEdge.X, CurrentTopLeftEdge.Y);
+                //        Point Norm = NormalizeMousePosition(selectedLayer.Offset);
+                //        Console.WriteLine("Layer X: {0}; Y : {1}", Norm.X, Norm.Y);
+                //        Point zero = NormalizeMousePosition(new Point(0,0));
+                //        Console.WriteLine("Origin X: {0}; Y : {1}", zero.X, zero.Y);
+
+
+                //        g.FillEllipse(maskBrush, zero.X - 50, zero.Y - 50, 100, 100);
+
+                //    }
+                //}
 
                 //selectedLayer.Bitmap = LayerManager.RotateImage(selectedLayer.Bitmap, 120);
 

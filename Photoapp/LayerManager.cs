@@ -347,7 +347,7 @@ namespace Photoapp
                 else
                 {
                     // Math.Abs(originalBitmap.Height - newHeight)
-                    resizedBitmap = new Bitmap(originalBitmap.Width, originalBitmap.Height);
+                    resizedBitmap = new Bitmap(originalBitmap.Width, originalBitmap.Height + Math.Abs(originalBitmap.Height - newHeight));
                 }
             }
             // Right Left
@@ -360,7 +360,7 @@ namespace Photoapp
                 else
                 {
                     // Math.Abs(originalBitmap.Width - newWidth)
-                    resizedBitmap = new Bitmap(originalBitmap.Width, originalBitmap.Height);
+                    resizedBitmap = new Bitmap(originalBitmap.Width + Math.Abs(originalBitmap.Width - newWidth), originalBitmap.Height);
                 }
             }
             else

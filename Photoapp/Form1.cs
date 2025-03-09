@@ -669,7 +669,7 @@ namespace Photoapp
                        
                         
                             startingpoint = NormalizedPoint;
-                            Console.WriteLine("Closest side: {0}", closestSide);
+                            //Console.WriteLine("Closest side: {0}", closestSide);
                             layerManager.ResizeBitmap(selectedLayerId, newWidth, newHeight, side);
 
                             break;
@@ -747,31 +747,6 @@ namespace Photoapp
             {
                 Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
                 Rectangle invalidRect = Rectangle.Empty;
-
-                // always finds 0
-                //using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
-                //{
-                //    using (SolidBrush maskBrush = new SolidBrush(Color.FromArgb(20, Color.Red))) // Semi-transparent preview
-                //    {
-                //        g.SmoothingMode = SmoothingMode.AntiAlias;
-                //        //Point offsets = NormalizeMousePositionLayer(previousOffset, selectedLayer.Offset);
-                //        ////g.FillEllipse(maskBrush, offsets.X-50, offsets.Y -50, 100, 100);
-                //        //CurrentTopLeftEdge.X += offsets.X;
-                //        //CurrentTopLeftEdge.Y += offsets.Y;
-                //        //Console.WriteLine("MOVED X: {0}; Y : {1}", offsets.X, offsets.Y);
-                //        //Console.WriteLine("CurrentActual X: {0}; Y : {1}", CurrentTopLeftEdge.X, CurrentTopLeftEdge.Y);
-                //        Point Norm = NormalizeMousePosition(selectedLayer.Offset);
-                //        Console.WriteLine("Layer X: {0}; Y : {1}", Norm.X, Norm.Y);
-                //        Point zero = NormalizeMousePosition(new Point(0,0));
-                //        Console.WriteLine("Origin X: {0}; Y : {1}", zero.X, zero.Y);
-
-
-                //        g.FillEllipse(maskBrush, zero.X - 50, zero.Y - 50, 100, 100);
-
-                //    }
-                //}
-
-                //selectedLayer.Bitmap = LayerManager.RotateImage(selectedLayer.Bitmap, 120);
 
                 switch (currentMode)
                 {
@@ -1290,6 +1265,42 @@ namespace Photoapp
             else
             {
                 MessageBox.Show("Invalid file path. Please select a valid image file.");
+            }
+        }
+
+        private void pNGToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveImage(ImageFormat.Png);
+        }
+
+        private void jPGToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveImage(ImageFormat.Jpeg);
+        }
+
+        private void bMPToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveImage(ImageFormat.Bmp);
+        }
+        private void SaveImage(ImageFormat format)
+        {
+            using (SaveFileDialog saveFileDialog = new SaveFileDialog())
+            {
+                saveFileDialog.Filter = "Image files (*.png, *.jpg, *.bmp) | *.png; *.jpg; *.bmp";
+                saveFileDialog.Title = "Save an Image File";
+                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        // Assuming combinedBitmap is the image you want to save
+                        combinedBitmap.Save(saveFileDialog.FileName, format);
+                        MessageBox.Show("Image saved successfully.");
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Error saving image: {ex.Message}");
+                    }
+                }
             }
         }
     }

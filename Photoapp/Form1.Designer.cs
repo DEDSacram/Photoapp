@@ -57,6 +57,10 @@ namespace Photoapp
             this.canvasPanel = new System.Windows.Forms.DoubleBufferedPanel();
             this.selectedLayer = new System.Windows.Forms.Label();
             this.legend = new System.Windows.Forms.Label();
+            this.saveImageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.pNGToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.jPGToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.bMPToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.buttonPanel.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -246,7 +250,8 @@ namespace Photoapp
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.importImageToolStripMenuItem});
+            this.importImageToolStripMenuItem,
+            this.saveImageToolStripMenuItem});
             this.fileToolStripMenuItem.ForeColor = System.Drawing.Color.White;
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
@@ -293,6 +298,37 @@ namespace Photoapp
             this.legend.TabIndex = 7;
             this.legend.Text = "label1";
             // 
+            // saveImageToolStripMenuItem
+            // 
+            this.saveImageToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.pNGToolStripMenuItem,
+            this.jPGToolStripMenuItem,
+            this.bMPToolStripMenuItem});
+            this.saveImageToolStripMenuItem.Name = "saveImageToolStripMenuItem";
+            this.saveImageToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.saveImageToolStripMenuItem.Text = "save image";
+            // 
+            // pNGToolStripMenuItem
+            // 
+            this.pNGToolStripMenuItem.Name = "pNGToolStripMenuItem";
+            this.pNGToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.pNGToolStripMenuItem.Text = "PNG";
+            this.pNGToolStripMenuItem.Click += new System.EventHandler(this.pNGToolStripMenuItem_Click);
+            // 
+            // jPGToolStripMenuItem
+            // 
+            this.jPGToolStripMenuItem.Name = "jPGToolStripMenuItem";
+            this.jPGToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.jPGToolStripMenuItem.Text = "JPG";
+            this.jPGToolStripMenuItem.Click += new System.EventHandler(this.jPGToolStripMenuItem_Click);
+            // 
+            // bMPToolStripMenuItem
+            // 
+            this.bMPToolStripMenuItem.Name = "bMPToolStripMenuItem";
+            this.bMPToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.bMPToolStripMenuItem.Text = "BMP";
+            this.bMPToolStripMenuItem.Click += new System.EventHandler(this.bMPToolStripMenuItem_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -337,6 +373,10 @@ namespace Photoapp
         private System.Windows.Forms.Label selectedLayer;
         private DoubleBufferedPanel canvasPanel;
         private Label legend;
+        private ToolStripMenuItem saveImageToolStripMenuItem;
+        private ToolStripMenuItem pNGToolStripMenuItem;
+        private ToolStripMenuItem jPGToolStripMenuItem;
+        private ToolStripMenuItem bMPToolStripMenuItem;
     }
 }
 

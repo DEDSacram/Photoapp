@@ -217,10 +217,6 @@ namespace Photoapp
                 {
 
                     layer.Bitmap = CreateBitmapFromBytes(ovveridecopy, entry.width, entry.height, PixelFormat.Format32bppArgb);
-                    //if(layer.Offset.X == entry.Offset.X)
-                    //{
-                    //    Console.WriteLine("same");
-                    //}
                     layer.Offset = entry.Offset;
                 }
                 catch

@@ -1415,6 +1415,7 @@ namespace Photoapp
 
             return equalizedBitmap;
         }
+
         private Bitmap EqualizeHistogramAllChannels(Bitmap original)
         {
             Bitmap equalizedBitmap = new Bitmap(original.Width, original.Height);
@@ -1495,11 +1496,12 @@ namespace Photoapp
             int kernelWidthRadius = kernelWidth / 2;
             int kernelHeightRadius = kernelHeight / 2;
 
+      
             for (int y = kernelHeightRadius; y < original.Height - kernelHeightRadius; y++)
             {
                 for (int x = kernelWidthRadius; x < original.Width - kernelWidthRadius; x++)
                 {
-                    double red = 0.0, green = 0.0, blue = 0.0;
+                    double red = 0.0, green = 0.0, blue = 0.0, alpha = 0.0;
 
                     for (int ky = -kernelHeightRadius; ky <= kernelHeightRadius; ky++)
                     {
@@ -1514,6 +1516,7 @@ namespace Photoapp
                             red += pixelColor.R * kernelValue;
                             green += pixelColor.G * kernelValue;
                             blue += pixelColor.B * kernelValue;
+                            alpha += pixelColor.A * kernelValue;
                         }
                     }
 
@@ -1521,10 +1524,7 @@ namespace Photoapp
                     int r = Math.Min(Math.Max((int)(red * multiplier), 0), 255);
                     int g = Math.Min(Math.Max((int)(green * multiplier), 0), 255);
                     int b = Math.Min(Math.Max((int)(blue * multiplier), 0), 255);
-
-                    int a = Math.Min(Math.Max((int)(r + g + b), 0), 255);
-
-                    filteredBitmap.SetPixel(x, y, Color.FromArgb(a, r, g, b));
+                    filteredBitmap.SetPixel(x, y, Color.FromArgb(Math.Min(Math.Max((int)(alpha * multiplier), 0), 255), r, g, b));
                 }
             }
 
@@ -1549,6 +1549,75 @@ namespace Photoapp
             popup.Controls.Add(pictureBox);
             popup.ShowDialog();
         }
+
+        // Prewitt Edge Detection Kernels
+        // Prewitt Vertical Kernel
+        double[,] PrewittVertical = new double[,]
+        {
+    { 1, 0, -1 },
+    { 1, 0, -1 },
+    { 1, 0, -1 }
+        };
+
+        // Prewitt Horizontal Kernel
+        double[,] PrewittHorizontal = new double[,]
+        {
+    { 1, 1, 1 },
+    { 0, 0, 0 },
+    { -1, -1, -1 }
+        };
+
+        // Sobel Edge Detection Kernels
+        // Sobel Vertical Kernel
+        double[,] SobelVertical = new double[,]
+        {
+    { 1, 0, -1 },
+    { 2, 0, -2 },
+    { 1, 0, -1 }
+        };
+
+        // Sobel Horizontal Kernel
+        double[,] SobelHorizontal = new double[,]
+        {
+    { 1, 2, 1 },
+    { 0, 0, 0 },
+    { -1, -2, -1 }
+        };
+
+        // Robinson Edge Detection Kernels
+        // Robinson Vertical Kernel (0°)
+        double[,] Robinson0 = new double[,]
+        {
+    { 0, 1, 0 },
+    { 1, -4, 1 },
+    { 0, 1, 0 }
+        };
+
+        // Robinson Horizontal Kernel (90°)
+        double[,] Robinson90 = new double[,]
+        {
+    { 1, 1, 1 },
+    { 0, -4, 0 },
+    { -1, -1, -1 }
+        };
+
+        // Kirsch Edge Detection Kernels
+        // Kirsch Vertical Kernel
+        double[,] KirschVertical = new double[,]
+        {
+    { 5, 5, 5 },
+    { -3, 0, -3 },
+    { -3, -3, -3 }
+        };
+
+        // Kirsch Horizontal Kernel
+        double[,] KirschHorizontal = new double[,]
+        {
+    { 5, -3, -3 },
+    { 5, 0, -3 },
+    { 5, -3, -3 }
+        };
+
 
         // before paint first calculate the combined bitmap you are doing the paint to the buffer here for some reason it is even slower now
         private void canvasPanel_Paint(object sender, PaintEventArgs e)
@@ -1715,6 +1784,7 @@ namespace Photoapp
             }
         }
 
+    
         private void edgeDetectionToolStripMenuItem_Click(object sender, EventArgs e)
         {
             double[,] kernel = new double[,]
@@ -1733,6 +1803,7 @@ namespace Photoapp
 
         private void sharpenToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            // hornofrekvencni filtr
             double[,] kernel = new double[,]
        {
                 { 0, -1, 0},
@@ -1762,7 +1833,7 @@ namespace Photoapp
                 ShowInPopup(filteredBitmap);
             }
         }
-
+        //https://lisyarus.github.io/blog/posts/blur-coefficients-generator.html
         private void x3ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             double[,] kernel = new double[,]
@@ -1782,7 +1853,7 @@ namespace Photoapp
         private void x5ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             double[,] kernel = new double[,]
-{
+{                // binomical same as gauss but gauss runs more times over
                 { 1, 4, 6,4,1},
                 { 4,16,24,16,4},
                 { 6,24,36,24,6},
@@ -1813,6 +1884,22 @@ namespace Photoapp
                 Bitmap filteredBitmap = ApplyConvolutionFilter(selectedLayer.Bitmap, kernel, -1.0f / 256.0f);
                 ShowInPopup(filteredBitmap);
             }
+        }
+        
+        private void edgeDetectionLeftToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            double[,] kernel = new double[,]
+{
+                  { 1, 0, -1 },
+                { 1,  0, -1 },
+                { 1, 0, -1 }
+};
+            //Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
+            //if (selectedLayer != null && selectedLayer.Bitmap != null)
+            //{
+                Bitmap filteredBitmap = ApplyConvolutionFilter(combinedBitmap, kernel);
+                ShowInPopup(filteredBitmap);
+            //}
         }
     }
 

@@ -56,10 +56,11 @@ namespace Photoapp
             get;
             private set;
         }
-        public bool IsTransform
+
+        public Point Offset
         {
             get;
-            private set;
+            set;
         }
 
         public bool overrideBitmap
@@ -82,7 +83,7 @@ namespace Photoapp
         {
             LayerId = layerId;
             ZippedBitmap = zippedBitmap;
-            IsTransform = false;
+     
             overrideBitmap = false;
         }
     }
@@ -164,7 +165,7 @@ namespace Photoapp
             }
         }
 
-        public void SaveToUndoStack(int layerId, int[] diff, bool ovveride, Point Previoussize)
+        public void SaveToUndoStack(int layerId, int[] diff, bool ovveride, Point Previoussize,Point previousoffset)
         {
 
             // Convert int[] to byte[]
@@ -181,6 +182,7 @@ namespace Photoapp
             entry.overrideBitmap = ovveride;
             entry.width = Previoussize.X;
             entry.height = Previoussize.Y; // cant do it here this is already with the new coords
+            entry.Offset = previousoffset;
 
             undoStack.Push(entry);
         }
@@ -215,6 +217,11 @@ namespace Photoapp
                 {
 
                     layer.Bitmap = CreateBitmapFromBytes(ovveridecopy, entry.width, entry.height, PixelFormat.Format32bppArgb);
+                    //if(layer.Offset.X == entry.Offset.X)
+                    //{
+                    //    Console.WriteLine("same");
+                    //}
+                    layer.Offset = entry.Offset;
                 }
                 catch
                 {
@@ -243,6 +250,7 @@ namespace Photoapp
                 reconstructedData[i] = (byte)value;
             }
             layer.Bitmap = CreateBitmapFromBytes(reconstructedData, layer.Bitmap.Width, layer.Bitmap.Height, PixelFormat.Format32bppArgb);
+            layer.Offset = entry.Offset;
         }
 
         // Helper: Extract raw bytes from a Bitmap using LockBits.
@@ -558,53 +566,11 @@ namespace Photoapp
             return new Rectangle(minX, minY, maxX - minX + 1, maxY - minY + 1);
         }
 
-        // Undo the last action for a specific layer
-        public void Undo(int layerId)
-        {
-            var tempStack = new Stack<UndoEntry>();
-            while (undoStack.Count > 0)
-            {
-                var entry = undoStack.Pop();
-                if (entry.LayerId == layerId)
-                {
-                    Bitmap restoredBitmap = UnzipBitmap(entry.ZippedBitmap);
-                    foreach (var layer in layers)
-                    {
-                        if (layer.LayerId == layerId)
-                        {
-                            layer.Bitmap = restoredBitmap;
-                            break;
-                        }
-                    }
-                    break;
-                }
-                else
-                {
-                    tempStack.Push(entry);
-                }
-            }
-
-            while (tempStack.Count > 0)
-            {
-                undoStack.Push(tempStack.Pop());
-            }
-        }
+  
 
         public Layer GetLayer(int layerId)
         {
             return layers.Find(layer => layer.LayerId == layerId);
-        }
-
-        private Bitmap UnzipBitmap(byte[] zippedData)
-        {
-            using (var zippedStream = new MemoryStream(zippedData))
-            using (var gzipStream = new GZipStream(zippedStream, CompressionMode.Decompress))
-            using (var outputStream = new MemoryStream())
-            {
-                gzipStream.CopyTo(outputStream);
-                outputStream.Position = 0;
-                return new Bitmap(outputStream);
-            }
         }
 
         public void ReorderLayers(int draggedLayerId, int targetLayerId)

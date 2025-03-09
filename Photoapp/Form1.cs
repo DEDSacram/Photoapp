@@ -70,6 +70,7 @@ namespace Photoapp
         private bool isScaling = false; // Track if a scale operation is ongoing
 
         private Point previous = Point.Empty; // Track the previous mouse position for panning
+        private Point previousOffset = Point.Empty;
 
 
         private Point startingpoint = Point.Empty; // Just normalized
@@ -359,6 +360,7 @@ namespace Photoapp
             {
                 Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
                 previous = new Point(selectedLayer.Bitmap.Width, selectedLayer.Bitmap.Height);
+                previousOffset = selectedLayer.Offset;
                 // save bitmap of Layer before changing
 
    
@@ -485,7 +487,6 @@ namespace Photoapp
             isRotating = false;
             isScaling = false;
         }
-        private Point CurrentTopLeftEdge = new Point(0,0);
         private bool IsNearFirstPoint(Point currentPoint)
         {
             // Check if the current point is near the first point (within 5px)
@@ -520,17 +521,6 @@ namespace Photoapp
            
                 Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
                 Rectangle invalidRect = Rectangle.Empty;
-                // start point
-
-                // Define the variables
-             
-            
-
-                // Output the closest side
-                //    Console.WriteLine("Closest side: {0} {1}", centerx - NormalizedPoint.X, centery -NormalizedPoint.Y); // correct
-
-                //Console.WriteLine("Closest side: {0} {1}", closestSide, centery - NormalizedPoint.Y);
-
                 switch (currentMode)
                 {
                     case Mode.pencil:
@@ -953,6 +943,36 @@ namespace Photoapp
 
 
         }
+        private void Savetomanager(Bitmap Modified, bool ovveride)
+        {
+            //string diffOutputPath = @"C:\Users\rlly\Desktop\paint\current.png";
+            //Modified.Save(diffOutputPath, ImageFormat.Png);
+
+            int[] signedDiff = new int[dataOriginal.Length];
+            if (ovveride)
+            {
+                for (int i = 0; i < dataOriginal.Length; i++)
+                {
+                    signedDiff[i] = dataOriginal[i];
+                }
+                layerManager.SaveToUndoStack(selectedLayerId, signedDiff, ovveride, previous,previousOffset);
+                return;
+            }
+
+            byte[] dataModified = GetBytesFromBitmap(Modified);
+
+            // Create an array to hold the signed difference.
+            // Since a difference can be negative, we use an int array.
+            //int[] signedDiff = new int[dataOriginal.Length];
+
+            // Compute the signed difference for each channel.
+            // (For each channel: diff = original - modified)
+            for (int i = 0; i < dataOriginal.Length; i++)
+            {
+                signedDiff[i] = dataOriginal[i] - dataModified[i];
+            }
+            layerManager.SaveToUndoStack(selectedLayerId, signedDiff, ovveride, previous,previousOffset);
+        }
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
 
@@ -998,36 +1018,7 @@ namespace Photoapp
 
             }
         }
-        private void Savetomanager(Bitmap Modified, bool ovveride)
-        {
-            //string diffOutputPath = @"C:\Users\rlly\Desktop\paint\current.png";
-            //Modified.Save(diffOutputPath, ImageFormat.Png);
-          
-            int[] signedDiff = new int[dataOriginal.Length];
-            if (ovveride)
-            {
-                for (int i = 0; i < dataOriginal.Length; i++)
-                {
-                    signedDiff[i] = dataOriginal[i];
-                }
-                layerManager.SaveToUndoStack(selectedLayerId, signedDiff, ovveride,previous);
-                return;
-            }
-
-            byte[] dataModified = GetBytesFromBitmap(Modified);
-
-            // Create an array to hold the signed difference.
-            // Since a difference can be negative, we use an int array.
-            //int[] signedDiff = new int[dataOriginal.Length];
-
-            // Compute the signed difference for each channel.
-            // (For each channel: diff = original - modified)
-            for (int i = 0; i < dataOriginal.Length; i++)
-            {
-                signedDiff[i] = dataOriginal[i] - dataModified[i];
-            }
-            layerManager.SaveToUndoStack(selectedLayerId, signedDiff, ovveride,previous);
-        }
+    
      
         private void canvasPanel_MouseWheel(object sender, MouseEventArgs e)
         {

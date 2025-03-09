@@ -54,13 +54,30 @@ namespace Photoapp
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importImageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.canvasPanel = new System.Windows.Forms.DoubleBufferedPanel();
-            this.selectedLayer = new System.Windows.Forms.Label();
-            this.legend = new System.Windows.Forms.Label();
             this.saveImageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pNGToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.jPGToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bMPToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.methodsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.grayscaleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.inverseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.histogramToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.rGBToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.intensityToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.equalizedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.equalizedAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.convolutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.identityToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.edgeDetectionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.sharpenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.boxBlurToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.gaussianToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.x3ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.x5ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.unsharpMaskingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.selectedLayer = new System.Windows.Forms.Label();
+            this.legend = new System.Windows.Forms.Label();
+            this.canvasPanel = new System.Windows.Forms.DoubleBufferedPanel();
             this.buttonPanel.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -240,7 +257,8 @@ namespace Photoapp
             // menuStrip1
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fileToolStripMenuItem});
+            this.fileToolStripMenuItem,
+            this.methodsToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(800, 24);
@@ -260,21 +278,175 @@ namespace Photoapp
             // importImageToolStripMenuItem
             // 
             this.importImageToolStripMenuItem.Name = "importImageToolStripMenuItem";
-            this.importImageToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.importImageToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.importImageToolStripMenuItem.Text = "import image";
             this.importImageToolStripMenuItem.Click += new System.EventHandler(this.importImageToolStripMenuItem_Click);
             // 
-            // canvasPanel
+            // saveImageToolStripMenuItem
             // 
-            this.canvasPanel.BackColor = System.Drawing.Color.White;
-            this.canvasPanel.Location = new System.Drawing.Point(172, 31);
-            this.canvasPanel.Name = "canvasPanel";
-            this.canvasPanel.Size = new System.Drawing.Size(616, 411);
-            this.canvasPanel.TabIndex = 1;
-            this.canvasPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.canvasPanel_Paint);
-            this.canvasPanel.MouseDown += new System.Windows.Forms.MouseEventHandler(this.canvasPanel_MouseDown);
-            this.canvasPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.canvasPanel_MouseMove);
-            this.canvasPanel.MouseUp += new System.Windows.Forms.MouseEventHandler(this.canvasPanel_MouseUp);
+            this.saveImageToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.pNGToolStripMenuItem,
+            this.jPGToolStripMenuItem,
+            this.bMPToolStripMenuItem});
+            this.saveImageToolStripMenuItem.Name = "saveImageToolStripMenuItem";
+            this.saveImageToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+            this.saveImageToolStripMenuItem.Text = "save image";
+            // 
+            // pNGToolStripMenuItem
+            // 
+            this.pNGToolStripMenuItem.Name = "pNGToolStripMenuItem";
+            this.pNGToolStripMenuItem.Size = new System.Drawing.Size(99, 22);
+            this.pNGToolStripMenuItem.Text = "PNG";
+            this.pNGToolStripMenuItem.Click += new System.EventHandler(this.pNGToolStripMenuItem_Click);
+            // 
+            // jPGToolStripMenuItem
+            // 
+            this.jPGToolStripMenuItem.Name = "jPGToolStripMenuItem";
+            this.jPGToolStripMenuItem.Size = new System.Drawing.Size(99, 22);
+            this.jPGToolStripMenuItem.Text = "JPG";
+            this.jPGToolStripMenuItem.Click += new System.EventHandler(this.jPGToolStripMenuItem_Click);
+            // 
+            // bMPToolStripMenuItem
+            // 
+            this.bMPToolStripMenuItem.Name = "bMPToolStripMenuItem";
+            this.bMPToolStripMenuItem.Size = new System.Drawing.Size(99, 22);
+            this.bMPToolStripMenuItem.Text = "BMP";
+            this.bMPToolStripMenuItem.Click += new System.EventHandler(this.bMPToolStripMenuItem_Click);
+            // 
+            // methodsToolStripMenuItem
+            // 
+            this.methodsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.grayscaleToolStripMenuItem,
+            this.inverseToolStripMenuItem,
+            this.histogramToolStripMenuItem,
+            this.convolutionToolStripMenuItem});
+            this.methodsToolStripMenuItem.Name = "methodsToolStripMenuItem";
+            this.methodsToolStripMenuItem.Size = new System.Drawing.Size(66, 20);
+            this.methodsToolStripMenuItem.Text = "Methods";
+            // 
+            // grayscaleToolStripMenuItem
+            // 
+            this.grayscaleToolStripMenuItem.Name = "grayscaleToolStripMenuItem";
+            this.grayscaleToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.grayscaleToolStripMenuItem.Text = "Grayscale";
+            this.grayscaleToolStripMenuItem.Click += new System.EventHandler(this.grayscaleToolStripMenuItem_Click);
+            // 
+            // inverseToolStripMenuItem
+            // 
+            this.inverseToolStripMenuItem.Name = "inverseToolStripMenuItem";
+            this.inverseToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.inverseToolStripMenuItem.Text = "Inverse";
+            this.inverseToolStripMenuItem.Click += new System.EventHandler(this.inverseToolStripMenuItem_Click);
+            // 
+            // histogramToolStripMenuItem
+            // 
+            this.histogramToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.rGBToolStripMenuItem,
+            this.intensityToolStripMenuItem,
+            this.equalizedToolStripMenuItem,
+            this.equalizedAllToolStripMenuItem});
+            this.histogramToolStripMenuItem.Name = "histogramToolStripMenuItem";
+            this.histogramToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.histogramToolStripMenuItem.Text = "Histogram";
+            // 
+            // rGBToolStripMenuItem
+            // 
+            this.rGBToolStripMenuItem.Name = "rGBToolStripMenuItem";
+            this.rGBToolStripMenuItem.Size = new System.Drawing.Size(141, 22);
+            this.rGBToolStripMenuItem.Text = "RGB";
+            this.rGBToolStripMenuItem.Click += new System.EventHandler(this.rGBToolStripMenuItem_Click);
+            // 
+            // intensityToolStripMenuItem
+            // 
+            this.intensityToolStripMenuItem.Name = "intensityToolStripMenuItem";
+            this.intensityToolStripMenuItem.Size = new System.Drawing.Size(141, 22);
+            this.intensityToolStripMenuItem.Text = "Intensity";
+            this.intensityToolStripMenuItem.Click += new System.EventHandler(this.intensityToolStripMenuItem_Click);
+            // 
+            // equalizedToolStripMenuItem
+            // 
+            this.equalizedToolStripMenuItem.Name = "equalizedToolStripMenuItem";
+            this.equalizedToolStripMenuItem.Size = new System.Drawing.Size(141, 22);
+            this.equalizedToolStripMenuItem.Text = "Equalized";
+            this.equalizedToolStripMenuItem.Click += new System.EventHandler(this.equalizedToolStripMenuItem_Click);
+            // 
+            // equalizedAllToolStripMenuItem
+            // 
+            this.equalizedAllToolStripMenuItem.Name = "equalizedAllToolStripMenuItem";
+            this.equalizedAllToolStripMenuItem.Size = new System.Drawing.Size(141, 22);
+            this.equalizedAllToolStripMenuItem.Text = "Equalized All";
+            this.equalizedAllToolStripMenuItem.Click += new System.EventHandler(this.equalizedAllToolStripMenuItem_Click);
+            // 
+            // convolutionToolStripMenuItem
+            // 
+            this.convolutionToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.identityToolStripMenuItem,
+            this.edgeDetectionToolStripMenuItem,
+            this.sharpenToolStripMenuItem,
+            this.boxBlurToolStripMenuItem,
+            this.gaussianToolStripMenuItem,
+            this.unsharpMaskingToolStripMenuItem});
+            this.convolutionToolStripMenuItem.Name = "convolutionToolStripMenuItem";
+            this.convolutionToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.convolutionToolStripMenuItem.Text = "Convolution";
+            // 
+            // identityToolStripMenuItem
+            // 
+            this.identityToolStripMenuItem.Name = "identityToolStripMenuItem";
+            this.identityToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.identityToolStripMenuItem.Text = "Identity";
+            this.identityToolStripMenuItem.Click += new System.EventHandler(this.identityToolStripMenuItem_Click);
+            // 
+            // edgeDetectionToolStripMenuItem
+            // 
+            this.edgeDetectionToolStripMenuItem.Name = "edgeDetectionToolStripMenuItem";
+            this.edgeDetectionToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.edgeDetectionToolStripMenuItem.Text = "Edge detection";
+            this.edgeDetectionToolStripMenuItem.Click += new System.EventHandler(this.edgeDetectionToolStripMenuItem_Click);
+            // 
+            // sharpenToolStripMenuItem
+            // 
+            this.sharpenToolStripMenuItem.Name = "sharpenToolStripMenuItem";
+            this.sharpenToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.sharpenToolStripMenuItem.Text = "Sharpen";
+            this.sharpenToolStripMenuItem.Click += new System.EventHandler(this.sharpenToolStripMenuItem_Click);
+            // 
+            // boxBlurToolStripMenuItem
+            // 
+            this.boxBlurToolStripMenuItem.Name = "boxBlurToolStripMenuItem";
+            this.boxBlurToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.boxBlurToolStripMenuItem.Text = "Box blur";
+            this.boxBlurToolStripMenuItem.Click += new System.EventHandler(this.boxBlurToolStripMenuItem_Click);
+            // 
+            // gaussianToolStripMenuItem
+            // 
+            this.gaussianToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.x3ToolStripMenuItem,
+            this.x5ToolStripMenuItem});
+            this.gaussianToolStripMenuItem.Name = "gaussianToolStripMenuItem";
+            this.gaussianToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.gaussianToolStripMenuItem.Text = "Gaussian";
+            // 
+            // x3ToolStripMenuItem
+            // 
+            this.x3ToolStripMenuItem.Name = "x3ToolStripMenuItem";
+            this.x3ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.x3ToolStripMenuItem.Text = "3x3";
+            this.x3ToolStripMenuItem.Click += new System.EventHandler(this.x3ToolStripMenuItem_Click);
+            // 
+            // x5ToolStripMenuItem
+            // 
+            this.x5ToolStripMenuItem.Name = "x5ToolStripMenuItem";
+            this.x5ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.x5ToolStripMenuItem.Text = "5x5";
+            this.x5ToolStripMenuItem.Click += new System.EventHandler(this.x5ToolStripMenuItem_Click);
+            // 
+            // unsharpMaskingToolStripMenuItem
+            // 
+            this.unsharpMaskingToolStripMenuItem.Name = "unsharpMaskingToolStripMenuItem";
+            this.unsharpMaskingToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.unsharpMaskingToolStripMenuItem.Text = "Unsharp masking";
+            this.unsharpMaskingToolStripMenuItem.Click += new System.EventHandler(this.unsharpMaskingToolStripMenuItem_Click);
             // 
             // selectedLayer
             // 
@@ -298,36 +470,17 @@ namespace Photoapp
             this.legend.TabIndex = 7;
             this.legend.Text = "label1";
             // 
-            // saveImageToolStripMenuItem
+            // canvasPanel
             // 
-            this.saveImageToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.pNGToolStripMenuItem,
-            this.jPGToolStripMenuItem,
-            this.bMPToolStripMenuItem});
-            this.saveImageToolStripMenuItem.Name = "saveImageToolStripMenuItem";
-            this.saveImageToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.saveImageToolStripMenuItem.Text = "save image";
-            // 
-            // pNGToolStripMenuItem
-            // 
-            this.pNGToolStripMenuItem.Name = "pNGToolStripMenuItem";
-            this.pNGToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.pNGToolStripMenuItem.Text = "PNG";
-            this.pNGToolStripMenuItem.Click += new System.EventHandler(this.pNGToolStripMenuItem_Click);
-            // 
-            // jPGToolStripMenuItem
-            // 
-            this.jPGToolStripMenuItem.Name = "jPGToolStripMenuItem";
-            this.jPGToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.jPGToolStripMenuItem.Text = "JPG";
-            this.jPGToolStripMenuItem.Click += new System.EventHandler(this.jPGToolStripMenuItem_Click);
-            // 
-            // bMPToolStripMenuItem
-            // 
-            this.bMPToolStripMenuItem.Name = "bMPToolStripMenuItem";
-            this.bMPToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.bMPToolStripMenuItem.Text = "BMP";
-            this.bMPToolStripMenuItem.Click += new System.EventHandler(this.bMPToolStripMenuItem_Click);
+            this.canvasPanel.BackColor = System.Drawing.Color.White;
+            this.canvasPanel.Location = new System.Drawing.Point(172, 31);
+            this.canvasPanel.Name = "canvasPanel";
+            this.canvasPanel.Size = new System.Drawing.Size(616, 411);
+            this.canvasPanel.TabIndex = 1;
+            this.canvasPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.canvasPanel_Paint);
+            this.canvasPanel.MouseDown += new System.Windows.Forms.MouseEventHandler(this.canvasPanel_MouseDown);
+            this.canvasPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.canvasPanel_MouseMove);
+            this.canvasPanel.MouseUp += new System.Windows.Forms.MouseEventHandler(this.canvasPanel_MouseUp);
             // 
             // Form1
             // 
@@ -377,6 +530,23 @@ namespace Photoapp
         private ToolStripMenuItem pNGToolStripMenuItem;
         private ToolStripMenuItem jPGToolStripMenuItem;
         private ToolStripMenuItem bMPToolStripMenuItem;
+        private ToolStripMenuItem methodsToolStripMenuItem;
+        private ToolStripMenuItem grayscaleToolStripMenuItem;
+        private ToolStripMenuItem inverseToolStripMenuItem;
+        private ToolStripMenuItem histogramToolStripMenuItem;
+        private ToolStripMenuItem rGBToolStripMenuItem;
+        private ToolStripMenuItem intensityToolStripMenuItem;
+        private ToolStripMenuItem equalizedToolStripMenuItem;
+        private ToolStripMenuItem equalizedAllToolStripMenuItem;
+        private ToolStripMenuItem convolutionToolStripMenuItem;
+        private ToolStripMenuItem identityToolStripMenuItem;
+        private ToolStripMenuItem edgeDetectionToolStripMenuItem;
+        private ToolStripMenuItem sharpenToolStripMenuItem;
+        private ToolStripMenuItem boxBlurToolStripMenuItem;
+        private ToolStripMenuItem gaussianToolStripMenuItem;
+        private ToolStripMenuItem x3ToolStripMenuItem;
+        private ToolStripMenuItem x5ToolStripMenuItem;
+        private ToolStripMenuItem unsharpMaskingToolStripMenuItem;
     }
 }
 

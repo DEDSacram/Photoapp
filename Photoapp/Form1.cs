@@ -1134,62 +1134,6 @@ namespace Photoapp
             }
         }
 
-        // before paint first calculate the combined bitmap you are doing the paint to the buffer here for some reason it is even slower now
-        private void canvasPanel_Paint(object sender, PaintEventArgs e)
-        {
-
-            // Draw the combined bitmap instead of individual layers
-            if (combinedBitmap != null)
-            {
-                e.Graphics.DrawImage(combinedBitmap, 0, 0);
-            }
-        }
-        // UI buttons handle
-        private void pencilButton_MouseClick(object sender, MouseEventArgs e)
-        {
-            currentMode = Mode.pencil;
-            ResetModes();
-        }
-        private void penButton_MouseClick(object sender, MouseEventArgs e)
-        {
-            currentMode = Mode.pen;
-            ResetModes();
-        }
-        private void dragButton_MouseClick(object sender, MouseEventArgs e)
-        {
-            currentMode = Mode.drag;
-            ResetModes();
-        }
-        private void rubberButton_MouseClick(object sender, MouseEventArgs e)
-        {
-            currentMode = Mode.rubber; // done
-            ResetModes();
-        }
-        private void eyeButton_MouseClick(object sender, MouseEventArgs e)
-        {
-            currentMode = Mode.eyedropper;
-            ResetModes();
-        }
-        private void zoomButton_MouseClick(object sender, MouseEventArgs e)
-        {
-            currentMode = Mode.zoom;
-            ResetModes();
-        }
-        private void fontButton_MouseClick(object sender, MouseEventArgs e)
-        {
-            currentMode = Mode.font;
-            ResetModes();
-        }
-        private void selectBoxButton_MouseClick(object sender, MouseEventArgs e)
-        {
-            currentMode = Mode.rectangleSelect;
-            ResetModes();
-        }
-        private void selectFreeButton_MouseClick(object sender, MouseEventArgs e)
-        {
-            currentMode = Mode.freeSelect;
-            ResetModes();
-        }
         // layerpanel UI (Draw)
         private void AddLayerToLayerPanel(int layerId)
         {
@@ -1251,6 +1195,417 @@ namespace Photoapp
             // Add the new layer panel to the LayerPanel
             layerPanel.Controls.Add(layerItemPanel);
         }
+        private void SaveImage(ImageFormat format)
+        {
+            using (SaveFileDialog saveFileDialog = new SaveFileDialog())
+            {
+                saveFileDialog.Filter = "Image files (*.png, *.jpg, *.bmp) | *.png; *.jpg; *.bmp";
+                saveFileDialog.Title = "Save an Image File";
+                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        // Assuming combinedBitmap is the image you want to save
+                        combinedBitmap.Save(saveFileDialog.FileName, format);
+                        MessageBox.Show("Image saved successfully.");
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Error saving image: {ex.Message}");
+                    }
+                }
+            }
+        }
+        // https://stackoverflow.com/questions/687261/converting-rgb-to-grayscale-intensity 5
+        private Bitmap ConvertToGrayscale(Bitmap original)
+        {
+            Bitmap grayscaleBitmap = new Bitmap(original.Width, original.Height);
+            for (int y = 0; y < original.Height; y++)
+            {
+                for (int x = 0; x < original.Width; x++)
+                {
+                    Color originalColor = original.GetPixel(x, y);
+                    int grayScale = (int)((originalColor.R * 0.3) + (originalColor.G * 0.59) + (originalColor.B * 0.11));
+                    Color grayColor = Color.FromArgb(originalColor.A, grayScale, grayScale, grayScale);
+                    grayscaleBitmap.SetPixel(x, y, grayColor);
+                }
+            }
+            return grayscaleBitmap;
+        }
+
+        private Bitmap InverseBitmap(Bitmap original)
+        {
+            Bitmap invertedBitmap = new Bitmap(original.Width, original.Height);
+            for (int y = 0; y < original.Height; y++)
+            {
+                for (int x = 0; x < original.Width; x++)
+                {
+                    Color originalColor = original.GetPixel(x, y);
+                    Color invertedColor = Color.FromArgb(originalColor.A, 255 - originalColor.R, 255 - originalColor.G, 255 - originalColor.B);
+                    invertedBitmap.SetPixel(x, y, invertedColor);
+                }
+            }
+            return invertedBitmap;
+        }
+
+        // 5
+
+        //6
+        private Dictionary<string, int[]> CalculateHistogram(Bitmap bitmap)
+        {
+            int[] redHistogram = new int[256];
+            int[] greenHistogram = new int[256];
+            int[] blueHistogram = new int[256];
+
+            for (int y = 0; y < bitmap.Height; y++)
+            {
+                for (int x = 0; x < bitmap.Width; x++)
+                {
+                    Color pixelColor = bitmap.GetPixel(x, y);
+                    redHistogram[pixelColor.R]++;
+                    greenHistogram[pixelColor.G]++;
+                    blueHistogram[pixelColor.B]++;
+                }
+            }
+
+            return new Dictionary<string, int[]>
+    {
+        { "Red", redHistogram },
+        { "Green", greenHistogram },
+        { "Blue", blueHistogram }
+    };
+        }
+
+        private void PlotHistogram(Dictionary<string, int[]> histograms)
+        {
+            Form histogramForm = new Form
+            {
+                Text = "Color Channel Histograms",
+                Size = new Size(800, 600)
+            };
+
+            PictureBox pictureBox = new PictureBox
+            {
+                Dock = DockStyle.Fill,
+                Image = new Bitmap(800, 600)
+            };
+
+            using (Graphics g = Graphics.FromImage(pictureBox.Image))
+            {
+                g.Clear(Color.White);
+
+                int[] redHistogram = histograms["Red"];
+                int[] greenHistogram = histograms["Green"];
+                int[] blueHistogram = histograms["Blue"];
+
+                int maxRed = redHistogram.Max();
+                int maxGreen = greenHistogram.Max();
+                int maxBlue = blueHistogram.Max();
+                int max = Math.Max(maxRed, Math.Max(maxGreen, maxBlue));
+
+                for (int i = 0; i < 256; i++)
+                {
+                    int redHeight = (int)(redHistogram[i] / (float)max * 200);
+                    int greenHeight = (int)(greenHistogram[i] / (float)max * 200);
+                    int blueHeight = (int)(blueHistogram[i] / (float)max * 200);
+
+                    g.DrawLine(Pens.Red, i * 3, 250, i * 3, 250 - redHeight);
+                    g.DrawLine(Pens.Green, i * 3 + 1, 250, i * 3 + 1, 250 - greenHeight);
+                    g.DrawLine(Pens.Blue, i * 3 + 2, 250, i * 3 + 2, 250 - blueHeight);
+                }
+            }
+
+            histogramForm.Controls.Add(pictureBox);
+            histogramForm.ShowDialog();
+        }
+
+        private int[] CalculateIntensityHistogram(Bitmap bitmap)
+        {
+            int[] intensityHistogram = new int[256];
+
+            for (int y = 0; y < bitmap.Height; y++)
+            {
+                for (int x = 0; x < bitmap.Width; x++)
+                {
+                    Color pixelColor = bitmap.GetPixel(x, y);
+                    int intensity = (int)((pixelColor.R * 0.3) + (pixelColor.G * 0.59) + (pixelColor.B * 0.11));
+                    intensityHistogram[intensity]++;
+                }
+            }
+
+            return intensityHistogram;
+        }
+        private void PlotIntensityHistogram(int[] histogram)
+        {
+            Form histogramForm = new Form
+            {
+                Text = "Intensity Histogram",
+                Size = new Size(800, 600)
+            };
+
+            PictureBox pictureBox = new PictureBox
+            {
+                Dock = DockStyle.Fill,
+                Image = new Bitmap(800, 600)
+            };
+
+            using (Graphics g = Graphics.FromImage(pictureBox.Image))
+            {
+                g.Clear(Color.White);
+
+                int max = histogram.Max();
+
+                for (int i = 0; i < 256; i++)
+                {
+                    int height = (int)(histogram[i] / (float)max * 200);
+                    g.DrawLine(Pens.Black, i * 3, 250, i * 3, 250 - height);
+                }
+            }
+
+            histogramForm.Controls.Add(pictureBox);
+            histogramForm.ShowDialog();
+        }
+
+
+        private Bitmap EqualizeHistogram(Bitmap original)
+        {
+            Bitmap equalizedBitmap = new Bitmap(original.Width, original.Height);
+
+            // Calculate the histogram
+            int[] histogram = new int[256];
+            for (int y = 0; y < original.Height; y++)
+            {
+                for (int x = 0; x < original.Width; x++)
+                {
+                    Color pixelColor = original.GetPixel(x, y);
+                    int intensity = (int)((pixelColor.R * 0.3) + (pixelColor.G * 0.59) + (pixelColor.B * 0.11));
+                    histogram[intensity]++;
+                }
+            }
+
+            // Calculate the cumulative distribution function (CDF)
+            int[] cdf = new int[256];
+            cdf[0] = histogram[0];
+            for (int i = 1; i < 256; i++)
+            {
+                cdf[i] = cdf[i - 1] + histogram[i];
+            }
+
+            // Normalize the CDF
+            int cdfMin = cdf.First(c => c > 0);
+            int totalPixels = original.Width * original.Height;
+            int[] equalizedValues = new int[256];
+            for (int i = 0; i < 256; i++)
+            {
+                equalizedValues[i] = (int)(((float)(cdf[i] - cdfMin) / (totalPixels - cdfMin)) * 255);
+            }
+
+            // Apply the equalized values to the bitmap
+            for (int y = 0; y < original.Height; y++)
+            {
+                for (int x = 0; x < original.Width; x++)
+                {
+                    Color pixelColor = original.GetPixel(x, y);
+                    int intensity = (int)((pixelColor.R * 0.3) + (pixelColor.G * 0.59) + (pixelColor.B * 0.11));
+                    int equalizedIntensity = equalizedValues[intensity];
+                    Color equalizedColor = Color.FromArgb(pixelColor.A, equalizedIntensity, equalizedIntensity, equalizedIntensity);
+                    equalizedBitmap.SetPixel(x, y, equalizedColor);
+                }
+            }
+
+            return equalizedBitmap;
+        }
+        private Bitmap EqualizeHistogramAllChannels(Bitmap original)
+        {
+            Bitmap equalizedBitmap = new Bitmap(original.Width, original.Height);
+
+            // Separate histograms for each channel
+            int[] redHistogram = new int[256];
+            int[] greenHistogram = new int[256];
+            int[] blueHistogram = new int[256];
+
+            // Calculate the histograms
+            for (int y = 0; y < original.Height; y++)
+            {
+                for (int x = 0; x < original.Width; x++)
+                {
+                    Color pixelColor = original.GetPixel(x, y);
+                    redHistogram[pixelColor.R]++;
+                    greenHistogram[pixelColor.G]++;
+                    blueHistogram[pixelColor.B]++;
+                }
+            }
+
+            // Calculate the cumulative distribution function (CDF) for each channel
+            int[] redCdf = new int[256];
+            int[] greenCdf = new int[256];
+            int[] blueCdf = new int[256];
+
+            redCdf[0] = redHistogram[0];
+            greenCdf[0] = greenHistogram[0];
+            blueCdf[0] = blueHistogram[0];
+
+            for (int i = 1; i < 256; i++)
+            {
+                redCdf[i] = redCdf[i - 1] + redHistogram[i];
+                greenCdf[i] = greenCdf[i - 1] + greenHistogram[i];
+                blueCdf[i] = blueCdf[i - 1] + blueHistogram[i];
+            }
+
+            // Normalize the CDFs
+            int totalPixels = original.Width * original.Height;
+            int[] redEqualizedValues = new int[256];
+            int[] greenEqualizedValues = new int[256];
+            int[] blueEqualizedValues = new int[256];
+
+            for (int i = 0; i < 256; i++)
+            {
+                redEqualizedValues[i] = (int)(((float)redCdf[i] / totalPixels) * 255);
+                greenEqualizedValues[i] = (int)(((float)greenCdf[i] / totalPixels) * 255);
+                blueEqualizedValues[i] = (int)(((float)blueCdf[i] / totalPixels) * 255);
+            }
+
+            // Apply the equalized values to the bitmap
+            for (int y = 0; y < original.Height; y++)
+            {
+                for (int x = 0; x < original.Width; x++)
+                {
+                    Color pixelColor = original.GetPixel(x, y);
+                    int redEqualized = redEqualizedValues[pixelColor.R];
+                    int greenEqualized = greenEqualizedValues[pixelColor.G];
+                    int blueEqualized = blueEqualizedValues[pixelColor.B];
+                    Color equalizedColor = Color.FromArgb(pixelColor.A, redEqualized, greenEqualized, blueEqualized);
+                    equalizedBitmap.SetPixel(x, y, equalizedColor);
+                }
+            }
+
+            return equalizedBitmap;
+        }
+
+        //6
+
+        //7
+        // https://stackoverflow.com/questions/4854839/how-to-use-pre-multiplied-during-image-convolution-to-solve-alpha-bleed-problem
+        private Bitmap ApplyConvolutionFilter(Bitmap original, double[,] kernel, float multiplier = 1.0f)
+        {
+            Bitmap filteredBitmap = new Bitmap(original.Width, original.Height);
+
+            int kernelWidth = kernel.GetLength(0);
+            int kernelHeight = kernel.GetLength(1);
+            int kernelWidthRadius = kernelWidth / 2;
+            int kernelHeightRadius = kernelHeight / 2;
+
+            for (int y = kernelHeightRadius; y < original.Height - kernelHeightRadius; y++)
+            {
+                for (int x = kernelWidthRadius; x < original.Width - kernelWidthRadius; x++)
+                {
+                    double red = 0.0, green = 0.0, blue = 0.0;
+
+                    for (int ky = -kernelHeightRadius; ky <= kernelHeightRadius; ky++)
+                    {
+                        for (int kx = -kernelWidthRadius; kx <= kernelWidthRadius; kx++)
+                        {
+                            Color pixelColor = original.GetPixel(x + kx, y + ky);
+
+
+                            double kernelValue = kernel[ky + kernelHeightRadius, kx + kernelWidthRadius];
+
+
+                            red += pixelColor.R * kernelValue;
+                            green += pixelColor.G * kernelValue;
+                            blue += pixelColor.B * kernelValue;
+                        }
+                    }
+
+
+                    int r = Math.Min(Math.Max((int)(red * multiplier), 0), 255);
+                    int g = Math.Min(Math.Max((int)(green * multiplier), 0), 255);
+                    int b = Math.Min(Math.Max((int)(blue * multiplier), 0), 255);
+
+                    int a = Math.Min(Math.Max((int)(r + g + b), 0), 255);
+
+                    filteredBitmap.SetPixel(x, y, Color.FromArgb(a, r, g, b));
+                }
+            }
+
+            return filteredBitmap;
+        }
+        //7
+
+        private void ShowInPopup(Bitmap bitmap)
+        {
+            Form popup = new Form
+            {
+                Text = "Grayscale Image",
+                Size = new Size(bitmap.Width, bitmap.Height)
+            };
+
+            PictureBox pictureBox = new PictureBox
+            {
+                Image = bitmap,
+                SizeMode = PictureBoxSizeMode.AutoSize,
+            };
+
+            popup.Controls.Add(pictureBox);
+            popup.ShowDialog();
+        }
+
+        // before paint first calculate the combined bitmap you are doing the paint to the buffer here for some reason it is even slower now
+        private void canvasPanel_Paint(object sender, PaintEventArgs e)
+        {
+
+            // Draw the combined bitmap instead of individual layers
+            if (combinedBitmap != null)
+            {
+                e.Graphics.DrawImage(combinedBitmap, 0, 0);
+            }
+        }
+        // UI buttons handle
+        private void pencilButton_MouseClick(object sender, MouseEventArgs e)
+        {
+            currentMode = Mode.pencil;
+            ResetModes();
+        }
+        private void penButton_MouseClick(object sender, MouseEventArgs e)
+        {
+            currentMode = Mode.pen;
+            ResetModes();
+        }
+        private void dragButton_MouseClick(object sender, MouseEventArgs e)
+        {
+            currentMode = Mode.drag;
+            ResetModes();
+        }
+        private void rubberButton_MouseClick(object sender, MouseEventArgs e)
+        {
+            currentMode = Mode.rubber; // done
+            ResetModes();
+        }
+        private void eyeButton_MouseClick(object sender, MouseEventArgs e)
+        {
+            currentMode = Mode.eyedropper;
+            ResetModes();
+        }
+        private void zoomButton_MouseClick(object sender, MouseEventArgs e)
+        {
+            currentMode = Mode.zoom;
+            ResetModes();
+        }
+        private void fontButton_MouseClick(object sender, MouseEventArgs e)
+        {
+            currentMode = Mode.font;
+            ResetModes();
+        }
+        private void selectBoxButton_MouseClick(object sender, MouseEventArgs e)
+        {
+            currentMode = Mode.rectangleSelect;
+            ResetModes();
+        }
+        private void selectFreeButton_MouseClick(object sender, MouseEventArgs e)
+        {
+            currentMode = Mode.freeSelect;
+            ResetModes();
+        }
 
         private void importImageToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -1282,25 +1637,181 @@ namespace Photoapp
         {
             SaveImage(ImageFormat.Bmp);
         }
-        private void SaveImage(ImageFormat format)
+
+
+
+        private void grayscaleToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            using (SaveFileDialog saveFileDialog = new SaveFileDialog())
+            Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
+            if (selectedLayer != null && selectedLayer.Bitmap != null)
             {
-                saveFileDialog.Filter = "Image files (*.png, *.jpg, *.bmp) | *.png; *.jpg; *.bmp";
-                saveFileDialog.Title = "Save an Image File";
-                if (saveFileDialog.ShowDialog() == DialogResult.OK)
-                {
-                    try
-                    {
-                        // Assuming combinedBitmap is the image you want to save
-                        combinedBitmap.Save(saveFileDialog.FileName, format);
-                        MessageBox.Show("Image saved successfully.");
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show($"Error saving image: {ex.Message}");
-                    }
-                }
+                Bitmap grayscaleBitmap = ConvertToGrayscale(selectedLayer.Bitmap);
+                ShowInPopup(grayscaleBitmap);
+            }
+        }
+
+        private void inverseToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
+            if (selectedLayer != null && selectedLayer.Bitmap != null)
+            {
+                Bitmap inversedBitmap = InverseBitmap(selectedLayer.Bitmap);
+                ShowInPopup(inversedBitmap);
+            }
+        }
+
+        private void rGBToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
+            if (selectedLayer != null && selectedLayer.Bitmap != null)
+            {
+                PlotHistogram(CalculateHistogram(selectedLayer.Bitmap));
+            }
+         
+        }
+
+        private void intensityToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
+            if (selectedLayer != null && selectedLayer.Bitmap != null)
+            {
+                PlotIntensityHistogram(CalculateIntensityHistogram(selectedLayer.Bitmap));
+            }
+        }
+
+        private void equalizedToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
+            if (selectedLayer != null && selectedLayer.Bitmap != null)
+            {
+                Bitmap equalizedBitmap = EqualizeHistogram(selectedLayer.Bitmap);
+                ShowInPopup(equalizedBitmap);
+            }
+        }
+
+        private void equalizedAllToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
+            if (selectedLayer != null && selectedLayer.Bitmap != null)
+            {
+                Bitmap equalizedBitmap = EqualizeHistogramAllChannels(selectedLayer.Bitmap);
+                ShowInPopup(equalizedBitmap);
+            }
+        }
+        // convulution
+        private void identityToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            double[,] kernel = new double[,]
+            {
+                { 0, 0, 0 },
+                { 0,  1, 0 },
+                { 0, 0, 0 }
+            };
+            Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
+            if (selectedLayer != null && selectedLayer.Bitmap != null)
+            {
+                Bitmap filteredBitmap = ApplyConvolutionFilter(selectedLayer.Bitmap, kernel);
+                ShowInPopup(filteredBitmap);
+            }
+        }
+
+        private void edgeDetectionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            double[,] kernel = new double[,]
+          {
+                { -1, -1, -1 },
+                { -1,  8, -1 },
+                { -1, -1, -1 }
+          };
+            Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
+            if (selectedLayer != null && selectedLayer.Bitmap != null)
+            {
+                Bitmap filteredBitmap = ApplyConvolutionFilter(selectedLayer.Bitmap, kernel);
+                ShowInPopup(filteredBitmap);
+            }
+        }
+
+        private void sharpenToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            double[,] kernel = new double[,]
+       {
+                { 0, -1, 0},
+                { -1,  5, -1 },
+                { 0, -1, 0 }
+       };
+            Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
+            if (selectedLayer != null && selectedLayer.Bitmap != null)
+            {
+                Bitmap filteredBitmap = ApplyConvolutionFilter(selectedLayer.Bitmap, kernel);
+                ShowInPopup(filteredBitmap);
+            }
+        }
+
+        private void boxBlurToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            double[,] kernel = new double[,]
+  {
+                { 1, 1, 1},
+                { 1,  1, 1 },
+                { 1, 1, 1 }
+  };
+            Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
+            if (selectedLayer != null && selectedLayer.Bitmap != null)
+            {
+                Bitmap filteredBitmap = ApplyConvolutionFilter(selectedLayer.Bitmap, kernel,1.0f/9.0f);
+                ShowInPopup(filteredBitmap);
+            }
+        }
+
+        private void x3ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            double[,] kernel = new double[,]
+{
+                { 1, 2, 1},
+                { 2,  4, 2 },
+                { 1, 2, 1 }
+};
+            Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
+            if (selectedLayer != null && selectedLayer.Bitmap != null)
+            {
+                Bitmap filteredBitmap = ApplyConvolutionFilter(selectedLayer.Bitmap, kernel, 1.0f / 16.0f);
+                ShowInPopup(filteredBitmap);
+            }
+        }
+
+        private void x5ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            double[,] kernel = new double[,]
+{
+                { 1, 4, 6,4,1},
+                { 4,16,24,16,4},
+                { 6,24,36,24,6},
+                {4,16,24,16,4 },
+                { 1, 4, 6,4,1}
+};
+            Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
+            if (selectedLayer != null && selectedLayer.Bitmap != null)
+            {
+                Bitmap filteredBitmap = ApplyConvolutionFilter(selectedLayer.Bitmap, kernel, 1.0f / 256.0f);
+                ShowInPopup(filteredBitmap);
+            }
+        }
+
+        private void unsharpMaskingToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            double[,] kernel = new double[,]
+{
+                { 1, 4, 6,4,1},
+                { 4,16,24,16,4},
+                { 6,24,-476,24,6},
+                {4,16,24,16,4 },
+                { 1, 4, 6,4,1}
+};
+            Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
+            if (selectedLayer != null && selectedLayer.Bitmap != null)
+            {
+                Bitmap filteredBitmap = ApplyConvolutionFilter(selectedLayer.Bitmap, kernel, -1.0f / 256.0f);
+                ShowInPopup(filteredBitmap);
             }
         }
     }

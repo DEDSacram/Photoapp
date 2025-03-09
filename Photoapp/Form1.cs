@@ -1486,6 +1486,13 @@ namespace Photoapp
         //6
 
         //7
+
+
+
+
+
+
+        // black edges when blurred
         // https://stackoverflow.com/questions/4854839/how-to-use-pre-multiplied-during-image-convolution-to-solve-alpha-bleed-problem
         private Bitmap ApplyConvolutionFilter(Bitmap original, double[,] kernel, float multiplier = 1.0f)
         {
@@ -1496,40 +1503,83 @@ namespace Photoapp
             int kernelWidthRadius = kernelWidth / 2;
             int kernelHeightRadius = kernelHeight / 2;
 
-      
-            for (int y = kernelHeightRadius; y < original.Height - kernelHeightRadius; y++)
+            if( multiplier == 1.0f)
             {
-                for (int x = kernelWidthRadius; x < original.Width - kernelWidthRadius; x++)
+                for (int y = kernelHeightRadius; y < original.Height - kernelHeightRadius; y++)
                 {
-                    double red = 0.0, green = 0.0, blue = 0.0, alpha = 0.0;
-
-                    for (int ky = -kernelHeightRadius; ky <= kernelHeightRadius; ky++)
+                    for (int x = kernelWidthRadius; x < original.Width - kernelWidthRadius; x++)
                     {
-                        for (int kx = -kernelWidthRadius; kx <= kernelWidthRadius; kx++)
+                        double red = 0.0, green = 0.0, blue = 0.0;
+
+                        for (int ky = -kernelHeightRadius; ky <= kernelHeightRadius; ky++)
                         {
-                            Color pixelColor = original.GetPixel(x + kx, y + ky);
+                            for (int kx = -kernelWidthRadius; kx <= kernelWidthRadius; kx++)
+                            {
+                                Color pixelColor = original.GetPixel(x + kx, y + ky);
 
 
-                            double kernelValue = kernel[ky + kernelHeightRadius, kx + kernelWidthRadius];
+                                double kernelValue = kernel[ky + kernelHeightRadius, kx + kernelWidthRadius];
 
 
-                            red += pixelColor.R * kernelValue;
-                            green += pixelColor.G * kernelValue;
-                            blue += pixelColor.B * kernelValue;
-                            alpha += pixelColor.A * kernelValue;
+                                red += pixelColor.R * kernelValue;
+                                green += pixelColor.G * kernelValue;
+                                blue += pixelColor.B * kernelValue;
+                          
+                            }
                         }
+                        Color pixelColor2 = original.GetPixel(x, y);
+                        int r = Math.Min(Math.Max((int)(red), 0), 255);
+                        int g = Math.Min(Math.Max((int)green, 0), 255);
+                        int b = Math.Min(Math.Max((int)blue, 0), 255);
+         
+                        filteredBitmap.SetPixel(x, y, Color.FromArgb(pixelColor2.A, r, g, b));
+
+
                     }
-
-
-                    int r = Math.Min(Math.Max((int)(red * multiplier), 0), 255);
-                    int g = Math.Min(Math.Max((int)(green * multiplier), 0), 255);
-                    int b = Math.Min(Math.Max((int)(blue * multiplier), 0), 255);
-                    filteredBitmap.SetPixel(x, y, Color.FromArgb(Math.Min(Math.Max((int)(alpha * multiplier), 0), 255), r, g, b));
                 }
             }
+            else
+            {
+                for (int y = kernelHeightRadius; y < original.Height - kernelHeightRadius; y++)
+                {
+                    for (int x = kernelWidthRadius; x < original.Width - kernelWidthRadius; x++)
+                    {
+                        double red = 0.0, green = 0.0, blue = 0.0, alpha = 0.0;
 
+                        for (int ky = -kernelHeightRadius; ky <= kernelHeightRadius; ky++)
+                        {
+                            for (int kx = -kernelWidthRadius; kx <= kernelWidthRadius; kx++)
+                            {
+                                Color pixelColor = original.GetPixel(x + kx, y + ky);
+
+
+                                double kernelValue = kernel[ky + kernelHeightRadius, kx + kernelWidthRadius];
+
+
+                                red += pixelColor.R * kernelValue;
+                                green += pixelColor.G * kernelValue;
+                                blue += pixelColor.B * kernelValue;
+                                alpha += pixelColor.A * kernelValue;
+                            }
+                        }
+
+                        int r = Math.Min(Math.Max((int)(red * multiplier), 0), 255);
+                        int g = Math.Min(Math.Max((int)(green * multiplier), 0), 255);
+                        int b = Math.Min(Math.Max((int)(blue * multiplier), 0), 255);
+                        int a = Math.Min(Math.Max((int)(alpha * multiplier), 0), 255);
+                        filteredBitmap.SetPixel(x, y, Color.FromArgb(a, r, g, b));
+
+
+                    }
+                }
+            }
+              
             return filteredBitmap;
         }
+
+
+
+
         //7
 
         private void ShowInPopup(Bitmap bitmap)

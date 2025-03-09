@@ -47,42 +47,37 @@ namespace Photoapp
 
         //zooming panning
         private float zoomFactor = 1.0f;  // Default zoom factor
-        private float zoomStep = 0.1f;    // Zoom step size
+        float zoomStep = 0.1f;
         private Point panOffset = new Point(0, 0);  // Offset for panning
-        //private Point panStart = Point.Empty; // Starting point of the pan
-        //private bool isPanning = false;    // Flag to indicate panning state
 
 
         private int selectedLayerId = 1; // Default to -1, indicating no layer is selected initially
 
+        // check if mouse is pressed down otherwise do nothing
         private bool isDrawing = false;
+        // check if is mask active
         private bool selectionactive = false;
+        // 
         private Point lastPoint;
+        // current mode that is being used
         private Mode currentMode = Mode.font; // Start in drawing mode
 
 
-        private List<Point> points = new List<Point>(); // Store points for freehand drawing
+        private List<Point> points = new List<Point>(); // Store points for freehand drawing pen etc.
 
         private bool isDragging = false; // Track if a drag operation is ongoing
-        private bool isRotating = false; // Track if a drag operation is ongoing
-        private bool isScaling = false; // Track if a drag operation is ongoing
+        private bool isRotating = false; // Track if a rotate operation is ongoing
+        private bool isScaling = false; // Track if a scale operation is ongoing
 
         private Point previous = Point.Empty; // Track the previous mouse position for panning
 
 
         private Point startingpoint = Point.Empty; // Just normalized
 
-        private Point previousOffset = Point.Empty;
-
-        // only redraw when needed
-        //private Timer redrawTimer;
-        //private bool needsRedraw = false;
-
         private Bitmap combinedBitmap;
         private Point selectionStartPoint;
         private Point selectionLastPoint;
 
-        private Bitmap virtualCanvas; // for double buffering
 
         // previous bitmap of UI layer save then draw new one compare if SHIFT OR CTRL WAS HELD DOWN
 
@@ -98,30 +93,6 @@ namespace Photoapp
 
         MaskControl MaskControl = new MaskControl();
 
-        // by my opinion correct masking
-
-        // virtual canvas due to compositing when updating a layer in any way first draw onto this then take its bitmap save into layer and then trigger a repaint in the main UI one
-        private void CreateVirtualCanvas()
-        {
-            // Create a new Bitmap based on the canvasPanel's size
-            virtualCanvas = new Bitmap(canvasPanel.Width, canvasPanel.Height, PixelFormat.Format32bppArgb);
-
-            // Get the selected layer's bitmap from the LayerManager
-            var selectedLayerBitmap = layerManager.GetLayer(selectedLayerId).Bitmap;
-
-            // Render the selected layer onto the virtual canvas
-            using (Graphics g = Graphics.FromImage(virtualCanvas))
-            {
-                // Clear the canvas to be transparent
-                g.Clear(Color.Transparent);
-
-                // Draw the selected layer's bitmap onto the virtual canvas
-                g.DrawImage(selectedLayerBitmap, 0, 0);
-            }
-
-            // At this point, the virtualCanvas contains the selected layer's bitmap
-            // but no invalidation or rendering of the panel occurs.
-        }
 
         // load image into layer bitmap
         private void LoadImageIntoLayer(string filePath, int layerId)
@@ -142,6 +113,18 @@ namespace Photoapp
             {
                 MessageBox.Show($"Error loading image: {ex.Message}");
             }
+        }
+
+        private string GetPathFile()
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "Image files (*.jpg, *.jpeg, *.png) | *.jpg; *.jpeg; *.png";
+            openFileDialog.Title = "Select an image file";
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                return openFileDialog.FileName;
+            }
+            return string.Empty;
         }
 
 
@@ -188,13 +171,9 @@ namespace Photoapp
 
             // Add the bitmap to the LayerManager as a new layer
             layerManager.AddLayer(layerId, bitmap);
-            layerManager.AddLayer(layerId + 1, bitmap);
+            AddLayerToLayerPanel(layerId); // Add the new layer to the LayerPanel
 
             // Update the LayerPanel to display the new layer
-            AddLayerToLayerPanel(layerId);
-            AddLayerToLayerPanel(layerId + 1);
-            LoadImageIntoLayer(@"C:\Users\rlly\Pictures\fox.png", layerId + 1);
-            CreateVirtualCanvas();
             CreateTransparentLayer();
             RedrawCanvas(new Rectangle(0, 0, canvasPanel.Width, canvasPanel.Height));
         }
@@ -275,7 +254,6 @@ namespace Photoapp
             // selected layer
             // Load the current selected layer's bitmap into the virtual canvas
             Layer selected = layerManager.GetLayer(selectedLayerId);
-            virtualCanvas = new Bitmap(selected.Bitmap);
         }
 
         public static void SaveBitmap(Bitmap bitmap, string filePath, ImageFormat format)
@@ -383,8 +361,7 @@ namespace Photoapp
                 previous = new Point(selectedLayer.Bitmap.Width, selectedLayer.Bitmap.Height);
                 // save bitmap of Layer before changing
 
-                previousOffset = selectedLayer.Offset;
-
+   
                 dataOriginal = GetBytesFromBitmap(selectedLayer.Bitmap);
                 isDrawing = true;
                 lastPoint = NormalizedPoint;
@@ -1060,7 +1037,6 @@ namespace Photoapp
                 Point mousePos = e.Location;
 
                 // Normalize mouse wheel movement
-                float zoomStep = 0.1f;
                 float zoomFactorChange = (e.Delta > 0) ? (1 + zoomStep) : (1 - zoomStep);
 
                 // Calculate new zoom factor, clamp it between limits
@@ -1247,17 +1223,6 @@ namespace Photoapp
         {
             currentMode = Mode.freeSelect;
             ResetModes();
-            // Show a SaveFileDialog to select where to save the image
-            //SaveFileDialog saveFileDialog = new SaveFileDialog
-            //{
-            //    Filter = "PNG Image|*.png|JPEG Image|*.jpg",
-            //    Title = "Save Canvas as Image"
-            //};
-
-            //if (saveFileDialog.ShowDialog() == DialogResult.OK)
-            //{
-            //    ExportCanvas(saveFileDialog.FileName);
-            //}
         }
         // layerpanel UI (Draw)
         private void AddLayerToLayerPanel(int layerId)
@@ -1321,7 +1286,21 @@ namespace Photoapp
             layerPanel.Controls.Add(layerItemPanel);
         }
 
-
+        private void importImageToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string filePath = GetPathFile();
+            if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+            {
+                int layerid = layerManager.GetNextLayerId();
+                AddLayerToLayerPanel(layerid);
+                layerManager.AddLayer(layerid, new Bitmap(filePath));
+                RedrawCanvas(new Rectangle(0, 0, canvasPanel.Width, canvasPanel.Height));
+            }
+            else
+            {
+                MessageBox.Show("Invalid file path. Please select a valid image file.");
+            }
+        }
     }
 
 }

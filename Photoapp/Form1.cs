@@ -1579,7 +1579,7 @@ namespace Photoapp
                                 red += pixelColor.R * kernelValue;
                                 green += pixelColor.G * kernelValue;
                                 blue += pixelColor.B * kernelValue;
-                                //alpha += pixelColor.A * kernelValue;
+           
                             }
                         }
 
@@ -1602,50 +1602,7 @@ namespace Photoapp
 
                     }
                 }
-
-                //filteredBitmap.Save(@"C:\Users\rlly\Desktop\paint\filteredmine2.png", ImageFormat.Png);
-
-                //for (int y = kernelHeightRadius; y < original.Height - kernelHeightRadius; y++)
-                //{
-                //    for (int x = kernelWidthRadius; x < original.Width - kernelWidthRadius; x++)
-                //    {
-                //        double red = 0.0, green = 0.0, blue = 0.0, alpha = 0.0;
-
-                //        int countfalse = 1;
-
-                //        for (int ky = -kernelHeightRadius; ky <= kernelHeightRadius; ky++)
-                //        {
-                //            for (int kx = -kernelWidthRadius; kx <= kernelWidthRadius; kx++)
-                //            {
-                //                Color pixelColor = original.GetPixel(x + kx, y + ky);
-
-                //                if (pixelColor.A == 0)
-                //                {
-                //                    countfalse++;
-                //                    continue;
-                //                }
-
-                //                double kernelValue = kernel[ky + kernelHeightRadius, kx + kernelWidthRadius];
-
-
-                //                red += pixelColor.R * kernelValue;
-                //                green += pixelColor.G * kernelValue;
-                //                blue += pixelColor.B * kernelValue;
-                //                alpha += pixelColor.A * kernelValue;
-                //            }
-                //        }
-
-                //        int r = Math.Min(Math.Max((int)(red * (multiplier)), 0), 255);
-                //        int g = Math.Min(Math.Max((int)(green * multiplier), 0), 255);
-                //        int b = Math.Min(Math.Max((int)(blue * multiplier), 0), 255);
-                //        int a = Math.Min(Math.Max((int)(alpha * (multiplier / countfalse)), 0), 255);
-                //        filteredBitmap.SetPixel(x, y, Color.FromArgb(a, r, g, b));
-
-
-                //    }
-                //}
-                //filteredBitmap.Save(@"C:\Users\rlly\Desktop\paint\filteredmine4.png", ImageFormat.Png);
-
+     
             }
 
 

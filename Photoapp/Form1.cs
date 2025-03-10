@@ -1542,24 +1542,34 @@ namespace Photoapp
             }
             else
             {
-            
+                Bitmap newbit = new Bitmap(original);
+
+                for (int y = 0; y < original.Height; y++)
+                {
+                    for (int x = 0; x < original.Width; x++)
+                    {
+                        Color pixel = original.GetPixel(x, y);
+
+                        newbit.SetPixel(x, y, Color.FromArgb(pixel.A, (int)(pixel.R * (pixel.A / 255.0)), (int)(pixel.G * (pixel.A / 255.0)), (int)(pixel.B * (pixel.A / 255.0))));
+                    }
+                }
                 for (int y = kernelHeightRadius; y < original.Height - kernelHeightRadius; y++)
                 {
                     for (int x = kernelWidthRadius; x < original.Width - kernelWidthRadius; x++)
                     {
-                        double red = 0.0, green = 0.0, blue = 0.0, alpha = 0.0;
+                        double red = 0.0, green = 0.0, blue = 0.0;
 
-                        int countfalse = 1;
+
 
                         for (int ky = -kernelHeightRadius; ky <= kernelHeightRadius; ky++)
                         {
                             for (int kx = -kernelWidthRadius; kx <= kernelWidthRadius; kx++)
                             {
-                                Color pixelColor = original.GetPixel(x + kx, y + ky);
+                                Color pixelColor = newbit.GetPixel(x + kx, y + ky);
 
-                                if(pixelColor.A == 0)
+                                if (pixelColor.A == 0)
                                 {
-                                    countfalse++;
+
                                     continue;
                                 }
 
@@ -1569,20 +1579,72 @@ namespace Photoapp
                                 red += pixelColor.R * kernelValue;
                                 green += pixelColor.G * kernelValue;
                                 blue += pixelColor.B * kernelValue;
-                                alpha += pixelColor.A * kernelValue;
+                                //alpha += pixelColor.A * kernelValue;
                             }
                         }
 
-                        int r = Math.Min(Math.Max((int)(red * (multiplier)), 0), 255);
-                        int g = Math.Min(Math.Max((int)(green * multiplier), 0), 255);
-                        int b = Math.Min(Math.Max((int)(blue * multiplier), 0), 255);
-                        int a = Math.Min(Math.Max((int)(alpha * (multiplier / countfalse)), 0), 255);
-                        filteredBitmap.SetPixel(x, y, Color.FromArgb(a, r, g, b));
+
+                        Color pixelColor2 = newbit.GetPixel(x, y);
+                        int r = Math.Min(Math.Max((int)((red * (multiplier) / (pixelColor2.A)) * 255), 0), 255);
+                        int g = Math.Min(Math.Max((int)((green * (multiplier) / (pixelColor2.A)) * 255), 0), 255);
+                        int b = Math.Min(Math.Max((int)((blue * (multiplier) / (pixelColor2.A)) * 255), 0), 255);
+
+                        if (pixelColor2.A == 0)
+                        {
+                            filteredBitmap.SetPixel(x, y, Color.FromArgb(0, 0, 0, 0));
+                        }
+                        else
+                        {
+                            filteredBitmap.SetPixel(x, y, Color.FromArgb(pixelColor2.A, r, g, b));
+                        }
+
 
 
                     }
                 }
-                filteredBitmap.Save(@"C:\Users\rlly\Desktop\paint\filteredmine.png", ImageFormat.Png);
+
+                //filteredBitmap.Save(@"C:\Users\rlly\Desktop\paint\filteredmine2.png", ImageFormat.Png);
+
+                //for (int y = kernelHeightRadius; y < original.Height - kernelHeightRadius; y++)
+                //{
+                //    for (int x = kernelWidthRadius; x < original.Width - kernelWidthRadius; x++)
+                //    {
+                //        double red = 0.0, green = 0.0, blue = 0.0, alpha = 0.0;
+
+                //        int countfalse = 1;
+
+                //        for (int ky = -kernelHeightRadius; ky <= kernelHeightRadius; ky++)
+                //        {
+                //            for (int kx = -kernelWidthRadius; kx <= kernelWidthRadius; kx++)
+                //            {
+                //                Color pixelColor = original.GetPixel(x + kx, y + ky);
+
+                //                if (pixelColor.A == 0)
+                //                {
+                //                    countfalse++;
+                //                    continue;
+                //                }
+
+                //                double kernelValue = kernel[ky + kernelHeightRadius, kx + kernelWidthRadius];
+
+
+                //                red += pixelColor.R * kernelValue;
+                //                green += pixelColor.G * kernelValue;
+                //                blue += pixelColor.B * kernelValue;
+                //                alpha += pixelColor.A * kernelValue;
+                //            }
+                //        }
+
+                //        int r = Math.Min(Math.Max((int)(red * (multiplier)), 0), 255);
+                //        int g = Math.Min(Math.Max((int)(green * multiplier), 0), 255);
+                //        int b = Math.Min(Math.Max((int)(blue * multiplier), 0), 255);
+                //        int a = Math.Min(Math.Max((int)(alpha * (multiplier / countfalse)), 0), 255);
+                //        filteredBitmap.SetPixel(x, y, Color.FromArgb(a, r, g, b));
+
+
+                //    }
+                //}
+                //filteredBitmap.Save(@"C:\Users\rlly\Desktop\paint\filteredmine4.png", ImageFormat.Png);
 
             }
 

@@ -1080,6 +1080,7 @@ namespace Photoapp
                 g.ScaleTransform(zoomFactor, zoomFactor);
                 //g.RotateTransform(20);
 
+                g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
                 g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.None;
                 g.CompositingMode = CompositingMode.SourceOver;
                 g.Clear(Color.Transparent);
@@ -1497,6 +1498,7 @@ namespace Photoapp
         private Bitmap ApplyConvolutionFilter(Bitmap original, double[,] kernel, float multiplier = 1.0f)
         {
             Bitmap filteredBitmap = new Bitmap(original.Width, original.Height);
+            Bitmap premultiplied = new Bitmap(original);
 
             int kernelWidth = kernel.GetLength(0);
             int kernelHeight = kernel.GetLength(1);
@@ -1540,6 +1542,7 @@ namespace Photoapp
             }
             else
             {
+            
                 for (int y = kernelHeightRadius; y < original.Height - kernelHeightRadius; y++)
                 {
                     for (int x = kernelWidthRadius; x < original.Width - kernelWidthRadius; x++)
@@ -1572,9 +1575,12 @@ namespace Photoapp
 
                     }
                 }
+                filteredBitmap.Save(@"C:\Users\rlly\Desktop\paint\filteredmine.png", ImageFormat.Png);
+
             }
-              
-            return filteredBitmap;
+
+
+                    return filteredBitmap;
         }
 
 

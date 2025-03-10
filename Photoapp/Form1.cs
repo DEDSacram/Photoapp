@@ -1549,12 +1549,19 @@ namespace Photoapp
                     {
                         double red = 0.0, green = 0.0, blue = 0.0, alpha = 0.0;
 
+                        int countfalse = 1;
+
                         for (int ky = -kernelHeightRadius; ky <= kernelHeightRadius; ky++)
                         {
                             for (int kx = -kernelWidthRadius; kx <= kernelWidthRadius; kx++)
                             {
                                 Color pixelColor = original.GetPixel(x + kx, y + ky);
 
+                                if(pixelColor.A == 0)
+                                {
+                                    countfalse++;
+                                    continue;
+                                }
 
                                 double kernelValue = kernel[ky + kernelHeightRadius, kx + kernelWidthRadius];
 
@@ -1566,10 +1573,10 @@ namespace Photoapp
                             }
                         }
 
-                        int r = Math.Min(Math.Max((int)(red * multiplier), 0), 255);
+                        int r = Math.Min(Math.Max((int)(red * (multiplier)), 0), 255);
                         int g = Math.Min(Math.Max((int)(green * multiplier), 0), 255);
                         int b = Math.Min(Math.Max((int)(blue * multiplier), 0), 255);
-                        int a = Math.Min(Math.Max((int)(alpha * multiplier), 0), 255);
+                        int a = Math.Min(Math.Max((int)(alpha * (multiplier / countfalse)), 0), 255);
                         filteredBitmap.SetPixel(x, y, Color.FromArgb(a, r, g, b));
 
 

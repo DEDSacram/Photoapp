@@ -25,6 +25,10 @@ namespace Photoapp
     //{
 
     //}
+
+
+
+
     public partial class Form1 : Form
     {
 
@@ -1983,6 +1987,288 @@ namespace Photoapp
                 ShowInPopup(filteredBitmap);
             //}
         }
+
+        //private void customToolStripMenuItem_Click(object sender, EventArgs e)
+        //{
+        //    Form filterForm = new Form
+        //    {
+        //        Text = "Custom Convolution Filter",
+        //        Size = new Size(800, 600),
+        //        StartPosition = FormStartPosition.CenterParent
+        //    };
+
+        //    Label sizeLabel = new Label
+        //    {
+        //        Text = "Kernel Size:",
+        //        Location = new Point(20, 20),
+        //        AutoSize = true
+        //    };
+        //    ComboBox comboBoxSize = new ComboBox
+        //    {
+        //        Location = new Point(100, 15),
+        //        DropDownStyle = ComboBoxStyle.DropDownList
+        //    };
+        //    comboBoxSize.Items.AddRange(new object[] { "3", "4", "5" });
+        //    comboBoxSize.SelectedIndex = 0;
+
+        //    DataGridView dataGridViewKernel = new DataGridView
+        //    {
+        //        Location = new Point(20, 60),
+        //        Size = new Size(500, 500),
+        //        ColumnHeadersVisible = false,
+        //        RowHeadersVisible = false,
+        //        AllowUserToAddRows = false,
+        //        AllowUserToDeleteRows = false,
+        //        AllowUserToResizeRows = false,
+        //        AllowUserToResizeColumns = false,
+        //        ScrollBars = ScrollBars.None
+        //    };
+
+        //    Button btnOK = new Button
+        //    {
+        //        Text = "OK",
+        //        Location = new Point(600, 500),
+        //        DialogResult = DialogResult.OK
+        //    };
+        //    Button btnCancel = new Button
+        //    {
+        //        Text = "Cancel",
+        //        Location = new Point(680, 500),
+        //        DialogResult = DialogResult.Cancel
+        //    };
+
+        //    filterForm.Controls.Add(sizeLabel);
+        //    filterForm.Controls.Add(comboBoxSize);
+        //    filterForm.Controls.Add(dataGridViewKernel);
+        //    filterForm.Controls.Add(btnOK);
+        //    filterForm.Controls.Add(btnCancel);
+
+        //    void UpdateGrid()
+        //    {
+        //        int size = int.Parse(comboBoxSize.SelectedItem.ToString());
+        //        dataGridViewKernel.Columns.Clear();
+        //        dataGridViewKernel.Rows.Clear();
+
+        //        for (int i = 0; i < size; i++)
+        //        {
+        //            dataGridViewKernel.Columns.Add($"col{i}", "");
+        //            dataGridViewKernel.Columns[i].Width = 50;
+        //        }
+
+        //        for (int i = 0; i < size; i++)
+        //        {
+        //            dataGridViewKernel.Rows.Add();
+        //            dataGridViewKernel.Rows[i].Height = 40;
+        //        }
+        //    }
+
+        //    comboBoxSize.SelectedIndexChanged += (s, ev) => UpdateGrid();
+        //    UpdateGrid(); // Initialize grid on form load
+
+        //    if (filterForm.ShowDialog() == DialogResult.OK)
+        //    {
+        //        int size = dataGridViewKernel.RowCount;
+        //        double[,] kernel = new double[size, size];
+
+        //        for (int i = 0; i < size; i++)
+        //        {
+        //            for (int j = 0; j < size; j++)
+        //            {
+        //                string val = dataGridViewKernel.Rows[i].Cells[j].Value?.ToString();
+        //                kernel[i, j] = double.TryParse(val, out double d) ? d : 0.0;
+        //            }
+        //        }
+
+
+
+        //        // Call your convolution logic here
+        //        Bitmap result = ApplyConvolutionFilter(combinedBitmap,kernel);
+        //        ShowInPopup(result);
+        //    }
+        //}
+
+        private void customToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Form filterForm = new Form
+            {
+                Text = "Custom Kernel",
+                Size = new Size(400, 450),
+                MinimumSize = new Size(400, 400),
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MaximizeBox = false,
+                MinimizeBox = false
+            };
+
+            Label lblX = new Label { Text = "Width (X):", Location = new Point(10, 15), AutoSize = true };
+            Label lblY = new Label { Text = "Height (Y):", Location = new Point(10, 50), AutoSize = true };
+
+            TextBox txtX = new TextBox { Location = new Point(90, 10), Width = 50, Text = "3" };
+            TextBox txtY = new TextBox { Location = new Point(90, 45), Width = 50, Text = "3" };
+
+            Label lblConstant = new Label { Text = "Constant (Multiplier):", Location = new Point(10, 80), AutoSize = true };
+            TextBox txtConstant = new TextBox { Location = new Point(120, 75), Width = 100, Text = "0" };  // Default to 0
+
+            Button btnGenerate = new Button
+            {
+                Text = "Generate Grid",
+                Location = new Point(160, 25),
+                AutoSize = true
+            };
+
+            DataGridView dataGridViewKernel = new DataGridView
+            {
+                Location = new Point(10, 120),
+                ColumnHeadersVisible = false,
+                RowHeadersVisible = false,
+                AllowUserToAddRows = false,
+                AllowUserToDeleteRows = false,
+                AllowUserToResizeRows = false,
+                AllowUserToResizeColumns = false,
+                ScrollBars = ScrollBars.None,
+                BorderStyle = BorderStyle.FixedSingle
+            };
+
+            Button btnOK = new Button
+            {
+                Text = "OK",
+                Location = new Point(10, 0), // Repositioned after grid is drawn
+                DialogResult = DialogResult.OK
+            };
+
+            Button btnCancel = new Button
+            {
+                Text = "Cancel",
+                Location = new Point(100, 0), // Repositioned after grid is drawn
+                DialogResult = DialogResult.Cancel
+            };
+
+            filterForm.Controls.AddRange(new Control[]
+            {
+        lblX, txtX, lblY, txtY, lblConstant, txtConstant, btnGenerate, dataGridViewKernel, btnOK, btnCancel
+            });
+
+            void GenerateGrid()
+            {
+                if (!int.TryParse(txtX.Text, out int width)) width = 3;
+                if (!int.TryParse(txtY.Text, out int height)) height = 3;
+
+                dataGridViewKernel.Columns.Clear();
+                dataGridViewKernel.Rows.Clear();
+
+                for (int i = 0; i < width; i++)
+                {
+                    dataGridViewKernel.Columns.Add($"col{i}", "");
+                    dataGridViewKernel.Columns[i].Width = 50;
+                }
+
+                for (int i = 0; i < height; i++)
+                {
+                    dataGridViewKernel.Rows.Add();
+                    dataGridViewKernel.Rows[i].Height = 40;
+                }
+
+                int gridWidth = width * 50 + 3;
+                int gridHeight = height * 40 + 3;
+
+                dataGridViewKernel.Size = new Size(gridWidth, gridHeight);
+                btnOK.Location = new Point(10, dataGridViewKernel.Bottom + 10);
+                btnCancel.Location = new Point(100, dataGridViewKernel.Bottom + 10);
+
+                filterForm.Size = new Size(gridWidth + 40, btnOK.Bottom + 60);
+            }
+
+            btnGenerate.Click += (s, ev) => GenerateGrid();
+            GenerateGrid(); // Generate default 3x3
+
+            if (filterForm.ShowDialog() == DialogResult.OK)
+            {
+                int rows = dataGridViewKernel.RowCount;
+                int cols = dataGridViewKernel.ColumnCount;
+                double[,] kernel = new double[rows, cols];
+
+                // Get kernel values from the DataGridView
+                double sum = 0;
+                int negativeSigns = 0;
+
+                for (int y = 0; y < rows; y++)
+                {
+                    for (int x = 0; x < cols; x++)
+                    {
+                        string val = dataGridViewKernel.Rows[y].Cells[x].Value?.ToString();
+                        kernel[y, x] = double.TryParse(val, out double d) ? d : 0.0;
+                        sum += kernel[y, x];
+
+                        // Track negative signs
+                        if (kernel[y, x] < 0) negativeSigns++;
+                    }
+                }
+
+                // Parse the constant factor (check if it's 0)
+                double constantFactor = 0;
+                string constantInput = txtConstant.Text;
+
+                if (constantInput == "0")
+                {
+                    // Default behavior: normalization
+                    if (sum != 0)
+                    {
+                        constantFactor = 1 / sum;
+                    }
+                    else
+                    {
+                        MessageBox.Show("Kernel sum is zero, unable to normalize. Defaulting to 1.");
+                        constantFactor = 1;
+                    }
+                }
+                else
+                {
+                    // Custom multiplier is provided
+                    if (constantInput.Contains("/"))
+                    {
+                        var parts = constantInput.Split('/');
+                        if (parts.Length == 2 && double.TryParse(parts[0], out double numerator) && double.TryParse(parts[1], out double denominator))
+                        {
+                            constantFactor = numerator / denominator;
+                        }
+                        else
+                        {
+                            MessageBox.Show("Invalid constant factor (must be a fraction, e.g., 1/9). Defaulting to 1.");
+                            constantFactor = 1;
+                        }
+                    }
+                    else if (!double.TryParse(constantInput, out constantFactor))
+                    {
+                        MessageBox.Show("Invalid constant factor! Defaulting to 1.");
+                        constantFactor = 1;
+                    }
+                }
+
+                // Handle signs: If there's an odd number of negative signs, the factor becomes negative
+                if (negativeSigns % 2 != 0)
+                {
+                    constantFactor = -constantFactor;
+                }
+
+                // Apply constant factor (normalization by sum or custom multiplier)
+                for (int i = 0; i < rows; i++)
+                {
+                    for (int j = 0; j < cols; j++)
+                    {
+                        kernel[i, j] *= constantFactor;
+                    }
+                }
+
+                Bitmap result = ApplyConvolutionFilter(combinedBitmap, kernel);
+                ShowInPopup(result);
+            }
+        }
+
+
+
+
+
+
     }
 
 }

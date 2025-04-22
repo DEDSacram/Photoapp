@@ -75,10 +75,11 @@ namespace Photoapp
             this.x3ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.x5ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.unsharpMaskingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.edgeDetectionLeftToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.selectedLayer = new System.Windows.Forms.Label();
             this.legend = new System.Windows.Forms.Label();
             this.canvasPanel = new System.Windows.Forms.DoubleBufferedPanel();
-            this.edgeDetectionLeftToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.customToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.buttonPanel.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -387,7 +388,8 @@ namespace Photoapp
             this.boxBlurToolStripMenuItem,
             this.gaussianToolStripMenuItem,
             this.unsharpMaskingToolStripMenuItem,
-            this.edgeDetectionLeftToolStripMenuItem});
+            this.edgeDetectionLeftToolStripMenuItem,
+            this.customToolStripMenuItem});
             this.convolutionToolStripMenuItem.Name = "convolutionToolStripMenuItem";
             this.convolutionToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.convolutionToolStripMenuItem.Text = "Convolution";
@@ -450,6 +452,13 @@ namespace Photoapp
             this.unsharpMaskingToolStripMenuItem.Text = "Unsharp masking";
             this.unsharpMaskingToolStripMenuItem.Click += new System.EventHandler(this.unsharpMaskingToolStripMenuItem_Click);
             // 
+            // edgeDetectionLeftToolStripMenuItem
+            // 
+            this.edgeDetectionLeftToolStripMenuItem.Name = "edgeDetectionLeftToolStripMenuItem";
+            this.edgeDetectionLeftToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.edgeDetectionLeftToolStripMenuItem.Text = "Edge detection left";
+            this.edgeDetectionLeftToolStripMenuItem.Click += new System.EventHandler(this.edgeDetectionLeftToolStripMenuItem_Click);
+            // 
             // selectedLayer
             // 
             this.selectedLayer.AutoSize = true;
@@ -484,12 +493,12 @@ namespace Photoapp
             this.canvasPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.canvasPanel_MouseMove);
             this.canvasPanel.MouseUp += new System.Windows.Forms.MouseEventHandler(this.canvasPanel_MouseUp);
             // 
-            // edgeDetectionLeftToolStripMenuItem
+            // customToolStripMenuItem
             // 
-            this.edgeDetectionLeftToolStripMenuItem.Name = "edgeDetectionLeftToolStripMenuItem";
-            this.edgeDetectionLeftToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.edgeDetectionLeftToolStripMenuItem.Text = "Edge detection left";
-            this.edgeDetectionLeftToolStripMenuItem.Click += new System.EventHandler(this.edgeDetectionLeftToolStripMenuItem_Click);
+            this.customToolStripMenuItem.Name = "customToolStripMenuItem";
+            this.customToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.customToolStripMenuItem.Text = "Custom";
+            this.customToolStripMenuItem.Click += new System.EventHandler(this.customToolStripMenuItem_Click);
             // 
             // Form1
             // 
@@ -557,6 +566,7 @@ namespace Photoapp
         private ToolStripMenuItem x5ToolStripMenuItem;
         private ToolStripMenuItem unsharpMaskingToolStripMenuItem;
         private ToolStripMenuItem edgeDetectionLeftToolStripMenuItem;
+        private ToolStripMenuItem customToolStripMenuItem;
     }
 }
 

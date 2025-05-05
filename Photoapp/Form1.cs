@@ -32,7 +32,7 @@ namespace Photoapp
     public partial class Form1 : Form
     {
 
-   
+
 
 
         // function Modes
@@ -49,10 +49,12 @@ namespace Photoapp
             freeSelect // done
         }
 
+        int rubberstrength = 50;
         //zooming panning
         private float zoomFactor = 1.0f;  // Default zoom factor
         float zoomStep = 0.1f;
         private Point panOffset = new Point(0, 0);  // Offset for panning
+
 
 
         private int selectedLayerId = 1; // Default to -1, indicating no layer is selected initially
@@ -137,7 +139,7 @@ namespace Photoapp
         {
 
             InitializeComponent();
-             this.KeyPreview = true;  // This allows the form to receive key events
+            this.KeyPreview = true;  // This allows the form to receive key events
             combinedBitmap = new Bitmap(canvasPanel.Width, canvasPanel.Height);
             MaskControl.MapRemembered = new byte[canvasPanel.Width, canvasPanel.Height];
 
@@ -248,7 +250,7 @@ namespace Photoapp
                 }
             }
         }
-     
+
         // layerpanel UI SELECT CURRENT
         private void SelectLayer(int layerId)
         {
@@ -275,10 +277,10 @@ namespace Photoapp
         }
         private void clearUIBitmap()
         {
-          
+
             if ((Control.ModifierKeys & Keys.Shift) == 0 && (Control.ModifierKeys & Keys.Control) == 0)
             {
-              
+
                 if (currentMode == Mode.rectangleSelect || currentMode == Mode.freeSelect)
                 {
                     selectionactive = false;
@@ -313,7 +315,7 @@ namespace Photoapp
                 {
                     selectionactive = true;
                 }
-              
+
                 // Dispose of UILayer
                 if (UILayer != null)
                 {
@@ -353,12 +355,12 @@ namespace Photoapp
         }
         private void canvasPanel_MouseDown(object sender, MouseEventArgs e)
         {
-   
 
-            
+
+
             Point NormalizedPoint = NormalizeMousePosition(e.Location);
             startingpoint = NormalizedPoint;
-       
+
             NormalizedPoint = NormalizeMousePositionLayer(NormalizedPoint, layerManager.GetLayer(selectedLayerId).Offset);
             if (e.Button == MouseButtons.Left)
             {
@@ -367,7 +369,7 @@ namespace Photoapp
                 previousOffset = selectedLayer.Offset;
                 // save bitmap of Layer before changing
 
-   
+
                 dataOriginal = GetBytesFromBitmap(selectedLayer.Bitmap);
                 isDrawing = true;
                 lastPoint = NormalizedPoint;
@@ -380,10 +382,10 @@ namespace Photoapp
                             NormalizedPoint = NormalizeMousePosition(e.Location);
                             lastPoint = NormalizedPoint;
                         }
-                      
+
                         points.Clear();
                         points.Add(NormalizedPoint);
-                     
+
                         break;
 
                     case Mode.rubber:
@@ -452,24 +454,24 @@ namespace Photoapp
                             }
                         }
 
-         
+
                         break;
                     case Mode.eyedropper:
                         // Get the color of the pixel at the given position
                         try
                         {
 
-                      
-                        Color pixelColor = selectedLayer.Bitmap.GetPixel(NormalizedPoint.X, NormalizedPoint.Y);
 
-                        // Extract the individual ARGB components
-                        int alpha = pixelColor.A;
-                        int red = pixelColor.R;
-                        int green = pixelColor.G;
-                        int blue = pixelColor.B;
+                            Color pixelColor = selectedLayer.Bitmap.GetPixel(NormalizedPoint.X, NormalizedPoint.Y);
 
-                        // Update the legend text to display the individual components
-                        legend.Text = $"A:{alpha};R:{red};G:{green};B:{blue};X:{e.X};Y:{e.Y};";
+                            // Extract the individual ARGB components
+                            int alpha = pixelColor.A;
+                            int red = pixelColor.R;
+                            int green = pixelColor.G;
+                            int blue = pixelColor.B;
+
+                            // Update the legend text to display the individual components
+                            legend.Text = $"A:{alpha};R:{red};G:{green};B:{blue};X:{e.X};Y:{e.Y};";
                         }
                         catch
                         {
@@ -478,7 +480,7 @@ namespace Photoapp
                         break;
                     case Mode.font:
 
-                    break;
+                        break;
                     case Mode.drag:
 
                         break;
@@ -486,7 +488,8 @@ namespace Photoapp
             }
         }
 
-       private void ResetModes() {
+        private void ResetModes()
+        {
             isDragging = false;
             isRotating = false;
             isScaling = false;
@@ -516,13 +519,13 @@ namespace Photoapp
         private void canvasPanel_MouseMove(object sender, MouseEventArgs e)
         {
 
-   
+
 
             Point NormalizedPoint = NormalizeMousePosition(e.Location);
             NormalizedPoint = NormalizeMousePositionLayer(NormalizedPoint, layerManager.GetLayer(selectedLayerId).Offset);
             if (isDrawing)
             {
-           
+
                 Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
                 Rectangle invalidRect = Rectangle.Empty;
                 switch (currentMode)
@@ -559,60 +562,62 @@ namespace Photoapp
                         }
                         break;
                     case Mode.rubber:
-                        if (selectionactive)
+                        //if (selectionactive)
+                        //{
+                        NormalizedPoint = NormalizeMousePosition(e.Location);
+                        using (Graphics g = Graphics.FromImage(UILayer))
+                        using (SolidBrush maskBrush = new SolidBrush(Color.FromArgb(128, Color.Gray))) // Semi-transparent preview
                         {
-                            NormalizedPoint = NormalizeMousePosition(e.Location);
-                            using (Graphics g = Graphics.FromImage(UILayer))
-                            using (SolidBrush maskBrush = new SolidBrush(Color.FromArgb(128, Color.Gray))) // Semi-transparent preview
-                            {
-                                g.SmoothingMode = SmoothingMode.AntiAlias;
-                                g.FillEllipse(maskBrush, NormalizedPoint.X - 10, NormalizedPoint.Y - 10, 20, 20);
-                            }
+                            g.SmoothingMode = SmoothingMode.AntiAlias;
+                            g.FillEllipse(maskBrush, NormalizedPoint.X - 10, NormalizedPoint.Y - 10, 20, 20);
                         }
-                        else
-                        {
-                            using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
-                            using (SolidBrush transparentBrush = new SolidBrush(Color.Transparent))
-                            {
-                                g.CompositingMode = CompositingMode.SourceCopy;
-                                g.SmoothingMode = SmoothingMode.AntiAlias;
-                                g.FillEllipse(transparentBrush, NormalizedPoint.X - 10, NormalizedPoint.Y - 10, 20, 20);
-                            }
-                            invalidRect = GetBoundingRectangle(lastPoint, NormalizedPoint);
-                            invalidRect = Rectangle.Inflate(invalidRect, 20, 20); // Inflate for pen size
-                            lastPoint = NormalizedPoint;
-                        }
+                        //}
+                        //else
+                        //{
+                        //    using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
+                        //    // this works but only partly I want to make seleciton here apply later
+                        //    using (SolidBrush transparentBrush = new SolidBrush(Color.FromArgb(200, 255, 255, 255)))
+                        //    {
+                        //        g.CompositingMode = CompositingMode.SourceCopy;
+                        //        g.SmoothingMode = SmoothingMode.AntiAlias;
+                        //        g.FillEllipse(transparentBrush, NormalizedPoint.X - 10, NormalizedPoint.Y - 10, 20, 20);
+
+                        //    }
+                        //    invalidRect = GetBoundingRectangle(lastPoint, NormalizedPoint);
+                        //    invalidRect = Rectangle.Inflate(invalidRect, 25, 25); // Inflate for pen size
+                        //    lastPoint = NormalizedPoint;
+                        //}
                         break;
                     case Mode.drag:
-                      
-                            if (isRotating)
+
+                        if (isRotating)
+                        {
+                            int middleX = selectedLayer.Bitmap.Width / 2;
+                            int middleY = selectedLayer.Bitmap.Height / 2;
+
+                            double startangle = GetAngleBetweenPoints(lastPoint, new Point(middleX, middleY));
+                            double adjustedandlge = GetAngleBetweenPoints(NormalizedPoint, new Point(middleX, middleY));
+                            double moveby = adjustedandlge - startangle;
+
+                            if (Math.Abs(moveby - lastAngle) > 0.1f) // A small tolerance to account for floating point precision
                             {
-                                int middleX = selectedLayer.Bitmap.Width / 2;
-                                int middleY = selectedLayer.Bitmap.Height / 2;
-                                
-                                double startangle = GetAngleBetweenPoints(lastPoint, new Point(middleX, middleY));
-                                double adjustedandlge = GetAngleBetweenPoints(NormalizedPoint, new Point(middleX, middleY));
-                                double moveby = adjustedandlge - startangle;
-                      
-                                if (Math.Abs(moveby - lastAngle) > 0.1f) // A small tolerance to account for floating point precision
-                                {
-                                    selectedLayer.Bitmap = LayerManager.RotateImage(selectedLayer.Bitmap, (float)moveby);
-                                    lastAngle = (float)moveby; // Update the last applied angle
-                                    lastPoint = NormalizedPoint;
-                                }
-                                break;
+                                selectedLayer.Bitmap = LayerManager.RotateImage(selectedLayer.Bitmap, (float)moveby);
+                                lastAngle = (float)moveby; // Update the last applied angle
+                                lastPoint = NormalizedPoint;
                             }
-                            if (isScaling)
-                            {
+                            break;
+                        }
+                        if (isScaling)
+                        {
                             NormalizedPoint = NormalizeMousePosition(e.Location);
-            
+
 
                             // DI SE ZABIT ONREJI PROSIM NEPROHAZUJ SIRKU VYSKU OSY
-                                           //   BEZ KONTEXTU                            // normalizovana
+                            //   BEZ KONTEXTU                            // normalizovana
                             int centerx = selectedLayer.Bitmap.Width / 2 + selectedLayer.Offset.X;
                             int centery = selectedLayer.Bitmap.Height / 2 + selectedLayer.Offset.Y;
 
-                 
+
 
                             int x = centerx - NormalizedPoint.X; // Example x-coordinate
                             int y = centery - NormalizedPoint.Y; // Example y-coordinate 
@@ -622,7 +627,7 @@ namespace Photoapp
                                 using (SolidBrush maskBrush = new SolidBrush(Color.FromArgb(128, Color.Red))) // Semi-transparent preview
                                 {
                                     g.SmoothingMode = SmoothingMode.AntiAlias;
-                                    g.FillEllipse(maskBrush, selectedLayer.Bitmap.Width / 2 -1, selectedLayer.Bitmap.Height / 2 - 1, 2, 2);
+                                    g.FillEllipse(maskBrush, selectedLayer.Bitmap.Width / 2 - 1, selectedLayer.Bitmap.Height / 2 - 1, 2, 2);
                                 }
                             }
 
@@ -644,7 +649,7 @@ namespace Photoapp
                                 else
                                 {
                                     closestSide = "Right";
-                                  
+
                                     side = 2;
                                 }
                             }
@@ -659,7 +664,7 @@ namespace Photoapp
                                 else
                                 {
                                     closestSide = "Bottom";
-                                
+
                                     side = 1;
                                 }
                             }
@@ -669,24 +674,24 @@ namespace Photoapp
                             //ResizeBitmap(Bitmap originalBitmap, int newWidth, int newHeight)
                             int newWidth = selectedLayer.Bitmap.Width - rescalexby;
                             int newHeight = selectedLayer.Bitmap.Height - rescaleyby;
-                            
-                       
-                        
+
+
+
                             startingpoint = NormalizedPoint;
                             //Console.WriteLine("Closest side: {0}", closestSide);
                             layerManager.ResizeBitmap(selectedLayerId, newWidth, newHeight, side);
 
                             break;
-                            }
-                            if (isDragging)
-                            {
-                          
+                        }
+                        if (isDragging)
+                        {
+
                             NormalizedPoint = NormalizeMousePosition(e.Location);
                             // Calculate the new location of the dragged panel
                             Point newLocation = new Point(NormalizedPoint.X, NormalizedPoint.Y);
                             selectedLayer.Offset = newLocation;
-                        
-                            }
+
+                        }
                         break;
                     case Mode.freeSelect:
                         NormalizedPoint = NormalizeMousePosition(e.Location);
@@ -735,10 +740,10 @@ namespace Photoapp
                 {
                     clearUIBitmap();
                 }
-                    
+
             }
         }
-        
+
         private void canvasPanel_MouseUp(object sender, MouseEventArgs e)
         {
 
@@ -771,20 +776,20 @@ namespace Photoapp
                                         // only apply to a existing bitmap
                                         if (selectedLayerColor.A != 0)  // Check for transparency (alpha = 0)
                                         {
-                                            
 
-                                            Point newcord = NormalizeMousePositionLayer(new Point(x, y),selectedLayer.Offset);
+
+                                            Point newcord = NormalizeMousePositionLayer(new Point(x, y), selectedLayer.Offset);
 
                                             //selectedLayer.Bitmap.SetPixel(x, y, Color.Black); // Apply to the UI layer
                                             if (newcord.X > 0 && newcord.Y > 0)
                                             {
-                                                if(newcord.X < selectedLayer.Bitmap.Width && newcord.Y < selectedLayer.Bitmap.Height)
+                                                if (newcord.X < selectedLayer.Bitmap.Width && newcord.Y < selectedLayer.Bitmap.Height)
                                                 {
                                                     selectedLayer.Bitmap.SetPixel(newcord.X, newcord.Y, Color.Black); // Apply to the UI layer
                                                 }
-                                               
+
                                             }
-                                         
+
                                         }
                                     }
                                 }
@@ -813,41 +818,141 @@ namespace Photoapp
                         // Get the selected layer
 
 
-                        // Loop through the MaskControl.MapRemembered and apply from the UILayer
-                        // Loop through the MaskControl.MapRemembered and apply from selectedLayer to UILayer
+                        //// rubber
+                        int newalpha = (int)((rubberstrength / 100) * 255);
+
+                        // make new bitmap using graphics object then redo all the pixels
+
+                        //// Loop through the MaskControl.MapRemembered and apply from the UILayer
+                        //// Loop through the MaskControl.MapRemembered and apply from selectedLayer to UILayer
+                        //if (selectionactive)
+                        //{
+                        //    for (int x = 0; x < MaskControl.MapRemembered.GetLength(0); x++) // Loop through the width
+                        //    {
+                        //        for (int y = 0; y < MaskControl.MapRemembered.GetLength(1); y++) // Loop through the height
+                        //        {
+                        //            // Check if the mask for this pixel is marked (e.g., 2 indicates rubber area)
+                        //            if (MaskControl.MapRemembered[x, y] == 2)
+                        //            {
+
+                        //                // Copy the pixel from selectedLayer to the UILayer
+                        //                Color selectedLayerColor = UILayer.GetPixel(x, y);
+
+                        //                if (selectedLayerColor.A != 0)  // Check for transparency (alpha = 0)
+                        //                {
+                        //                    // Copy the pixel from selectedLayer to the UILayer
+                        //                    Point newcord = NormalizeMousePositionLayer(new Point(x, y), selectedLayer.Offset);
+
+                        //                    //selectedLayer.Bitmap.SetPixel(x, y, Color.Black); // Apply to the UI layer
+                        //                    if (newcord.X > 0 && newcord.Y > 0)
+                        //                    {
+                        //                        if (newcord.X < selectedLayer.Bitmap.Width && newcord.Y < selectedLayer.Bitmap.Height)
+                        //                        {
+                        //                            Color rubpixel = selectedLayer.Bitmap.GetPixel(x, y);
+                        //                            selectedLayer.Bitmap.SetPixel(newcord.X, newcord.Y, Color.FromArgb(newalpha,rubpixel.R,rubpixel.G,rubpixel.B)); // Apply to the UI layer
+                        //                        }
+
+                        //                    }
+                        //                }
+                        //            }
+                        //        }
+                        //    }
+                        //}
+
+                        //ellipse vs bitmap setpixel
+
+                        // new bitmap
+                        Bitmap maskBitmap = new Bitmap(
+               selectedLayer.Bitmap.Width, // Width
+                 selectedLayer.Bitmap.Height  // Height
+                );
                         if (selectionactive)
                         {
-                            for (int x = 0; x < MaskControl.MapRemembered.GetLength(0); x++) // Loop through the width
+                            using (Graphics maskGraphics = Graphics.FromImage(maskBitmap))
                             {
-                                for (int y = 0; y < MaskControl.MapRemembered.GetLength(1); y++) // Loop through the height
+                                maskGraphics.Clear(Color.Transparent); // Start with transparency
+                                for (int x = 0; x < MaskControl.MapRemembered.GetLength(0); x++)
                                 {
-                                    // Check if the mask for this pixel is marked (e.g., 2 indicates rubber area)
-                                    if (MaskControl.MapRemembered[x, y] == 2)
+                                    for (int y = 0; y < MaskControl.MapRemembered.GetLength(1); y++)
                                     {
-
-                                        // Copy the pixel from selectedLayer to the UILayer
-                                        Color selectedLayerColor = UILayer.GetPixel(x, y);
-
-                                        if (selectedLayerColor.A != 0)  // Check for transparency (alpha = 0)
+                                        Point newcord = NormalizeMousePositionLayer(new Point(x, y), selectedLayer.Offset);
+                                        if (newcord.X > 0 && newcord.Y > 0 &&
+                                              newcord.X < selectedLayer.Bitmap.Width &&
+                                              newcord.Y < selectedLayer.Bitmap.Height)
                                         {
-                                            // Copy the pixel from selectedLayer to the UILayer
-                                            Point newcord = NormalizeMousePositionLayer(new Point(x, y), selectedLayer.Offset);
+                                            Color selectedLayerColor = UILayer.GetPixel(x, y);
+                                            Color rubpixel = selectedLayer.Bitmap.GetPixel(newcord.X, newcord.Y);
 
-                                            //selectedLayer.Bitmap.SetPixel(x, y, Color.Black); // Apply to the UI layer
-                                            if (newcord.X > 0 && newcord.Y > 0)
+                                            // pokud je v masce
+                                            if (MaskControl.MapRemembered[x, y] == 2)
                                             {
-                                                if (newcord.X < selectedLayer.Bitmap.Width && newcord.Y < selectedLayer.Bitmap.Height)
+                                                if (selectedLayerColor.A != 0)
                                                 {
-                                                    selectedLayer.Bitmap.SetPixel(newcord.X, newcord.Y, Color.Transparent); // Apply to the UI layer
+                                                    maskBitmap.SetPixel(newcord.X, newcord.Y, Color.FromArgb(100, rubpixel.R, rubpixel.G, rubpixel.B));
+
+                                                }
+                                                else
+                                                {
+                                                    maskBitmap.SetPixel(newcord.X, newcord.Y, rubpixel);
                                                 }
 
+                                            }
+                                            else
+                                            {
+                                                maskBitmap.SetPixel(newcord.X, newcord.Y, rubpixel);
                                             }
                                         }
                                     }
                                 }
                             }
+
+
+
+
+
                         }
-            
+                        else
+                        {
+
+                            using (Graphics maskGraphics = Graphics.FromImage(maskBitmap))
+                            {
+                                maskGraphics.Clear(Color.Transparent); // Start with transparency
+
+                                for (int x = 0; x < MaskControl.MapRemembered.GetLength(0); x++)
+                                {
+                                    for (int y = 0; y < MaskControl.MapRemembered.GetLength(1); y++)
+                                    {
+                                        Point newcord = NormalizeMousePositionLayer(new Point(x, y), selectedLayer.Offset);
+
+                                        // Read from source safely
+                                        if (newcord.X >= 0 && newcord.Y >= 0 &&
+                                            newcord.X < selectedLayer.Bitmap.Width &&
+                                            newcord.Y < selectedLayer.Bitmap.Height)
+                                        {
+                                            Color rubpixel = selectedLayer.Bitmap.GetPixel(newcord.X, newcord.Y);
+                                            Color selectedLayerColor = UILayer.GetPixel(x, y);
+
+                                            // Write always to maskBitmap[x, y]
+                                            if (selectedLayerColor.A != 0)
+                                            {
+                                                maskBitmap.SetPixel(newcord.X, newcord.Y, Color.FromArgb(100, rubpixel.R, rubpixel.G, rubpixel.B));
+                                            }
+                                            else
+                                            {
+                                                maskBitmap.SetPixel(newcord.X, newcord.Y, rubpixel);
+                                            }
+                                        }
+                                    }
+                                }
+
+                            }
+
+
+                        }
+
+                        selectedLayer.Bitmap = maskBitmap;
+
+
                         break;
                     case Mode.freeSelect:
                         using (Graphics g = Graphics.FromImage(UILayer))
@@ -897,16 +1002,16 @@ namespace Photoapp
                 {
 
 
-                    if(currentMode == Mode.drag && (isRotating || isScaling))
+                    if (currentMode == Mode.drag && (isRotating || isScaling))
                     {
                         // Save the modified layer bitmap to the undo stack
-                 
-                        Savetomanager(selectedLayer.Bitmap,true);
+
+                        Savetomanager(selectedLayer.Bitmap, true);
                     }
                     else
                     {
                         // Save the modified layer bitmap to the undo stack
-                        Savetomanager(selectedLayer.Bitmap,false);
+                        Savetomanager(selectedLayer.Bitmap, false);
                     }
                     // Savetomanager(selectedLayer.Bitmap); currently stop for rotate transforms
                 }
@@ -915,10 +1020,10 @@ namespace Photoapp
             }
 
 
-                lastPoint = NormalizedPoint;
-                isDrawing = false;
+            lastPoint = NormalizedPoint;
+            isDrawing = false;
             // save selected layer bitmap to undo
-         
+
 
 
         }
@@ -934,7 +1039,7 @@ namespace Photoapp
                 {
                     signedDiff[i] = dataOriginal[i];
                 }
-                layerManager.SaveToUndoStack(selectedLayerId, signedDiff, ovveride, previous,previousOffset);
+                layerManager.SaveToUndoStack(selectedLayerId, signedDiff, ovveride, previous, previousOffset);
                 return;
             }
 
@@ -950,7 +1055,7 @@ namespace Photoapp
             {
                 signedDiff[i] = dataOriginal[i] - dataModified[i];
             }
-            layerManager.SaveToUndoStack(selectedLayerId, signedDiff, ovveride, previous,previousOffset);
+            layerManager.SaveToUndoStack(selectedLayerId, signedDiff, ovveride, previous, previousOffset);
         }
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
@@ -997,8 +1102,8 @@ namespace Photoapp
 
             }
         }
-    
-     
+
+
         private void canvasPanel_MouseWheel(object sender, MouseEventArgs e)
         {
             if (Control.ModifierKeys == Keys.Control) // Zoom when Control is held
@@ -1022,7 +1127,7 @@ namespace Photoapp
 
                 // Update zoom factor
                 zoomFactor = newZoomFactor;
-              
+
                 // Redraw the canvas with updated zoom and pan
                 RedrawCanvas(canvasPanel.ClientRectangle);
             }
@@ -1063,7 +1168,7 @@ namespace Photoapp
             return new Point((int)normalizedX, (int)normalizedY);
         }
 
-        private Point NormalizeMousePositionLayer(Point mousePos,Point layer)
+        private Point NormalizeMousePositionLayer(Point mousePos, Point layer)
         {
             // Adjust the mouse position based on the current zoom and pan
             // Zoom is accounted for by the Normalize mouse position point
@@ -1114,11 +1219,11 @@ namespace Photoapp
                         {
                             if (MaskControl.MapRemembered[x, y] == 1)
                             {
-                             
+
                                 // Set pixel to desired color (e.g., Red)
-                                maskBitmap.SetPixel(x, y, Color.Red); 
+                                maskBitmap.SetPixel(x, y, Color.Blue);
                             }
-                         //   testing purposes
+                            //   testing purposes
                             //else if (MaskControl.MapRemembered[x, y] == 2)
                             //{
                             //    // Set pixel to desired color (e.g., Red)
@@ -1189,7 +1294,8 @@ namespace Photoapp
             downButton.Click += (sender, e) => MoveLayerDown(layerId);
 
             // Add a click event to select this layer when clicked
-            label.Click += (sender, e) => {
+            label.Click += (sender, e) =>
+            {
                 SelectLayer(layerId); // Update the selected layer label and variable
             };
 
@@ -1509,7 +1615,7 @@ namespace Photoapp
             int kernelWidthRadius = kernelWidth / 2;
             int kernelHeightRadius = kernelHeight / 2;
 
-            if( multiplier == 1.0f)
+            if (multiplier == 1.0f)
             {
                 for (int y = kernelHeightRadius; y < original.Height - kernelHeightRadius; y++)
                 {
@@ -1530,14 +1636,14 @@ namespace Photoapp
                                 red += pixelColor.R * kernelValue;
                                 green += pixelColor.G * kernelValue;
                                 blue += pixelColor.B * kernelValue;
-                          
+
                             }
                         }
                         Color pixelColor2 = original.GetPixel(x, y);
                         int r = Math.Min(Math.Max((int)(red), 0), 255);
                         int g = Math.Min(Math.Max((int)green, 0), 255);
                         int b = Math.Min(Math.Max((int)blue, 0), 255);
-         
+
                         filteredBitmap.SetPixel(x, y, Color.FromArgb(pixelColor2.A, r, g, b));
 
 
@@ -1583,7 +1689,7 @@ namespace Photoapp
                                 red += pixelColor.R * kernelValue;
                                 green += pixelColor.G * kernelValue;
                                 blue += pixelColor.B * kernelValue;
-           
+
                             }
                         }
 
@@ -1606,11 +1712,11 @@ namespace Photoapp
 
                     }
                 }
-     
+
             }
 
 
-                    return filteredBitmap;
+            return filteredBitmap;
         }
 
 
@@ -1822,7 +1928,7 @@ namespace Photoapp
             {
                 PlotHistogram(CalculateHistogram(selectedLayer.Bitmap));
             }
-         
+
         }
 
         private void intensityToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1870,7 +1976,7 @@ namespace Photoapp
             }
         }
 
-    
+
         private void edgeDetectionToolStripMenuItem_Click(object sender, EventArgs e)
         {
             double[,] kernel = new double[,]
@@ -1915,7 +2021,7 @@ namespace Photoapp
             Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
             if (selectedLayer != null && selectedLayer.Bitmap != null)
             {
-                Bitmap filteredBitmap = ApplyConvolutionFilter(selectedLayer.Bitmap, kernel,1.0f/9.0f);
+                Bitmap filteredBitmap = ApplyConvolutionFilter(selectedLayer.Bitmap, kernel, 1.0f / 9.0f);
                 ShowInPopup(filteredBitmap);
             }
         }
@@ -1971,7 +2077,7 @@ namespace Photoapp
                 ShowInPopup(filteredBitmap);
             }
         }
-        
+
         private void edgeDetectionLeftToolStripMenuItem_Click(object sender, EventArgs e)
         {
             double[,] kernel = new double[,]
@@ -1983,109 +2089,10 @@ namespace Photoapp
             //Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
             //if (selectedLayer != null && selectedLayer.Bitmap != null)
             //{
-                Bitmap filteredBitmap = ApplyConvolutionFilter(combinedBitmap, kernel);
-                ShowInPopup(filteredBitmap);
+            Bitmap filteredBitmap = ApplyConvolutionFilter(combinedBitmap, kernel);
+            ShowInPopup(filteredBitmap);
             //}
         }
-
-        //private void customToolStripMenuItem_Click(object sender, EventArgs e)
-        //{
-        //    Form filterForm = new Form
-        //    {
-        //        Text = "Custom Convolution Filter",
-        //        Size = new Size(800, 600),
-        //        StartPosition = FormStartPosition.CenterParent
-        //    };
-
-        //    Label sizeLabel = new Label
-        //    {
-        //        Text = "Kernel Size:",
-        //        Location = new Point(20, 20),
-        //        AutoSize = true
-        //    };
-        //    ComboBox comboBoxSize = new ComboBox
-        //    {
-        //        Location = new Point(100, 15),
-        //        DropDownStyle = ComboBoxStyle.DropDownList
-        //    };
-        //    comboBoxSize.Items.AddRange(new object[] { "3", "4", "5" });
-        //    comboBoxSize.SelectedIndex = 0;
-
-        //    DataGridView dataGridViewKernel = new DataGridView
-        //    {
-        //        Location = new Point(20, 60),
-        //        Size = new Size(500, 500),
-        //        ColumnHeadersVisible = false,
-        //        RowHeadersVisible = false,
-        //        AllowUserToAddRows = false,
-        //        AllowUserToDeleteRows = false,
-        //        AllowUserToResizeRows = false,
-        //        AllowUserToResizeColumns = false,
-        //        ScrollBars = ScrollBars.None
-        //    };
-
-        //    Button btnOK = new Button
-        //    {
-        //        Text = "OK",
-        //        Location = new Point(600, 500),
-        //        DialogResult = DialogResult.OK
-        //    };
-        //    Button btnCancel = new Button
-        //    {
-        //        Text = "Cancel",
-        //        Location = new Point(680, 500),
-        //        DialogResult = DialogResult.Cancel
-        //    };
-
-        //    filterForm.Controls.Add(sizeLabel);
-        //    filterForm.Controls.Add(comboBoxSize);
-        //    filterForm.Controls.Add(dataGridViewKernel);
-        //    filterForm.Controls.Add(btnOK);
-        //    filterForm.Controls.Add(btnCancel);
-
-        //    void UpdateGrid()
-        //    {
-        //        int size = int.Parse(comboBoxSize.SelectedItem.ToString());
-        //        dataGridViewKernel.Columns.Clear();
-        //        dataGridViewKernel.Rows.Clear();
-
-        //        for (int i = 0; i < size; i++)
-        //        {
-        //            dataGridViewKernel.Columns.Add($"col{i}", "");
-        //            dataGridViewKernel.Columns[i].Width = 50;
-        //        }
-
-        //        for (int i = 0; i < size; i++)
-        //        {
-        //            dataGridViewKernel.Rows.Add();
-        //            dataGridViewKernel.Rows[i].Height = 40;
-        //        }
-        //    }
-
-        //    comboBoxSize.SelectedIndexChanged += (s, ev) => UpdateGrid();
-        //    UpdateGrid(); // Initialize grid on form load
-
-        //    if (filterForm.ShowDialog() == DialogResult.OK)
-        //    {
-        //        int size = dataGridViewKernel.RowCount;
-        //        double[,] kernel = new double[size, size];
-
-        //        for (int i = 0; i < size; i++)
-        //        {
-        //            for (int j = 0; j < size; j++)
-        //            {
-        //                string val = dataGridViewKernel.Rows[i].Cells[j].Value?.ToString();
-        //                kernel[i, j] = double.TryParse(val, out double d) ? d : 0.0;
-        //            }
-        //        }
-
-
-
-        //        // Call your convolution logic here
-        //        Bitmap result = ApplyConvolutionFilter(combinedBitmap,kernel);
-        //        ShowInPopup(result);
-        //    }
-        //}
 
         private void customToolStripMenuItem_Click(object sender, EventArgs e)
         {

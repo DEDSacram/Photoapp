@@ -76,10 +76,11 @@ namespace Photoapp
             this.x5ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.unsharpMaskingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.edgeDetectionLeftToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.customToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.selectedLayer = new System.Windows.Forms.Label();
             this.legend = new System.Windows.Forms.Label();
+            this.iconButton1 = new FontAwesome.Sharp.IconButton();
             this.canvasPanel = new System.Windows.Forms.DoubleBufferedPanel();
-            this.customToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.buttonPanel.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -107,6 +108,7 @@ namespace Photoapp
             // 
             // buttonPanel
             // 
+            this.buttonPanel.Controls.Add(this.iconButton1);
             this.buttonPanel.Controls.Add(this.selectFreeButton);
             this.buttonPanel.Controls.Add(this.selectBoxButton);
             this.buttonPanel.Controls.Add(this.fontButton);
@@ -329,14 +331,14 @@ namespace Photoapp
             // grayscaleToolStripMenuItem
             // 
             this.grayscaleToolStripMenuItem.Name = "grayscaleToolStripMenuItem";
-            this.grayscaleToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.grayscaleToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
             this.grayscaleToolStripMenuItem.Text = "Grayscale";
             this.grayscaleToolStripMenuItem.Click += new System.EventHandler(this.grayscaleToolStripMenuItem_Click);
             // 
             // inverseToolStripMenuItem
             // 
             this.inverseToolStripMenuItem.Name = "inverseToolStripMenuItem";
-            this.inverseToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.inverseToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
             this.inverseToolStripMenuItem.Text = "Inverse";
             this.inverseToolStripMenuItem.Click += new System.EventHandler(this.inverseToolStripMenuItem_Click);
             // 
@@ -348,7 +350,7 @@ namespace Photoapp
             this.equalizedToolStripMenuItem,
             this.equalizedAllToolStripMenuItem});
             this.histogramToolStripMenuItem.Name = "histogramToolStripMenuItem";
-            this.histogramToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.histogramToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
             this.histogramToolStripMenuItem.Text = "Histogram";
             // 
             // rGBToolStripMenuItem
@@ -391,34 +393,34 @@ namespace Photoapp
             this.edgeDetectionLeftToolStripMenuItem,
             this.customToolStripMenuItem});
             this.convolutionToolStripMenuItem.Name = "convolutionToolStripMenuItem";
-            this.convolutionToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.convolutionToolStripMenuItem.Size = new System.Drawing.Size(140, 22);
             this.convolutionToolStripMenuItem.Text = "Convolution";
             // 
             // identityToolStripMenuItem
             // 
             this.identityToolStripMenuItem.Name = "identityToolStripMenuItem";
-            this.identityToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.identityToolStripMenuItem.Size = new System.Drawing.Size(173, 22);
             this.identityToolStripMenuItem.Text = "Identity";
             this.identityToolStripMenuItem.Click += new System.EventHandler(this.identityToolStripMenuItem_Click);
             // 
             // edgeDetectionToolStripMenuItem
             // 
             this.edgeDetectionToolStripMenuItem.Name = "edgeDetectionToolStripMenuItem";
-            this.edgeDetectionToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.edgeDetectionToolStripMenuItem.Size = new System.Drawing.Size(173, 22);
             this.edgeDetectionToolStripMenuItem.Text = "Edge detection";
             this.edgeDetectionToolStripMenuItem.Click += new System.EventHandler(this.edgeDetectionToolStripMenuItem_Click);
             // 
             // sharpenToolStripMenuItem
             // 
             this.sharpenToolStripMenuItem.Name = "sharpenToolStripMenuItem";
-            this.sharpenToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.sharpenToolStripMenuItem.Size = new System.Drawing.Size(173, 22);
             this.sharpenToolStripMenuItem.Text = "Sharpen";
             this.sharpenToolStripMenuItem.Click += new System.EventHandler(this.sharpenToolStripMenuItem_Click);
             // 
             // boxBlurToolStripMenuItem
             // 
             this.boxBlurToolStripMenuItem.Name = "boxBlurToolStripMenuItem";
-            this.boxBlurToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.boxBlurToolStripMenuItem.Size = new System.Drawing.Size(173, 22);
             this.boxBlurToolStripMenuItem.Text = "Box blur";
             this.boxBlurToolStripMenuItem.Click += new System.EventHandler(this.boxBlurToolStripMenuItem_Click);
             // 
@@ -428,7 +430,7 @@ namespace Photoapp
             this.x3ToolStripMenuItem,
             this.x5ToolStripMenuItem});
             this.gaussianToolStripMenuItem.Name = "gaussianToolStripMenuItem";
-            this.gaussianToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.gaussianToolStripMenuItem.Size = new System.Drawing.Size(173, 22);
             this.gaussianToolStripMenuItem.Text = "Gaussian";
             // 
             // x3ToolStripMenuItem
@@ -448,16 +450,23 @@ namespace Photoapp
             // unsharpMaskingToolStripMenuItem
             // 
             this.unsharpMaskingToolStripMenuItem.Name = "unsharpMaskingToolStripMenuItem";
-            this.unsharpMaskingToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.unsharpMaskingToolStripMenuItem.Size = new System.Drawing.Size(173, 22);
             this.unsharpMaskingToolStripMenuItem.Text = "Unsharp masking";
             this.unsharpMaskingToolStripMenuItem.Click += new System.EventHandler(this.unsharpMaskingToolStripMenuItem_Click);
             // 
             // edgeDetectionLeftToolStripMenuItem
             // 
             this.edgeDetectionLeftToolStripMenuItem.Name = "edgeDetectionLeftToolStripMenuItem";
-            this.edgeDetectionLeftToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.edgeDetectionLeftToolStripMenuItem.Size = new System.Drawing.Size(173, 22);
             this.edgeDetectionLeftToolStripMenuItem.Text = "Edge detection left";
             this.edgeDetectionLeftToolStripMenuItem.Click += new System.EventHandler(this.edgeDetectionLeftToolStripMenuItem_Click);
+            // 
+            // customToolStripMenuItem
+            // 
+            this.customToolStripMenuItem.Name = "customToolStripMenuItem";
+            this.customToolStripMenuItem.Size = new System.Drawing.Size(173, 22);
+            this.customToolStripMenuItem.Text = "Custom";
+            this.customToolStripMenuItem.Click += new System.EventHandler(this.customToolStripMenuItem_Click);
             // 
             // selectedLayer
             // 
@@ -481,6 +490,21 @@ namespace Photoapp
             this.legend.TabIndex = 7;
             this.legend.Text = "label1";
             // 
+            // iconButton1
+            // 
+            this.iconButton1.FlatAppearance.BorderSize = 0;
+            this.iconButton1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.iconButton1.IconChar = FontAwesome.Sharp.IconChar.HandPointer;
+            this.iconButton1.IconColor = System.Drawing.Color.FromArgb(((int)(((byte)(252)))), ((int)(((byte)(252)))), ((int)(((byte)(252)))));
+            this.iconButton1.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            this.iconButton1.IconSize = 20;
+            this.iconButton1.Location = new System.Drawing.Point(34, 64);
+            this.iconButton1.Name = "iconButton1";
+            this.iconButton1.Size = new System.Drawing.Size(24, 24);
+            this.iconButton1.TabIndex = 9;
+            this.iconButton1.UseVisualStyleBackColor = true;
+            this.iconButton1.Click += new System.EventHandler(this.iconButton1_Click);
+            // 
             // canvasPanel
             // 
             this.canvasPanel.BackColor = System.Drawing.Color.White;
@@ -492,13 +516,6 @@ namespace Photoapp
             this.canvasPanel.MouseDown += new System.Windows.Forms.MouseEventHandler(this.canvasPanel_MouseDown);
             this.canvasPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.canvasPanel_MouseMove);
             this.canvasPanel.MouseUp += new System.Windows.Forms.MouseEventHandler(this.canvasPanel_MouseUp);
-            // 
-            // customToolStripMenuItem
-            // 
-            this.customToolStripMenuItem.Name = "customToolStripMenuItem";
-            this.customToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.customToolStripMenuItem.Text = "Custom";
-            this.customToolStripMenuItem.Click += new System.EventHandler(this.customToolStripMenuItem_Click);
             // 
             // Form1
             // 
@@ -517,6 +534,8 @@ namespace Photoapp
             this.Text = "Form1";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Form1_KeyDown);
+            this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.Form1_KeyPress);
+            this.PreviewKeyDown += new System.Windows.Forms.PreviewKeyDownEventHandler(this.Form1_PreviewKeyDown);
             this.buttonPanel.ResumeLayout(false);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
@@ -567,6 +586,7 @@ namespace Photoapp
         private ToolStripMenuItem unsharpMaskingToolStripMenuItem;
         private ToolStripMenuItem edgeDetectionLeftToolStripMenuItem;
         private ToolStripMenuItem customToolStripMenuItem;
+        private FontAwesome.Sharp.IconButton iconButton1;
     }
 }
 

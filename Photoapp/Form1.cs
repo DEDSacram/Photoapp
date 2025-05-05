@@ -46,10 +46,15 @@ namespace Photoapp
             zoom, // TODO FIX EVERYTHING
             font, // TODO
             rectangleSelect, // done
-            freeSelect // done
+            freeSelect, // done
+            arrow
         }
 
         int rubberstrength = 50;
+        string userText = "";
+
+
+
         //zooming panning
         private float zoomFactor = 1.0f;  // Default zoom factor
         float zoomStep = 0.1f;
@@ -140,6 +145,10 @@ namespace Photoapp
 
             InitializeComponent();
             this.KeyPreview = true;  // This allows the form to receive key events
+  
+            this.AcceptButton = null;  // Disable default Enter behavior for buttons
+            this.Focus();  // Set the focus to the form itself
+
             combinedBitmap = new Bitmap(canvasPanel.Width, canvasPanel.Height);
             MaskControl.MapRemembered = new byte[canvasPanel.Width, canvasPanel.Height];
 
@@ -167,6 +176,9 @@ namespace Photoapp
         // Initialize
         private void Form1_Load(object sender, EventArgs e)
         {
+
+        
+
             // Create a bitmap with the size of the canvasPanel
             Bitmap bitmap = new Bitmap(canvasPanel.Width, canvasPanel.Height);
 
@@ -484,6 +496,8 @@ namespace Photoapp
                     case Mode.drag:
 
                         break;
+                    case Mode.arrow:
+                        break;
                 }
             }
         }
@@ -493,6 +507,7 @@ namespace Photoapp
             isDragging = false;
             isRotating = false;
             isScaling = false;
+            userText = "";
         }
         private bool IsNearFirstPoint(Point currentPoint)
         {
@@ -530,6 +545,10 @@ namespace Photoapp
                 Rectangle invalidRect = Rectangle.Empty;
                 switch (currentMode)
                 {
+                    case Mode.font:
+                        this.ActiveControl = null;  // Remove focus controls
+                        this.Focus();  // Put keyboard on form
+                        return;
                     case Mode.pencil:
 
                         if (selectionactive)  // If selection is active, draw on the UI layer
@@ -562,8 +581,6 @@ namespace Photoapp
                         }
                         break;
                     case Mode.rubber:
-                        //if (selectionactive)
-                        //{
                         NormalizedPoint = NormalizeMousePosition(e.Location);
                         using (Graphics g = Graphics.FromImage(UILayer))
                         using (SolidBrush maskBrush = new SolidBrush(Color.FromArgb(128, Color.Gray))) // Semi-transparent preview
@@ -571,22 +588,6 @@ namespace Photoapp
                             g.SmoothingMode = SmoothingMode.AntiAlias;
                             g.FillEllipse(maskBrush, NormalizedPoint.X - 10, NormalizedPoint.Y - 10, 20, 20);
                         }
-                        //}
-                        //else
-                        //{
-                        //    using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
-                        //    // this works but only partly I want to make seleciton here apply later
-                        //    using (SolidBrush transparentBrush = new SolidBrush(Color.FromArgb(200, 255, 255, 255)))
-                        //    {
-                        //        g.CompositingMode = CompositingMode.SourceCopy;
-                        //        g.SmoothingMode = SmoothingMode.AntiAlias;
-                        //        g.FillEllipse(transparentBrush, NormalizedPoint.X - 10, NormalizedPoint.Y - 10, 20, 20);
-
-                        //    }
-                        //    invalidRect = GetBoundingRectangle(lastPoint, NormalizedPoint);
-                        //    invalidRect = Rectangle.Inflate(invalidRect, 25, 25); // Inflate for pen size
-                        //    lastPoint = NormalizedPoint;
-                        //}
                         break;
                     case Mode.drag:
 
@@ -815,52 +816,8 @@ namespace Photoapp
 
                         break;
                     case Mode.rubber:
-                        // Get the selected layer
-
-
                         //// rubber
-                        int newalpha = (int)((rubberstrength / 100) * 255);
-
-                        // make new bitmap using graphics object then redo all the pixels
-
-                        //// Loop through the MaskControl.MapRemembered and apply from the UILayer
-                        //// Loop through the MaskControl.MapRemembered and apply from selectedLayer to UILayer
-                        //if (selectionactive)
-                        //{
-                        //    for (int x = 0; x < MaskControl.MapRemembered.GetLength(0); x++) // Loop through the width
-                        //    {
-                        //        for (int y = 0; y < MaskControl.MapRemembered.GetLength(1); y++) // Loop through the height
-                        //        {
-                        //            // Check if the mask for this pixel is marked (e.g., 2 indicates rubber area)
-                        //            if (MaskControl.MapRemembered[x, y] == 2)
-                        //            {
-
-                        //                // Copy the pixel from selectedLayer to the UILayer
-                        //                Color selectedLayerColor = UILayer.GetPixel(x, y);
-
-                        //                if (selectedLayerColor.A != 0)  // Check for transparency (alpha = 0)
-                        //                {
-                        //                    // Copy the pixel from selectedLayer to the UILayer
-                        //                    Point newcord = NormalizeMousePositionLayer(new Point(x, y), selectedLayer.Offset);
-
-                        //                    //selectedLayer.Bitmap.SetPixel(x, y, Color.Black); // Apply to the UI layer
-                        //                    if (newcord.X > 0 && newcord.Y > 0)
-                        //                    {
-                        //                        if (newcord.X < selectedLayer.Bitmap.Width && newcord.Y < selectedLayer.Bitmap.Height)
-                        //                        {
-                        //                            Color rubpixel = selectedLayer.Bitmap.GetPixel(x, y);
-                        //                            selectedLayer.Bitmap.SetPixel(newcord.X, newcord.Y, Color.FromArgb(newalpha,rubpixel.R,rubpixel.G,rubpixel.B)); // Apply to the UI layer
-                        //                        }
-
-                        //                    }
-                        //                }
-                        //            }
-                        //        }
-                        //    }
-                        //}
-
-                        //ellipse vs bitmap setpixel
-
+                        //int newalpha = (int)((rubberstrength / 100) * 255);
                         // new bitmap
                         Bitmap maskBitmap = new Bitmap(
                selectedLayer.Bitmap.Width, // Width
@@ -984,6 +941,26 @@ namespace Photoapp
                         break;
                     case Mode.drag:
                         break;
+                    case Mode.arrow:
+                        using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
+                        {
+                         
+                            g.SmoothingMode = SmoothingMode.AntiAlias;
+                           
+                            using (Pen pen = new Pen(Color.Blue, 3))
+                            {
+                                pen.CustomEndCap = new AdjustableArrowCap(6, 6, false);// unfilled
+
+                                //pen.CustomEndCap = new AdjustableArrowCap(6, 6); // (width, height)
+
+                        
+                                g.DrawLine(pen, lastPoint, NormalizedPoint);
+                            }
+                        }
+                        break;
+                    case Mode.font:
+                        return;
+                        break;
                 }
 
 
@@ -1015,6 +992,7 @@ namespace Photoapp
                     }
                     // Savetomanager(selectedLayer.Bitmap); currently stop for rotate transforms
                 }
+        
                 clearUIBitmap();
                 RedrawCanvas(invalidRect);
             }
@@ -1057,9 +1035,95 @@ namespace Photoapp
             }
             layerManager.SaveToUndoStack(selectedLayerId, signedDiff, ovveride, previous, previousOffset);
         }
+        private void DrawText()
+        {
+            Rectangle invalidRect = canvasPanel.ClientRectangle; // Invalidate the entire canvas
+            //clearUIBitmap();
+            //RedrawCanvas(invalidRect);
+            using (Graphics g = Graphics.FromImage(UILayer))
+            {
+                g.Clear(Color.Transparent);
+
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+
+                // Optional: don't clear if layering text
+                // g.Clear(Color.Transparent);
+
+                using (Font font = new Font("Arial", 24))
+                using (Brush brush = new SolidBrush(Color.Black))
+                {
+                    float lineHeight = font.GetHeight(g);
+                    float y = startingpoint.Y;
+
+                    foreach (string line in userText.Split('\n'))
+                    {
+
+
+                        g.DrawString(line, font, brush, new PointF(startingpoint.X, y));
+                        y += lineHeight;
+                    }
+                }
+            }
+            RedrawCanvas(canvasPanel.ClientRectangle);
+
+        }
+        private void applyText()
+        {
+            Layer selectedLayer = layerManager.GetLayer(selectedLayerId);
+            using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
+            {
+                g.SmoothingMode = SmoothingMode.None; // Or AntiAlias if needed
+
+                // apply only if if the layer is there number 2 option is create a new layer
+                g.DrawImage(UILayer,new Point(-selectedLayer.Offset.X,-selectedLayer.Offset.Y));
+            }
+
+
+        }
+
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
+            if (e.KeyCode == Keys.Escape && currentMode == Mode.font)
+            {
+                applyText();
+                // clear
+                userText = "";          // Clear or cancel text input
+                DrawText();             // Refresh text rendering
 
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
+            //if (currentMode == Mode.font)
+            //{
+
+            //    if (e.KeyCode == Keys.Back && userText.Length > 0)
+            //    {
+            //        userText = userText.Substring(0, userText.Length - 1);
+            //    }
+            //    else if (e.KeyCode == Keys.Enter)
+            //    {
+            //        userText += "\n";  // Handle Enter for newline
+            //        e.SuppressKeyPress = true;  // Prevent default Enter behavior
+            //    }
+            //    else if (e.KeyCode == Keys.Space)
+            //    {
+            //        userText += " ";
+            //    }
+            //    else if (e.KeyCode >= Keys.A && e.KeyCode <= Keys.Z)
+            //    {
+            //        bool shift = Control.ModifierKeys.HasFlag(Keys.Shift);
+            //        char ch = (char)(e.KeyCode + (shift ? 0 : 32));
+            //        userText += ch;
+            //    }
+            //    else if (e.KeyCode >= Keys.D0 && e.KeyCode <= Keys.D9)
+            //    {
+            //        char ch = (char)e.KeyCode;
+            //        userText += ch;
+            //    }
+
+            //    DrawText();
+
+            //}
             // Check if the Ctrl key, Shift key, and Z key are pressed
             if (e.Control && e.Shift && e.KeyCode == Keys.Z)
             {
@@ -1867,6 +1931,11 @@ namespace Photoapp
             currentMode = Mode.freeSelect;
             ResetModes();
         }
+        private void iconButton1_Click(object sender, EventArgs e)
+        {
+            currentMode = Mode.arrow;
+            ResetModes();
+        }
 
         private void importImageToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -2271,11 +2340,48 @@ namespace Photoapp
             }
         }
 
+        // not used
+        private void Form1_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
+        {
+       
+            //if (e.KeyCode == Keys.Enter)
+            //{
+            //    userText += "\n";  // Handle Enter key for newline
+            //    e.IsInputKey = true;  // Mark as an input key
+            //}
+            //else if (e.KeyCode == Keys.Back && userText.Length > 0)
+            //{
+            //    userText = userText.Substring(0, userText.Length - 1);  // Handle Backspace
+            //}
 
+            //DrawText();  // Redraw the text
+        
+    }
 
+        private void Form1_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (currentMode != Mode.font) return;
+     
+            if (e.KeyChar == '\r')
+            {
+                userText += "\n";
+                e.Handled = true;  // Prevent system handling
+            }
+            else if (e.KeyChar == (char)Keys.Back)
+            {
+                if (userText.Length > 0)
+                    userText = userText.Substring(0, userText.Length - 1);
 
+                e.Handled = true;
+            }
+            else if (!char.IsControl(e.KeyChar))
+            {
+                userText += e.KeyChar;
+                e.Handled = true;
+            }
 
-
+            DrawText();
+        }
     }
 
 }

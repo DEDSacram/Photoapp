@@ -42,6 +42,7 @@ namespace Photoapp
             this.layerPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.labelLayers = new System.Windows.Forms.Label();
             this.buttonPanel = new System.Windows.Forms.Panel();
+            this.iconButton1 = new FontAwesome.Sharp.IconButton();
             this.selectFreeButton = new FontAwesome.Sharp.IconButton();
             this.selectBoxButton = new FontAwesome.Sharp.IconButton();
             this.fontButton = new FontAwesome.Sharp.IconButton();
@@ -79,8 +80,8 @@ namespace Photoapp
             this.customToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.selectedLayer = new System.Windows.Forms.Label();
             this.legend = new System.Windows.Forms.Label();
-            this.iconButton1 = new FontAwesome.Sharp.IconButton();
             this.canvasPanel = new System.Windows.Forms.DoubleBufferedPanel();
+            this.importPdfToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.buttonPanel.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -122,6 +123,21 @@ namespace Photoapp
             this.buttonPanel.Name = "buttonPanel";
             this.buttonPanel.Size = new System.Drawing.Size(129, 92);
             this.buttonPanel.TabIndex = 4;
+            // 
+            // iconButton1
+            // 
+            this.iconButton1.FlatAppearance.BorderSize = 0;
+            this.iconButton1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.iconButton1.IconChar = FontAwesome.Sharp.IconChar.HandPointer;
+            this.iconButton1.IconColor = System.Drawing.Color.FromArgb(((int)(((byte)(252)))), ((int)(((byte)(252)))), ((int)(((byte)(252)))));
+            this.iconButton1.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            this.iconButton1.IconSize = 20;
+            this.iconButton1.Location = new System.Drawing.Point(34, 64);
+            this.iconButton1.Name = "iconButton1";
+            this.iconButton1.Size = new System.Drawing.Size(24, 24);
+            this.iconButton1.TabIndex = 9;
+            this.iconButton1.UseVisualStyleBackColor = true;
+            this.iconButton1.Click += new System.EventHandler(this.iconButton1_Click);
             // 
             // selectFreeButton
             // 
@@ -273,7 +289,8 @@ namespace Photoapp
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.importImageToolStripMenuItem,
-            this.saveImageToolStripMenuItem});
+            this.saveImageToolStripMenuItem,
+            this.importPdfToolStripMenuItem});
             this.fileToolStripMenuItem.ForeColor = System.Drawing.Color.White;
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
@@ -282,7 +299,7 @@ namespace Photoapp
             // importImageToolStripMenuItem
             // 
             this.importImageToolStripMenuItem.Name = "importImageToolStripMenuItem";
-            this.importImageToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+            this.importImageToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.importImageToolStripMenuItem.Text = "import image";
             this.importImageToolStripMenuItem.Click += new System.EventHandler(this.importImageToolStripMenuItem_Click);
             // 
@@ -293,7 +310,7 @@ namespace Photoapp
             this.jPGToolStripMenuItem,
             this.bMPToolStripMenuItem});
             this.saveImageToolStripMenuItem.Name = "saveImageToolStripMenuItem";
-            this.saveImageToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+            this.saveImageToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.saveImageToolStripMenuItem.Text = "save image";
             // 
             // pNGToolStripMenuItem
@@ -490,21 +507,6 @@ namespace Photoapp
             this.legend.TabIndex = 7;
             this.legend.Text = "label1";
             // 
-            // iconButton1
-            // 
-            this.iconButton1.FlatAppearance.BorderSize = 0;
-            this.iconButton1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.iconButton1.IconChar = FontAwesome.Sharp.IconChar.HandPointer;
-            this.iconButton1.IconColor = System.Drawing.Color.FromArgb(((int)(((byte)(252)))), ((int)(((byte)(252)))), ((int)(((byte)(252)))));
-            this.iconButton1.IconFont = FontAwesome.Sharp.IconFont.Auto;
-            this.iconButton1.IconSize = 20;
-            this.iconButton1.Location = new System.Drawing.Point(34, 64);
-            this.iconButton1.Name = "iconButton1";
-            this.iconButton1.Size = new System.Drawing.Size(24, 24);
-            this.iconButton1.TabIndex = 9;
-            this.iconButton1.UseVisualStyleBackColor = true;
-            this.iconButton1.Click += new System.EventHandler(this.iconButton1_Click);
-            // 
             // canvasPanel
             // 
             this.canvasPanel.BackColor = System.Drawing.Color.White;
@@ -516,6 +518,13 @@ namespace Photoapp
             this.canvasPanel.MouseDown += new System.Windows.Forms.MouseEventHandler(this.canvasPanel_MouseDown);
             this.canvasPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.canvasPanel_MouseMove);
             this.canvasPanel.MouseUp += new System.Windows.Forms.MouseEventHandler(this.canvasPanel_MouseUp);
+            // 
+            // importPdfToolStripMenuItem
+            // 
+            this.importPdfToolStripMenuItem.Name = "importPdfToolStripMenuItem";
+            this.importPdfToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.importPdfToolStripMenuItem.Text = "import pdf";
+            this.importPdfToolStripMenuItem.Click += new System.EventHandler(this.importPdfToolStripMenuItem_Click);
             // 
             // Form1
             // 
@@ -587,6 +596,7 @@ namespace Photoapp
         private ToolStripMenuItem edgeDetectionLeftToolStripMenuItem;
         private ToolStripMenuItem customToolStripMenuItem;
         private FontAwesome.Sharp.IconButton iconButton1;
+        private ToolStripMenuItem importPdfToolStripMenuItem;
     }
 }
 

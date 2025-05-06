@@ -15,6 +15,8 @@ using System.Windows.Media.Media3D;
 using System.Runtime.InteropServices;
 using System.IO.Compression;
 using System.IO;
+using PdfiumViewer;
+using System.Xml.Linq;
 
 
 namespace Photoapp
@@ -1093,37 +1095,6 @@ namespace Photoapp
                 e.Handled = true;
                 e.SuppressKeyPress = true;
             }
-            //if (currentMode == Mode.font)
-            //{
-
-            //    if (e.KeyCode == Keys.Back && userText.Length > 0)
-            //    {
-            //        userText = userText.Substring(0, userText.Length - 1);
-            //    }
-            //    else if (e.KeyCode == Keys.Enter)
-            //    {
-            //        userText += "\n";  // Handle Enter for newline
-            //        e.SuppressKeyPress = true;  // Prevent default Enter behavior
-            //    }
-            //    else if (e.KeyCode == Keys.Space)
-            //    {
-            //        userText += " ";
-            //    }
-            //    else if (e.KeyCode >= Keys.A && e.KeyCode <= Keys.Z)
-            //    {
-            //        bool shift = Control.ModifierKeys.HasFlag(Keys.Shift);
-            //        char ch = (char)(e.KeyCode + (shift ? 0 : 32));
-            //        userText += ch;
-            //    }
-            //    else if (e.KeyCode >= Keys.D0 && e.KeyCode <= Keys.D9)
-            //    {
-            //        char ch = (char)e.KeyCode;
-            //        userText += ch;
-            //    }
-
-            //    DrawText();
-
-            //}
             // Check if the Ctrl key, Shift key, and Z key are pressed
             if (e.Control && e.Shift && e.KeyCode == Keys.Z)
             {
@@ -2381,6 +2352,37 @@ namespace Photoapp
             }
 
             DrawText();
+        }
+
+        private void importPdfToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+     
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "Pdf files (*.pdf) | *.pdf";
+            openFileDialog.Title = "Select an pdf file";
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            { 
+          
+        
+            if (!string.IsNullOrEmpty(openFileDialog.FileName) && File.Exists(openFileDialog.FileName))
+            {
+
+                using (var pdfDocument = PdfDocument.Load(openFileDialog.FileName))
+                {
+                    int pageIndex = 0; // Index of the page to render (0-based)
+                    Bitmap image = (Bitmap)pdfDocument.Render(pageIndex, 300, 300, PdfRenderFlags.CorrectFromDpi);
+                
+                        int layerid = layerManager.GetNextLayerId();
+                        AddLayerToLayerPanel(layerid);
+                        layerManager.AddLayer(layerid, new Bitmap(image));
+                        RedrawCanvas(new Rectangle(0, 0, canvasPanel.Width, canvasPanel.Height));
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.Show("Invalid file path. Please select a valid pdf file.");
+            }
         }
     }
 

@@ -128,7 +128,25 @@ namespace Photoapp
                 MessageBox.Show($"Error loading image: {ex.Message}");
             }
         }
+        private void InitializeSlider()
+        {
+            // Create and configure the TrackBar
+            TrackBar slider = new TrackBar();
+            slider.Minimum = 0;
+            slider.Maximum = 255;
+            slider.TickFrequency = 5;
+            slider.Value = 50; // Default value
+            slider.Dock = DockStyle.Top;
+            slider.ValueChanged += Slider_ValueChanged;
 
+            // Add to the 'settings' panel
+            settings.Controls.Add(slider);
+        }
+        private void Slider_ValueChanged(object sender, EventArgs e)
+        {
+            TrackBar slider = sender as TrackBar;
+            rubberstrength = slider.Value;
+        }
         private string GetPathFile()
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
@@ -819,7 +837,7 @@ namespace Photoapp
                         break;
                     case Mode.rubber:
                         //// rubber
-                        //int newalpha = (int)((rubberstrength / 100) * 255);
+                 
                         // new bitmap
                         Bitmap maskBitmap = new Bitmap(
                selectedLayer.Bitmap.Width, // Width
@@ -847,7 +865,7 @@ namespace Photoapp
                                             {
                                                 if (selectedLayerColor.A != 0)
                                                 {
-                                                    maskBitmap.SetPixel(newcord.X, newcord.Y, Color.FromArgb(100, rubpixel.R, rubpixel.G, rubpixel.B));
+                                                    maskBitmap.SetPixel(newcord.X, newcord.Y, Color.FromArgb(rubberstrength, rubpixel.R, rubpixel.G, rubpixel.B));
 
                                                 }
                                                 else
@@ -894,7 +912,7 @@ namespace Photoapp
                                             // Write always to maskBitmap[x, y]
                                             if (selectedLayerColor.A != 0)
                                             {
-                                                maskBitmap.SetPixel(newcord.X, newcord.Y, Color.FromArgb(100, rubpixel.R, rubpixel.G, rubpixel.B));
+                                                maskBitmap.SetPixel(newcord.X, newcord.Y, Color.FromArgb(rubberstrength, rubpixel.R, rubpixel.G, rubpixel.B));
                                             }
                                             else
                                             {
@@ -1876,6 +1894,7 @@ namespace Photoapp
         {
             currentMode = Mode.rubber; // done
             ResetModes();
+            InitializeSlider();
         }
         private void eyeButton_MouseClick(object sender, MouseEventArgs e)
         {
@@ -2383,6 +2402,11 @@ namespace Photoapp
             {
                 MessageBox.Show("Invalid file path. Please select a valid pdf file.");
             }
+        }
+
+        private void panel1_Paint(object sender, PaintEventArgs e)
+        {
+
         }
     }
 

@@ -59,6 +59,7 @@ namespace Photoapp
             this.pNGToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.jPGToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bMPToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.importPdfToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.methodsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.grayscaleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.inverseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -81,7 +82,7 @@ namespace Photoapp
             this.selectedLayer = new System.Windows.Forms.Label();
             this.legend = new System.Windows.Forms.Label();
             this.canvasPanel = new System.Windows.Forms.DoubleBufferedPanel();
-            this.importPdfToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.settings = new System.Windows.Forms.Panel();
             this.buttonPanel.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -299,7 +300,7 @@ namespace Photoapp
             // importImageToolStripMenuItem
             // 
             this.importImageToolStripMenuItem.Name = "importImageToolStripMenuItem";
-            this.importImageToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.importImageToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.importImageToolStripMenuItem.Text = "import image";
             this.importImageToolStripMenuItem.Click += new System.EventHandler(this.importImageToolStripMenuItem_Click);
             // 
@@ -310,7 +311,7 @@ namespace Photoapp
             this.jPGToolStripMenuItem,
             this.bMPToolStripMenuItem});
             this.saveImageToolStripMenuItem.Name = "saveImageToolStripMenuItem";
-            this.saveImageToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.saveImageToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.saveImageToolStripMenuItem.Text = "save image";
             // 
             // pNGToolStripMenuItem
@@ -333,6 +334,13 @@ namespace Photoapp
             this.bMPToolStripMenuItem.Size = new System.Drawing.Size(99, 22);
             this.bMPToolStripMenuItem.Text = "BMP";
             this.bMPToolStripMenuItem.Click += new System.EventHandler(this.bMPToolStripMenuItem_Click);
+            // 
+            // importPdfToolStripMenuItem
+            // 
+            this.importPdfToolStripMenuItem.Name = "importPdfToolStripMenuItem";
+            this.importPdfToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
+            this.importPdfToolStripMenuItem.Text = "import pdf";
+            this.importPdfToolStripMenuItem.Click += new System.EventHandler(this.importPdfToolStripMenuItem_Click);
             // 
             // methodsToolStripMenuItem
             // 
@@ -519,12 +527,13 @@ namespace Photoapp
             this.canvasPanel.MouseMove += new System.Windows.Forms.MouseEventHandler(this.canvasPanel_MouseMove);
             this.canvasPanel.MouseUp += new System.Windows.Forms.MouseEventHandler(this.canvasPanel_MouseUp);
             // 
-            // importPdfToolStripMenuItem
+            // settings
             // 
-            this.importPdfToolStripMenuItem.Name = "importPdfToolStripMenuItem";
-            this.importPdfToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.importPdfToolStripMenuItem.Text = "import pdf";
-            this.importPdfToolStripMenuItem.Click += new System.EventHandler(this.importPdfToolStripMenuItem_Click);
+            this.settings.Location = new System.Drawing.Point(13, 139);
+            this.settings.Name = "settings";
+            this.settings.Size = new System.Drawing.Size(132, 21);
+            this.settings.TabIndex = 8;
+            this.settings.Paint += new System.Windows.Forms.PaintEventHandler(this.panel1_Paint);
             // 
             // Form1
             // 
@@ -532,6 +541,7 @@ namespace Photoapp
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(49)))), ((int)(((byte)(54)))), ((int)(((byte)(59)))));
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.settings);
             this.Controls.Add(this.legend);
             this.Controls.Add(this.selectedLayer);
             this.Controls.Add(this.buttonPanel);
@@ -597,6 +607,7 @@ namespace Photoapp
         private ToolStripMenuItem customToolStripMenuItem;
         private FontAwesome.Sharp.IconButton iconButton1;
         private ToolStripMenuItem importPdfToolStripMenuItem;
+        private Panel settings;
     }
 }
 

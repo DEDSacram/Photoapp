@@ -43,13 +43,13 @@ namespace Photoapp
             pencil, // done
             pen, // done
             rubber, // Done
-            drag, // TODO
+            drag, // done
             eyedropper, // done
-            zoom, // TODO FIX EVERYTHING
-            font, // TODO
+            zoom, // done
+            font, // done
             rectangleSelect, // done
             freeSelect, // done
-            arrow
+            arrow  // done
         }
 
         int rubberstrength = 50;
@@ -133,7 +133,7 @@ namespace Photoapp
             // Create and configure the TrackBar
             TrackBar slider = new TrackBar();
             slider.Minimum = 0;
-            slider.Maximum = 255;
+            slider.Maximum = 255; 
             slider.TickFrequency = 5;
             slider.Value = 50; // Default value
             slider.Dock = DockStyle.Top;
@@ -289,6 +289,7 @@ namespace Photoapp
             // selected layer label
             selectedLayerId = layerId; // Store the selected layer ID
             selectedLayer.Text = $"Selected Layer: {layerId}"; // Update the label to show the selected layer
+
 
             // selected layer
             // Load the current selected layer's bitmap into the virtual canvas
@@ -454,35 +455,30 @@ namespace Photoapp
                                 // Draw a line to close the shape (from the last point to the first point)
                                 g.DrawLine(Pens.Black, points[points.Count - 1], points[0]);
 
-                                // Optionally, draw a small dot for each point
-                                foreach (var point in points)
-                                {
-                                    g.FillEllipse(Brushes.Black, point.X - 2, point.Y - 2, 4, 4); // Draw a small dot at each point
-                                }
+                                //draw a small dot on point
+                                //foreach (var point in points)
+                                //{
+                                //    g.FillEllipse(Brushes.Black, point.X - 2, point.Y - 2, 4, 4); // Draw a small dot at each point
+                                //}
                             }
 
-                            points.Clear(); // Optionally, clear the points list after closing the shape (or keep for next shape)
+                            points.Clear();
                             break;
                         }
 
-                        // Only draw the lines between points (not a polygon)
-                        if (points.Count > 1) // Only start drawing after the first point
+                        if (points.Count > 1)
                         {
                             using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
                             {
-                                //g.Clear(Color.White); // Clear the canvas first
-
                                 // Draw lines between each pair of points
                                 for (int i = 1; i < points.Count; i++)
                                 {
                                     g.DrawLine(Pens.Black, points[i - 1], points[i]);
                                 }
-
-                                // Optionally, draw a small dot for each point
-                                foreach (var point in points)
-                                {
-                                    g.FillEllipse(Brushes.Black, point.X - 2, point.Y - 2, 4, 4); // Draw a small dot at each point
-                                }
+                                //foreach (var point in points)
+                                //{
+                                //    g.FillEllipse(Brushes.Black, point.X - 2, point.Y - 2, 4, 4); // Draw a small dot at each point
+                                //}
                             }
                         }
 
@@ -528,6 +524,10 @@ namespace Photoapp
             isRotating = false;
             isScaling = false;
             userText = "";
+            points.Clear(); // fix pencil to pen and backwards
+
+            lastPoint = new Point(0,0); // nemel mit
+            canvasPanel.Focus();
         }
         private bool IsNearFirstPoint(Point currentPoint)
         {
@@ -1351,6 +1351,8 @@ namespace Photoapp
             {
                 SelectLayer(layerId); // Update the selected layer label and variable
             };
+
+
 
             // Add the buttons to the layer item panel
             layerItemPanel.Controls.Add(upButton);

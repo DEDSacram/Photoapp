@@ -133,7 +133,7 @@ namespace Photoapp
             // Create and configure the TrackBar
             TrackBar slider = new TrackBar();
             slider.Minimum = 0;
-            slider.Maximum = 255; 
+            slider.Maximum = 255;
             slider.TickFrequency = 5;
             slider.Value = 50; // Default value
             slider.Dock = DockStyle.Top;
@@ -165,7 +165,7 @@ namespace Photoapp
 
             InitializeComponent();
             this.KeyPreview = true;  // This allows the form to receive key events
-  
+
             this.AcceptButton = null;  // Disable default Enter behavior for buttons
             this.Focus();  // Set the focus to the form itself
 
@@ -197,7 +197,7 @@ namespace Photoapp
         private void Form1_Load(object sender, EventArgs e)
         {
 
-        
+
 
             // Create a bitmap with the size of the canvasPanel
             Bitmap bitmap = new Bitmap(canvasPanel.Width, canvasPanel.Height);
@@ -523,10 +523,11 @@ namespace Photoapp
             isDragging = false;
             isRotating = false;
             isScaling = false;
+            isDrawing = false;
             userText = "";
             points.Clear(); // fix pencil to pen and backwards
 
-            lastPoint = new Point(0,0); // nemel mit
+            lastPoint = new Point(0, 0); // nemel mit
             canvasPanel.Focus();
         }
         private bool IsNearFirstPoint(Point currentPoint)
@@ -837,7 +838,7 @@ namespace Photoapp
                         break;
                     case Mode.rubber:
                         //// rubber
-                 
+
                         // new bitmap
                         Bitmap maskBitmap = new Bitmap(
                selectedLayer.Bitmap.Width, // Width
@@ -964,16 +965,16 @@ namespace Photoapp
                     case Mode.arrow:
                         using (Graphics g = Graphics.FromImage(selectedLayer.Bitmap))
                         {
-                         
+
                             g.SmoothingMode = SmoothingMode.AntiAlias;
-                           
+
                             using (Pen pen = new Pen(Color.Blue, 3))
                             {
                                 pen.CustomEndCap = new AdjustableArrowCap(6, 6, false);// unfilled
 
                                 //pen.CustomEndCap = new AdjustableArrowCap(6, 6); // (width, height)
 
-                        
+
                                 g.DrawLine(pen, lastPoint, NormalizedPoint);
                             }
                         }
@@ -1012,7 +1013,7 @@ namespace Photoapp
                     }
                     // Savetomanager(selectedLayer.Bitmap); currently stop for rotate transforms
                 }
-        
+
                 clearUIBitmap();
                 RedrawCanvas(invalidRect);
             }
@@ -1095,7 +1096,7 @@ namespace Photoapp
                 g.SmoothingMode = SmoothingMode.None; // Or AntiAlias if needed
 
                 // apply only if if the layer is there number 2 option is create a new layer
-                g.DrawImage(UILayer,new Point(-selectedLayer.Offset.X,-selectedLayer.Offset.Y));
+                g.DrawImage(UILayer, new Point(-selectedLayer.Offset.X, -selectedLayer.Offset.Y));
             }
 
 
@@ -1886,6 +1887,7 @@ namespace Photoapp
         {
             currentMode = Mode.pen;
             ResetModes();
+
         }
         private void dragButton_MouseClick(object sender, MouseEventArgs e)
         {
@@ -2335,7 +2337,7 @@ namespace Photoapp
         // not used
         private void Form1_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
         {
-       
+
             //if (e.KeyCode == Keys.Enter)
             //{
             //    userText += "\n";  // Handle Enter key for newline
@@ -2347,13 +2349,13 @@ namespace Photoapp
             //}
 
             //DrawText();  // Redraw the text
-        
-    }
+
+        }
 
         private void Form1_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (currentMode != Mode.font) return;
-     
+
             if (e.KeyChar == '\r')
             {
                 userText += "\n";
@@ -2377,22 +2379,22 @@ namespace Photoapp
 
         private void importPdfToolStripMenuItem_Click(object sender, EventArgs e)
         {
-     
+
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.Filter = "Pdf files (*.pdf) | *.pdf";
             openFileDialog.Title = "Select an pdf file";
             if (openFileDialog.ShowDialog() == DialogResult.OK)
-            { 
-          
-        
-            if (!string.IsNullOrEmpty(openFileDialog.FileName) && File.Exists(openFileDialog.FileName))
             {
 
-                using (var pdfDocument = PdfDocument.Load(openFileDialog.FileName))
+
+                if (!string.IsNullOrEmpty(openFileDialog.FileName) && File.Exists(openFileDialog.FileName))
                 {
-                    int pageIndex = 0; // Index of the page to render (0-based)
-                    Bitmap image = (Bitmap)pdfDocument.Render(pageIndex, 300, 300, PdfRenderFlags.CorrectFromDpi);
-                
+
+                    using (var pdfDocument = PdfDocument.Load(openFileDialog.FileName))
+                    {
+                        int pageIndex = 0; // Index of the page to render (0-based)
+                        Bitmap image = (Bitmap)pdfDocument.Render(pageIndex, 300, 300, PdfRenderFlags.CorrectFromDpi);
+
                         int layerid = layerManager.GetNextLayerId();
                         AddLayerToLayerPanel(layerid);
                         layerManager.AddLayer(layerid, new Bitmap(image));
